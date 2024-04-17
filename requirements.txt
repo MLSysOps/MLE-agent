@@ -1,0 +1,9 @@
+rich~=13.7.1
+click~=8.1.7
+openai
+inquirer~=3.2.4
+chromadb~=0.4.24
+psutil~=5.9.8
+instructor~=0.6.8
+pydantic~=2.6.4
+setuptools~=68.2.2
