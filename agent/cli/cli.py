@@ -3,7 +3,9 @@ import click
 from rich.console import Console
 
 import agent
+from agent.utils import Config
 
+config = Config()
 # avoid the tokenizers parallelism issue
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
@@ -48,16 +50,18 @@ class DefaultCommandGroup(click.Group):
 @click.version_option(version=agent.__version__)
 def cli():
     """
-    Termax: A CLI tool to generate and execute commands from natural language.
+    MLE-Agent: The CLI tool to build machine learning projects.
     """
-    pass
+
+
+
 
 
 @cli.command(default_command=True)
 @click.argument('text', nargs=-1)
-def generate(text):
+def ask(text):
     """
-    Generate the code from the natural language text.
+    ASK the agent a question to build an ML project.
     """
     console = Console()
     console.log(text)

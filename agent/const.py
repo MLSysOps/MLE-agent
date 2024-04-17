@@ -1,3 +1,5 @@
+DB_NAME = 'database'
+
 CONFIG_SEC_GENERAL = 'general'
 CONFIG_SEC_API_KEY = 'api_key'
 CONFIG_LLM_LIST = {  # with the default model.
@@ -10,4 +12,4 @@ CONFIG_LLM_LIST = {  # with the default model.
 }
 
 # LLMs
-CONFIG_SEC_OPENAI = 'openai'
+LLM_TYPE_OPENAI = 'openai'
