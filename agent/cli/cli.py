@@ -1,13 +1,52 @@
 import os
 import click
+import inquirer
 from rich.console import Console
 
 import agent
+from agent.const import *
 from agent.utils import Config
 
 config = Config()
 # avoid the tokenizers parallelism issue
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
+
+def build_config(general: bool = False):
+    """
+    build_config: build the configuration for Termax.
+    Args:
+        general: a boolean indicating whether to build the general configuration only.
+    :return:
+    """
+    configuration = Config()
+    platform = LLM_TYPE_OPENAI
+    exe_questions = [
+        inquirer.Text(
+            "api_key",
+            message="What is your OpenAI API key?"
+        )
+    ]
+
+    general_config = {
+        'platform': platform,
+        'api_key': inquirer.prompt(exe_questions)['api_key'],
+    }
+
+    configuration.write_general(general_config)
+
+    if not general:
+        platform_config = {
+            "model": 'gpt-3.5-turbo',
+            'temperature': 0.7,
+            'max_tokens': 2000,
+            'top_p': 1.0,
+            'top_k': 32,
+            'stop_sequences': 'None',
+            'candidate_count': 1
+        }
+
+        configuration.write_platform(platform_config, platform=platform)
 
 
 class DefaultCommandGroup(click.Group):
@@ -52,9 +91,16 @@ def cli():
     """
     MLE-Agent: The CLI tool to build machine learning projects.
     """
+    pass
 
 
-
+@cli.command()
+@click.option('--general', '-g', is_flag=True, help="Set up the general configuration for MLE Agent.")
+def config(general):
+    """
+    Set up the global configuration for Termax.
+    """
+    build_config(general)
 
 
 @cli.command(default_command=True)
