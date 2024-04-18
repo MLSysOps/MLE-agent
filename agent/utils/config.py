@@ -54,40 +54,18 @@ class Config:
         else:
             raise ValueError("there is no '[openai]' section found in the configuration file.")
 
-    def write_general(self, config_dict: dict):
+    def write_section(self, section_name: str, config_dict: dict):
         """
-        write_general: write the general configuration.
+        write_section: write the project configuration.
 
+        @param section_name: the section name.
         @param config_dict: the configuration dictionary.
 
         """
-        if not self.config.has_section(CONFIG_SEC_GENERAL):
-            self.config.add_section(CONFIG_SEC_GENERAL)
+        if not self.config.has_section(section_name):
+            self.config.add_section(section_name)
 
-        self.config[CONFIG_SEC_GENERAL] = config_dict
-
-        # save the new configuration and reload.
-        with open(self.config_path, 'w') as configfile:
-            self.config.write(configfile)
-            self.reload_config(self.config_path)
-
-    def write_platform(
-            self,
-            config_dict: dict,
-            platform: str = LLM_TYPE_OPENAI
-    ):
-        """
-        write_platform: indicate and generate the platform related configuration.
-
-        @param config_dict: the configuration dictionary.
-        @param platform: the platform to configure.
-
-        """
-        # create the configuration to connect with OpenAI.
-        if not self.config.has_section(platform):
-            self.config.add_section(platform)
-
-        self.config[platform] = config_dict
+        self.config[section_name] = config_dict
 
         # save the new configuration and reload.
         with open(self.config_path, 'w') as configfile:

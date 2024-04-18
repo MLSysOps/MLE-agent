@@ -1,6 +1,7 @@
-rich~=13.7.1
-click~=8.1.7
+rich
+click
 openai
+pyyaml
 inquirer~=3.2.4
 chromadb~=0.4.24
 psutil~=5.9.8

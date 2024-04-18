@@ -1,1 +1,2 @@
-from .config import Config, CONFIG_HOME
+from .config import *
+from .system import *

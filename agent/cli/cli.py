@@ -1,13 +1,10 @@
-import os
 import click
 import inquirer
-from rich.console import Console
 
 import agent
-from agent.const import *
-from agent.utils import Config
+from agent.utils import *
 
-config = Config()
+console = Console()
 # avoid the tokenizers parallelism issue
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
@@ -33,7 +30,7 @@ def build_config(general: bool = False):
         'api_key': inquirer.prompt(exe_questions)['api_key'],
     }
 
-    configuration.write_general(general_config)
+    configuration.write_section(CONFIG_SEC_GENERAL, general_config)
 
     if not general:
         platform_config = {
@@ -46,46 +43,10 @@ def build_config(general: bool = False):
             'candidate_count': 1
         }
 
-        configuration.write_platform(platform_config, platform=platform)
+        configuration.write_section(platform, platform_config)
 
 
-class DefaultCommandGroup(click.Group):
-    """allow a default command for a group"""
-
-    def command(self, *args, **kwargs):
-        """
-        command: the command decorator for the group.
-        """
-        default_command = kwargs.pop('default_command', False)
-        if default_command and not args:
-            kwargs['name'] = kwargs.get('name', 'termax/t')
-        decorator = super(
-            DefaultCommandGroup, self).command(*args, **kwargs)
-
-        if default_command:
-            def new_decorator(f):
-                cmd = decorator(f)
-                self.default_command = cmd.name
-                return cmd
-
-            return new_decorator
-
-        return decorator
-
-    def resolve_command(self, ctx, args):
-        """
-        resolve_command: resolve the command.
-        """
-        try:
-            # test if the command parses
-            return super(DefaultCommandGroup, self).resolve_command(ctx, args)
-        except click.UsageError:
-            # command did not parse, assume it is the default command
-            args.insert(0, self.default_command)
-            return super(DefaultCommandGroup, self).resolve_command(ctx, args)
-
-
-@click.group(cls=DefaultCommandGroup)
+@click.group()
 @click.version_option(version=agent.__version__)
 def cli():
     """
@@ -103,11 +64,32 @@ def config(general):
     build_config(general)
 
 
-@cli.command(default_command=True)
+@cli.command()
 @click.argument('text', nargs=-1)
 def ask(text):
     """
     ASK the agent a question to build an ML project.
     """
-    console = Console()
+
     console.log(text)
+
+
+@cli.command()
+@click.argument('name')
+def new(name: str):
+    """
+    new: create a new machine learning project.
+    """
+    configuration = Config()
+    project_initial_config = {
+        'name': name,
+        'description': 'A new machine learning project.',  # default description
+        'llm': configuration.read()['general']['platform'],
+        'step': 0
+    }
+
+    project_path = create_directory(name)
+    update_project_state(project_path, project_initial_config)
+    configuration.write_section(CONFIG_SEC_PROJECT, {
+        'path': project_path
+    })
