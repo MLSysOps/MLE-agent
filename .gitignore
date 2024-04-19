@@ -161,3 +161,4 @@ cython_debug/
 
 # macOS
 *.DS_Store
+/credential.ini
