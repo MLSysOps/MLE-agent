@@ -3,6 +3,7 @@ import questionary
 
 import agent
 from agent.utils import *
+from agent.model import OpenAIModel
 
 console = Console()
 # avoid the tokenizers parallelism issue
@@ -77,6 +78,25 @@ def build_config(general: bool = False):
         configuration.write_section(platform, platform_config)
 
 
+def load_model():
+    """
+    load_model: load the model based on the configuration.
+    """
+    configuration = Config()
+    config_dict = configuration.read()
+    plat = config_dict['general']['platform']
+
+    model = None
+    if plat == LLM_TYPE_OPENAI:
+        model = OpenAIModel(
+            api_key=config_dict[CONFIG_SEC_GENERAL][CONFIG_SEC_API_KEY],
+            model=config_dict[LLM_TYPE_OPENAI].get('model'),
+            temperature=float(config_dict[LLM_TYPE_OPENAI]['temperature'])
+        )
+
+    return model
+
+
 @click.group(cls=DefaultCommandGroup)
 @click.version_option(version=agent.__version__)
 def cli():
@@ -111,7 +131,10 @@ def go():
     go: start the working your ML project.
     """
     configuration = Config()
+    model = load_model()
     console.log("Welcome to MLE-Agent! :sunglasses:")
+    if model:
+        console.log(f"Model loaded: {model.model_type}, {model.model}")
     console.line()
 
     if configuration.read().get('project') is None:
@@ -119,10 +142,15 @@ def go():
         console.log("Please create a new project first using 'mle new <project_name>' command.")
         return
 
+    # ask for the project language.
     console.log("> Current project:", configuration.read()['project']['path'])
     if configuration.read()['project'].get('lang') is None:
         lang = questionary.text("What is your major language for this project?").ask()
         configuration.write_section(CONFIG_SEC_PROJECT, {'lang': lang})
+
+    console.log("> Project language:", configuration.read()['project']['lang'])
+
+    # ask for the project description.
 
 
 @cli.command()

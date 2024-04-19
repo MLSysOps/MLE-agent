@@ -7,9 +7,5 @@ class Model(ABC):
         self.model_type = None
 
     @abstractmethod
-    def load_data(self, data):
-        pass
-
-    @abstractmethod
-    def load_model(self, model_path):
+    def chat(self, context: str, text: str):
         pass

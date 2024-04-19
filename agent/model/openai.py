@@ -1,15 +1,16 @@
 import importlib.util
 
 from .base import Model
+from agent.const import LLM_TYPE_OPENAI
 
 
 class OpenAIModel(Model):
-    def __init__(self, api_key, version, temperature):
+    def __init__(self, api_key, model, temperature):
         """
         Initialize the OpenAI model.
         Args:
             api_key (str): The OpenAI API key.
-            version (str): The model version.
+            model (str): The model with version.
             temperature (float): The temperature value.
         """
         super().__init__()
@@ -26,12 +27,35 @@ class OpenAIModel(Model):
                 "More information, please refer to: https://openai.com/product"
             )
 
-        self.version = version
+        self.model = model
+        self.model_type = LLM_TYPE_OPENAI
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
-    def load_data(self, data):
-        pass
+    def chat(self, context: str, text: str):
+        """
+        Chat with the model.
+        Args:
+            context (str): The context (chat history) prompt.
+            text (str): The text prompt.
+        """
+        try:
+            chat_history = [
+                {"role": "system", "content": context},
+                {"role": "user", "content": text}
+            ]
 
-    def load_model(self, model_path):
-        pass
+            completion = self.client.chat.completions.create(
+                model=self.version,
+                messages=chat_history,
+                temperature=self.temperature
+            )
+
+            response = completion.choices[0].message.content
+            return response
+        except self.RateLimitError as e:
+            print("Rate limit exceeded. Please try again later.")
+            print(f"Error message: {e}")
+        except Exception as e:
+            print("OpenAI error occurred.")
+            print(f"Error message: {e}")
