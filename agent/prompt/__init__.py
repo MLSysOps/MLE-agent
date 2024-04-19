@@ -1,1 +1,1 @@
-from .chain import PromptChain
+from .base import pmpt_sys_init

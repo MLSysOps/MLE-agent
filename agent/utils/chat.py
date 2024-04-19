@@ -24,6 +24,16 @@ class Chat:
         self.console = Console()
         self.session = PromptSession(history=FileHistory(HISTORY_PATH))
 
+    def add(self, role: str, content: str):
+        """
+        Add the chat to the history.
+        :param role: the role.
+        :param content: the content.
+        :return: the chat history.
+        """
+        self.chat_history.append({"role": role, "content": content})
+        return self.chat_history
+
     def chat_generator(self, message: str):
         """
         Generate the chat.

@@ -4,6 +4,7 @@ import questionary
 import agent
 from agent.utils import *
 from agent.model import OpenAIModel
+from agent.prompt import pmpt_sys_init
 
 console = Console()
 # avoid the tokenizers parallelism issue
@@ -80,14 +81,6 @@ def config(general):
 
 
 @cli.command()
-def ask():
-    """
-    ASK the agent a question to build an ML project.
-    """
-    Chat(load_model()).start()
-
-
-@cli.command()
 def go():
     """
     go: start the working your ML project.
@@ -110,11 +103,15 @@ def go():
         lang = questionary.text("What is your major language for this project?").ask()
         configuration.write_section(CONFIG_SEC_PROJECT, {'lang': lang})
 
-    console.log("> Project language:", configuration.read()['project']['lang'])
+    selected_language = configuration.read()['project']['lang']
+    console.log("> Project language:", selected_language)
 
-    # ask for the project description.
+    # start the interactive chat
     console.line()
-    Chat(model).start()
+    chat_app = Chat(model)
+    # set the initial system prompt
+    chat_app.add(role='system', content=pmpt_sys_init(selected_language))
+    chat_app.start()
 
 
 @cli.command()
