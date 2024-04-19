@@ -1,5 +1,6 @@
 import os
 from rich.live import Live
+from rich.panel import Panel
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -45,7 +46,6 @@ class Chat:
         :param prompt: the user prompt.
         :return:
         """
-        self.console.print(Markdown("**>**"), end=" ")
         text = ""
         block = "█ "
         with Live(console=self.console) as live:
@@ -57,8 +57,8 @@ class Chat:
                     block = ""
                 markdown = Markdown(text + block)
                 live.update(
-                    markdown,
-                    refresh=True,
+                    Panel(markdown, title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
+                    refresh=True
                 )
         self.chat_history.append({"role": "assistant", "content": text})
 
@@ -69,6 +69,6 @@ class Chat:
         """
         while True:
             try:
-                self.handle_streaming(self.session.prompt("(Type to ask): ").strip())
+                self.handle_streaming(self.session.prompt("[type to ask]: ").strip())
             except (KeyboardInterrupt, EOFError):
                 exit()
