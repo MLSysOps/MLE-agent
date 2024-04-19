@@ -32,30 +32,16 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
-    def chat(self, context: str, text: str):
+    def completions(self, chat_history):
         """
-        Chat with the model.
+        Completions of the LLM model.
         Args:
-            context (str): The context (chat history) prompt.
-            text (str): The text prompt.
+            chat_history: The context (chat history).
         """
-        try:
-            chat_history = [
-                {"role": "system", "content": context},
-                {"role": "user", "content": text}
-            ]
 
-            completion = self.client.chat.completions.create(
-                model=self.version,
-                messages=chat_history,
-                temperature=self.temperature
-            )
-
-            response = completion.choices[0].message.content
-            return response
-        except self.RateLimitError as e:
-            print("Rate limit exceeded. Please try again later.")
-            print(f"Error message: {e}")
-        except Exception as e:
-            print("OpenAI error occurred.")
-            print(f"Error message: {e}")
+        return self.client.chat.completions.create(
+            model=self.model,
+            messages=chat_history,
+            temperature=self.temperature,
+            stream=True
+        )

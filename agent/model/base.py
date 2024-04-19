@@ -7,5 +7,5 @@ class Model(ABC):
         self.model_type = None
 
     @abstractmethod
-    def chat(self, context: str, text: str):
+    def completions(self, chat_history):
         pass

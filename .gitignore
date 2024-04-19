@@ -161,3 +161,6 @@ cython_debug/
 
 # macOS
 *.DS_Store
+
+# cache
+.rich-chat.history
