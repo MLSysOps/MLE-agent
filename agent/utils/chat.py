@@ -8,8 +8,10 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
 from agent.const import CONFIG_CHAT_HISTORY_FILE
-from agent.utils import CONFIG_HOME, extract_and_save_file
+from agent.utils import Config, CONFIG_HOME
+from agent.utils import extract_and_save_file, list_all_files
 
+config = Config()
 HISTORY_PATH = str(os.path.join(CONFIG_HOME, CONFIG_CHAT_HISTORY_FILE))
 
 
@@ -48,7 +50,7 @@ class Chat:
                 if chunk:
                     yield chunk
         except Exception as e:
-            print(f"GeneratorError: {e}")
+            raise Exception(f"GeneratorError: {e}")
 
     def handle_streaming(self, prompt):
         """
@@ -83,6 +85,12 @@ class Chat:
         """
         while True:
             try:
-                self.handle_streaming(self.session.prompt("[type to ask]: ").strip())
+                user_pmpt = self.session.prompt("[type to ask]: ").strip()
+                # update the local file structure
+                self.add("user", f"""
+                    \n
+                    The files under the project directory is: {list_all_files(config.read()['project']['path'])}
+                """)
+                self.handle_streaming(user_pmpt)
             except (KeyboardInterrupt, EOFError):
                 exit()

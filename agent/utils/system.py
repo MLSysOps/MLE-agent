@@ -6,6 +6,30 @@ from agent.types import ProjectState
 from agent.const import CONFIG_PROJECT_FILE
 
 
+def list_all_files(path):
+    """
+    Lists all files and directories under the given path if it is a directory.
+    If the path is a file, returns None.
+
+    Args:
+    path (str): The file system path to check and list contents from.
+
+    Returns:
+    list of str or None: A list of file and directory names under the given path, or None if the path is a file.
+    """
+    if os.path.isfile(path):
+        return None  # Return None if the path is a file
+
+    file_list = []
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            file_list.append(os.path.join(root, name))
+        for name in dirs:
+            file_list.append(os.path.join(root, name))
+
+    return file_list
+
+
 def create_directory(dir_name: str):
     """
     Create a directory if it does not exist.
