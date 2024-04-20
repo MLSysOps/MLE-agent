@@ -7,8 +7,8 @@ from rich.markdown import Markdown
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from agent.utils import CONFIG_HOME
 from agent.const import CONFIG_CHAT_HISTORY_FILE
+from agent.utils import CONFIG_HOME, extract_and_save_file
 
 HISTORY_PATH = str(os.path.join(CONFIG_HOME, CONFIG_CHAT_HISTORY_FILE))
 
@@ -70,6 +70,10 @@ class Chat:
                     Panel(markdown, title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
                     refresh=True
                 )
+
+        saved_file, _ = extract_and_save_file(text)
+        saved_info = f"Generated code saved as: {saved_file}"
+        self.console.log(saved_info)
         self.chat_history.append({"role": "assistant", "content": text})
 
     def start(self):
