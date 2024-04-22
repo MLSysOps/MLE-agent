@@ -1,4 +1,5 @@
 from langchain_openai import ChatOpenAI
+from cfg import load_config
 
 
 from enum import Enum
@@ -54,8 +55,11 @@ def analyze_ml_development_stage(input: str, llm: BaseChatModel) -> MLDevelopmen
 
 
 if __name__ == "__main__":
+
+    config = load_config('../credential.json')
+    OPENAI_API_KEY = config["OPENAI_API_KEY"]
     # Example usage:
-    llm = ChatOpenAI(api_key="OpenAI_API_KEY")
+    llm = ChatOpenAI(api_key=OPENAI_API_KEY)
     # Example corrected usage:
     stage_result = analyze_ml_development_stage.invoke(
         input="I am currently selecting features and cleaning data",

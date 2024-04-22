@@ -1,22 +1,11 @@
-from langchain_community.utilities import SQLDatabase
 from langchain_openai import ChatOpenAI
-from snowflake.snowpark import Session
-from langchain.chains import create_sql_query_chain
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import chain
 from langchain_core.output_parsers import StrOutputParser
 from snowflake.connector import connect
 
-import json
-
-
-# Load the configuration from a JSON file
-def load_config(file_path):
-    with open(file_path, 'r') as file:
-        config = json.load(file)
-    return config
-
+from cfg import load_config
 
 def snowflake_config(config):
     snowflake_config = config["snowflake"]
@@ -98,8 +87,6 @@ if __name__ == "__main__":
     data_engineering_data_loading()
 
     config = load_config('../credential.json')
-
-    # Extract Snowflake and OpenAI configuration details
     OPENAI_API_KEY = config["OPENAI_API_KEY"]
 
     session = snowflake_config(config)
