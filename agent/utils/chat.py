@@ -1,4 +1,5 @@
 import os
+import json
 from rich.live import Live
 from rich.panel import Panel
 from rich.console import Console
@@ -10,6 +11,7 @@ from prompt_toolkit.history import FileHistory
 from agent.const import CONFIG_CHAT_HISTORY_FILE
 from agent.utils import Config, CONFIG_HOME
 from agent.utils import extract_and_save_file, list_all_files
+from agent.integration import get_function
 
 config = Config()
 HISTORY_PATH = str(os.path.join(CONFIG_HOME, CONFIG_CHAT_HISTORY_FILE))
@@ -36,47 +38,88 @@ class Chat:
         self.chat_history.append({"role": role, "content": content})
         return self.chat_history
 
-    def chat_generator(self, message: str):
+    def handle_function_call(self, name, arguments):
         """
-        Generate the chat.
-        :param message: the user message.
+        Handle the function call.
+        :param name: the function name.
+        :param arguments: the function arguments.
         :return:
         """
-        self.chat_history.append({"role": "user", "content": message})
+        self.chat_history.append(
+            {
+                "role": "assistant",
+                "content": "",
+                "function_call": {"name": name, "arguments": arguments},
+            }
+        )
 
-        try:
-            response = self.agent.completions(self.chat_history)
-            for chunk in response:
-                if chunk:
-                    yield chunk
-        except Exception as e:
-            raise Exception(f"GeneratorError: {e}")
+        if arguments != "":
+            dict_args = json.loads(arguments)
+            joined_args = ", ".join(f'{k}="{v}"' for k, v in dict_args.items())
+        else:
+            dict_args = {}
+            joined_args = ""
+        self.console.log(f"> @FunctionCall `{name}({joined_args})` \n\n")
 
-    def handle_streaming(self, prompt):
+        results = get_function(name).execute(**dict_args)
+        self.chat_history.append({"role": "function", "content": results, "name": name})
+
+        return results
+
+    def handle_response(self, prompt):
         """
-        Handle the streaming of the chat.
+        Handle the response from the chat.
         :param prompt: the user prompt.
         :return:
         """
-        text = ""
-        block = "█ "
-        with Live(console=self.console) as live:
-            for token in self.chat_generator(prompt):
-                content = token.choices[0].delta.content
-                if content:
-                    text = text + content
-                if token.choices[0].finish_reason is not None:
-                    block = ""
-                markdown = Markdown(text + block)
-                live.update(
-                    Panel(markdown, title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
-                    refresh=True
-                )
+        text = block = ""
+        func_name = func_arguments = ""
 
-        saved_file, _ = extract_and_save_file(text)
-        saved_info = f"Generated code saved as: {saved_file}"
-        self.console.log(saved_info)
+        self.chat_history.append({"role": "user", "content": prompt})
+        response = self.agent.completions(self.chat_history, True)
+
+        for token in response:
+            content = token.choices[0].delta.content
+            if content:
+                text = text + content
+
+            function_call = token.choices[0].delta.function_call
+            if function_call:
+                if function_call.name:
+                    func_name = function_call.name
+                if function_call.arguments:
+                    func_arguments += function_call.arguments
+
+            stop_reason = token.choices[0].finish_reason
+            if stop_reason == "function_call":
+                self.handle_function_call(func_name, func_arguments)
+                yield from self.handle_response(prompt)
+            if stop_reason == "stop":
+                saved_file, _ = extract_and_save_file(text)
+                saved_info = f"Generated code saved as: {saved_file}"
+                block = f"\n{saved_info}"
+
+            if text:
+                yield Markdown(text + block)
+
         self.chat_history.append({"role": "assistant", "content": text})
+
+    def handle_streaming(self, prompt, display=True):
+        """
+        Handle the streaming of the chat.
+        :param prompt: the user prompt.
+        :param display: the flag to display the chat.
+        :return:
+        """
+        if display:
+            with Live(console=self.console) as live:
+                for markdown in self.handle_response(prompt):
+                    live.update(
+                        Panel(markdown, title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
+                        refresh=True
+                    )
+        else:
+            self.handle_response(prompt)
 
     def start(self):
         """
@@ -88,7 +131,6 @@ class Chat:
                 user_pmpt = self.session.prompt("[type to ask]: ").strip()
                 # update the local file structure
                 self.add("user", f"""
-                    \n
                     The files under the project directory is: {list_all_files(config.read()['project']['path'])}
                 """)
                 self.handle_streaming(user_pmpt)

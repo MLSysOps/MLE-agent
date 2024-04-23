@@ -1,6 +1,7 @@
 import importlib.util
 
 from .base import Model
+from agent.integration import get_all_func_schema
 from agent.const import LLM_TYPE_OPENAI
 
 
@@ -32,12 +33,22 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
-    def completions(self, chat_history):
+    def completions(self, chat_history, use_function=False):
         """
         Completions of the LLM model.
         Args:
             chat_history: The context (chat history).
+            use_function: The flag to use the function.
         """
+
+        if use_function:
+            return self.client.chat.completions.create(
+                model=self.model,
+                messages=chat_history,
+                temperature=self.temperature,
+                functions=get_all_func_schema(),
+                stream=True
+            )
 
         return self.client.chat.completions.create(
             model=self.model,
