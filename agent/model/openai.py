@@ -33,12 +33,18 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
-    def completions(self, chat_history, use_function=False):
+    def completions(
+            self,
+            chat_history,
+            use_function=False,
+            stream=True
+    ):
         """
         Completions of the LLM model.
         Args:
             chat_history: The context (chat history).
             use_function: The flag to use the function.
+            stream: The flag to stream the output.
         """
 
         if use_function:
@@ -47,12 +53,12 @@ class OpenAIModel(Model):
                 messages=chat_history,
                 temperature=self.temperature,
                 functions=get_all_func_schema(),
-                stream=True
+                stream=stream
             )
 
         return self.client.chat.completions.create(
             model=self.model,
             messages=chat_history,
             temperature=self.temperature,
-            stream=True
+            stream=stream
         )
