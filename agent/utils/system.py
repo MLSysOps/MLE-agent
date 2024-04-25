@@ -1,7 +1,9 @@
 import os
+import re
 import yaml
 from rich.console import Console
 
+from agent.utils import Config
 from agent.types import ProjectState
 from agent.const import CONFIG_PROJECT_FILE
 
@@ -103,3 +105,32 @@ def update_project_state(project_path: str, content_dict: dict = None):
         console.log(f"[green]File '{file_path}' updated successfully.")
     except IOError as error:
         console.log(f"[red]Updating the file '{file_path}' failed due to: {error}")
+
+
+def extract_and_save_file(input_text):
+    """
+    Extracts the file name and code block from a text formatted as specified,
+    then creates a local file with the file name and writes the code into it.
+
+    Args:
+    input_text (str): The text containing the file name and code block.
+
+    Returns:
+    str: The name of the file created.
+    """
+    file_name_match = re.search(r"File Name:\s*(.*?)\s*\n+\s*Code:", input_text, re.DOTALL)
+    if not file_name_match:
+        raise ValueError("File name not found in the text.")
+
+    file_name = file_name_match.group(1).strip()
+
+    project_file_path = os.path.join(Config().read()['project']['path'], file_name)
+    code_match = re.search(r"```(?:[a-zA-Z0-9]+)?\n(.*?)```", input_text, re.DOTALL)
+    if not code_match:
+        raise ValueError("Code block not found in the text.")
+
+    code = code_match.group(1).strip()
+    with open(project_file_path, 'w') as file:
+        file.write(code)
+
+    return project_file_path, code

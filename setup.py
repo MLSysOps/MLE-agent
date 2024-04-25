@@ -42,6 +42,10 @@ setup(
             "mle=agent.cli.cli:cli",
         ]
     },
+    package_data={
+        'steps': ['agent/templates/*.yml']
+    },
+    zip_safe=False,
     include_package_data=True,
     install_requires=requirements,
     setup_requires=['setuptools>=38.6.0'],

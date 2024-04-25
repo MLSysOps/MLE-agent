@@ -81,9 +81,9 @@ def config(general):
 
 
 @cli.command()
-def go():
+def chat():
     """
-    go: start the working your ML project.
+    chat: start an interactive chat with LLM to work on your ML project.
     """
     configuration = Config()
     model = load_model()
