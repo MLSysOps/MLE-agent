@@ -8,13 +8,12 @@ from rich.markdown import Markdown
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from agent.const import CONFIG_CHAT_HISTORY_FILE
-from agent.utils import Config, CONFIG_HOME
+from agent.utils import Config
 from agent.utils import extract_and_save_file, list_all_files
 from agent.integration import get_function
+from agent.const import CONFIG_CHAT_HISTORY_FILE
 
 config = Config()
-HISTORY_PATH = str(os.path.join(CONFIG_HOME, CONFIG_CHAT_HISTORY_FILE))
 
 
 class Chat:
@@ -26,7 +25,10 @@ class Chat:
         self.agent = llm_agent
         self.chat_history = []
         self.console = Console()
-        self.session = PromptSession(history=FileHistory(HISTORY_PATH))
+        self.project_home = config.read().get('project')['path']
+        self.session = PromptSession(
+            history=FileHistory(str(os.path.join(self.project_home, CONFIG_CHAT_HISTORY_FILE)))
+        )
 
     def add(self, role: str, content: str):
         """
