@@ -118,16 +118,19 @@ def extract_and_save_file(input_text):
     Returns:
     str: The name of the file created.
     """
+    console = Console()
     file_name_match = re.search(r"File Name:\s*(.*?)\s*\n+\s*Code:", input_text, re.DOTALL)
     if not file_name_match:
-        raise ValueError("File name not found in the text.")
+        console.log("File name not found in the text.")
+        return None, None
 
     file_name = file_name_match.group(1).strip()
 
     project_file_path = os.path.join(Config().read()['project']['path'], file_name)
     code_match = re.search(r"```(?:[a-zA-Z0-9]+)?\n(.*?)```", input_text, re.DOTALL)
     if not code_match:
-        raise ValueError("Code block not found in the text.")
+        console.log("Code block not found in the text.")
+        return None, None
 
     code = code_match.group(1).strip()
     with open(project_file_path, 'w') as file:

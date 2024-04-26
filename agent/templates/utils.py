@@ -23,3 +23,21 @@ def load_step(file_name: str) -> Step:
     except ValidationError as e:
         print(f"Error in loading step file: {e}")
         raise
+
+
+def get_step_mapping(step_num: int):
+    """
+    Get the step mapping based on the step number.
+    :param step_num: the step number.
+    :return: the step mapping.
+    """
+    step_mapping = {
+        0: 'data_collection.yml',
+        1: 'data_engineering.yml',
+        2: 'model_selection.yml',
+        3: 'model_training.yml',
+        4: 'model_evaluation.yml',
+        5: 'model_deployment.yml'
+    }
+
+    return step_mapping.get(step_num, None)

@@ -74,16 +74,17 @@ class Chat:
         :param prompt: the user prompt.
         :return:
         """
-        text = block = ""
+        text = ''
         func_name = func_arguments = ""
 
         self.chat_history.append({"role": "user", "content": prompt})
-        response = self.agent.completions(self.chat_history, True)
+        response = self.agent.completions(self.chat_history, stream=True, use_function=True)
 
         for token in response:
             content = token.choices[0].delta.content
             if content:
                 text = text + content
+                yield text
 
             function_call = token.choices[0].delta.function_call
             if function_call:
@@ -96,13 +97,11 @@ class Chat:
             if stop_reason == "function_call":
                 self.handle_function_call(func_name, func_arguments)
                 yield from self.handle_response(prompt)
+
             if stop_reason == "stop":
                 saved_file, _ = extract_and_save_file(text)
-                saved_info = f"Generated code saved as: {saved_file}"
-                block = f"\n{saved_info}"
-
-            if text:
-                yield Markdown(text + block)
+                if saved_file:
+                    self.console.log(f"Generating code to: {saved_file}")
 
         self.chat_history.append({"role": "assistant", "content": text})
 
@@ -115,9 +114,9 @@ class Chat:
         """
         if display:
             with Live(console=self.console) as live:
-                for markdown in self.handle_response(prompt):
+                for text in self.handle_response(prompt):
                     live.update(
-                        Panel(markdown, title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
+                        Panel(Markdown(text), title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
                         refresh=True
                     )
         else:

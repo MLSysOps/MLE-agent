@@ -27,9 +27,12 @@ class Config:
 
         Returns: a dictionary of the configuration.
         """
-        self.reload_config(CONFIG_PATH)
-        config_dict = {}
+        if os.path.isfile(CONFIG_PATH):
+            self.reload_config(CONFIG_PATH)
+        else:
+            return None
 
+        config_dict = {}
         for section in self.config.sections():
             options_dict = {option: self.config.get(section, option) for option in self.config.options(section)}
             config_dict[section] = options_dict

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from setuptools import find_packages, setup
 
-from agent.version import __version__
 # read the contents of README file
 from os import path
 from io import open  # for Python 2 and 3 compatibility
