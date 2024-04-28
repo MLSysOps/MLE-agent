@@ -1,6 +1,7 @@
 from agent.types import Step
 
 
+
 def pmpt_sys_init(
         lang: str,
         step: Step
@@ -14,5 +15,11 @@ def pmpt_sys_init(
     File Name: {{name}}
     
     Code: {{code}}
+    
+    """
+
+
+def pmpt_ml_project():
+    return f"""
     
     """

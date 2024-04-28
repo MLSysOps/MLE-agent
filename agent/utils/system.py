@@ -158,6 +158,23 @@ def extract_file_name(text: str) -> str:
         return None
 
 
+def extract_code(text: str) -> str:
+    """
+    Extracts the code block from a given text string.
+
+    Args:
+    text (str): The text containing the code block.
+
+    Returns:
+    str: The extracted code block, or an empty string if no code block is found.
+    """
+    match = re.search(r'```(?:[a-zA-Z0-9]+)?\n(.*?)```', text, re.DOTALL)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+
 def load_yaml_file(file_path: str):
     """
     Load a YAML file and return the data.

@@ -136,13 +136,22 @@ def new():
     """
     configuration = Config()
     name = questionary.text("What is the name of the project?").ask()
+    if not name:
+        return
+
     description = questionary.text("What is the description of this project? (Optional)").ask()
     language = questionary.text("What is the major language for this project?").ask()
+
+    if not language:
+        console.log("Please provide a valid language. Aborted.")
+        return
+
     project_path = create_directory(name)
     update_project_state(
         project_path,
         {
             'step': 0,
+            'task': 0,
             'name': name,
             'description': description,
             'llm': configuration.read()['general']['platform'],
