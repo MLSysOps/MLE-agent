@@ -1,3 +1,16 @@
 step: 0
 name: "Data Collection"
 description: "Data collection in machine learning involves gathering, storing, and preparing high-quality, relevant data from various sources to train and evaluate machine learning models."
+tasks:
+    - name: "Identify Data Sources"
+      description: "Identify the sources of data that are relevant to the problem you are trying to solve."
+      resources:
+        - name: "Databases"
+          description: "Databases are a common source of structured data that can be used for machine learning."
+        - name: "APIs"
+          description: "APIs provide access to data from various online services and platforms."
+          choices: [ "Huggingface Datasets", "PyTorch Datasets", "Scikit-learn Datasets" ]
+        - name: "Files"
+          description: "Files, such as CSV, JSON, and Excel files, can be used to store data for analysis."
+    - name: "Collect Data"
+      description: "Collect data from the identified sources and store it in a structured format for analysis."

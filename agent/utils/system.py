@@ -1,11 +1,31 @@
 import os
 import re
 import yaml
+from pydantic import BaseModel
 from rich.console import Console
+from typing import Type, TypeVar
 
 from agent.utils import Config
 from agent.types import ProjectState
 from agent.const import CONFIG_PROJECT_FILE
+
+T = TypeVar('T', bound=BaseModel)
+
+
+def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
+    """
+    Loads YAML data from a file and converts it into a Pydantic model.
+
+    Args:
+    file_path (str): Path to the YAML file.
+    model (Type[T]): The Pydantic model class to which the data should be converted.
+
+    Returns:
+    T: An instance of the specified Pydantic model class.
+    """
+    with open(file_path, 'r') as file:
+        data = yaml.safe_load(file)
+        return model(**data)
 
 
 def list_all_files(path):
@@ -137,3 +157,14 @@ def extract_and_save_file(input_text):
         file.write(code)
 
     return project_file_path, code
+
+
+def load_yaml_file(file_path: str):
+    """
+    Load a YAML file and return the data.
+    :param file_path: the path of the YAML file.
+    :return: the data in the YAML file.
+    """
+    with open(file_path, 'r') as file:
+        data = yaml.safe_load(file)
+    return data
