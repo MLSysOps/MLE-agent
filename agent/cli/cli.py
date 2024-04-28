@@ -3,6 +3,8 @@ import questionary
 
 import agent
 from agent.utils import *
+from agent.types import Step
+from agent.function import Chat, Chain
 from agent.model import OpenAIModel
 from agent.prompt import pmpt_sys_init
 from agent.templates import load_step, get_step_mapping
@@ -79,6 +81,15 @@ def config(general):
     Set up the global configuration for Termax.
     """
     build_config(general)
+
+
+@cli.command()
+def start():
+    """
+    start: start the chat with LLM.
+    """
+    chain = Chain(load_step('data_collection.yml'), load_model())
+    chain.start()
 
 
 @cli.command()

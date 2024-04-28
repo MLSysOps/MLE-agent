@@ -1,8 +1,11 @@
 import os
 import yaml
-from pydantic import ValidationError
+from typing import Type, TypeVar
+from pydantic import BaseModel, ValidationError
 
 from agent.types import Step
+
+T = TypeVar('T', bound=BaseModel)
 
 
 def load_step(file_name: str) -> Step:
@@ -41,3 +44,19 @@ def get_step_mapping(step_num: int):
     }
 
     return step_mapping.get(step_num, None)
+
+
+def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
+    """
+    Loads YAML data from a file and converts it into a Pydantic model.
+
+    Args:
+    file_path (str): Path to the YAML file.
+    model (Type[T]): The Pydantic model class to which the data should be converted.
+
+    Returns:
+    T: An instance of the specified Pydantic model class.
+    """
+    with open(file_path, 'r') as file:
+        data = yaml.safe_load(file)
+        return model(**data)

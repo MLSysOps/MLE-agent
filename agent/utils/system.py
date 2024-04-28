@@ -9,24 +9,6 @@ from agent.utils import Config
 from agent.types import ProjectState
 from agent.const import CONFIG_PROJECT_FILE
 
-T = TypeVar('T', bound=BaseModel)
-
-
-def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
-    """
-    Loads YAML data from a file and converts it into a Pydantic model.
-
-    Args:
-    file_path (str): Path to the YAML file.
-    model (Type[T]): The Pydantic model class to which the data should be converted.
-
-    Returns:
-    T: An instance of the specified Pydantic model class.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-        return model(**data)
-
 
 def list_all_files(path):
     """
