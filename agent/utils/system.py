@@ -141,6 +141,23 @@ def extract_and_save_file(input_text):
     return project_file_path, code
 
 
+def extract_file_name(text: str) -> str:
+    """
+    Extracts the file name from a given text string.
+
+    Args:
+    text (str): The text containing the file name.
+
+    Returns:
+    str: The extracted file name, or an empty string if no file name is found.
+    """
+    match = re.search(r'File Name: (\S+)', text)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+
 def load_yaml_file(file_path: str):
     """
     Load a YAML file and return the data.
