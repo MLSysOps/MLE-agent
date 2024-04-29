@@ -109,7 +109,7 @@ class Chain:
         You are an Machine learning engineer, and you are currently working on an ML project using {self.project_state.lang} as the primary language.
         Please generate a code script for the current task based on following information.
         
-        User Requirement: {self.user_requirement}   
+        User Requirement: {self.user_requirement}
         Primary language: {self.project_state.lang}
         Current task: {task.name}
         Task description: {task.description}
