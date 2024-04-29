@@ -1,12 +1,15 @@
 import os
 import questionary
+from rich.live import Live
+from rich.panel import Panel
 from rich.console import Console
+from rich.markdown import Markdown
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
 from agent.utils import *
-from agent.types import Step
+from agent.types import Step, Task, Resource
 from agent.const import CONFIG_TASK_HISTORY_FILE
 
 config = Config()
@@ -30,8 +33,8 @@ class Chain:
         self.session = PromptSession(
             history=FileHistory(str(os.path.join(self.project_home, CONFIG_TASK_HISTORY_FILE)))
         )
-        self.target_
         self.target_source = None
+        self.user_requirement = None
 
     def ask(self, question):
         """
@@ -41,14 +44,21 @@ class Chain:
         """
         return questionary.text(question).ask()
 
-    def ask_choice(self, question, choices):
+    def ask_choice(self, question, choices: Resource):
         """
         Ask a choice question.
         :param question: the question to ask.
         :param choices: the choices to choose from.
         :return: the answer.
         """
-        return questionary.select(question, choices).ask()
+        source_kind = questionary.select(question, [c.name for c in choices]).ask()
+        if source_kind:
+            for choice in choices:
+                if choice.name == source_kind:
+                    if choice.choices:
+                        return questionary.select("Please select", choice.choices).ask()
+
+                    return source_kind
 
     def gen_file_name(self, user_requirement: str):
         """
@@ -65,10 +75,11 @@ class Chain:
         
         """
 
+        self.user_requirement = user_requirement
         self.chat_history.extend(
             [
                 {"role": 'system', "content": prompt},
-                {"role": 'user', "content": user_requirement}
+                {"role": 'user', "content": self.user_requirement}
             ]
         )
 
@@ -84,18 +95,24 @@ class Chain:
             if new_name:
                 self.target_source = os.path.join(self.project_state.path, new_name)
 
+        # clear the chat history
+        self.chat_history = []
+
         return self.target_source
 
-    def gen_task_content(self):
+    def gen_task_content(self, task: Task):
         """
         Generate the content of the current task.
         :return: the content of the task.
         """
         prompt = f"""
         You are an Machine learning engineer, and you are currently working on an ML project using {self.project_state.lang} as the primary language.
-        Now are are given a user requirement to generate a code script for the current task.
+        Please generate a code script for the current task based on following information.
         
-        Current task: {self.step.step}:{self.step.name}
+        User Requirement: {self.user_requirement}   
+        Primary language: {self.project_state.lang}
+        Current task: {task.name}
+        Task description: {task.description}
         
         Output format should be:
         
@@ -105,16 +122,30 @@ class Chain:
 
         self.chat_history.extend(
             [
-                {"role": 'system', "content": prompt},
-                {"role": 'user', "content": ""}
+                {"role": 'user', "content": prompt}
             ]
         )
 
-        with self.console.status("Generating code script..."):
-            completion = self.agent.completions(self.chat_history, stream=False)
-            code = extract_code(completion.choices[0].message.content)
+        text = ""
+        completion = self.agent.completions(self.chat_history, stream=True)
 
-        return code
+        with Live(console=self.console) as live:
+            for token in completion:
+                content = token.choices[0].delta.content
+                if content:
+                    text = text + content
+                    live.update(
+                        Panel(Markdown(text), title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
+                        refresh=True
+                    )
+
+                stop_reason = token.choices[0].finish_reason
+                if stop_reason == "stop":
+                    code = extract_code(text)
+                    if code:
+                        with open(self.target_source, 'w') as file:
+                            file.write(code)
+                        self.console.print(f"Code generated to: {self.target_source}")
 
     def start(self):
         """
@@ -127,9 +158,23 @@ class Chain:
             if self.target_source is None:
                 requirements = self.ask("What are the user requirements for the file name?")
                 if requirements:
-                    self.console.print(f"The generated file name is: {self.gen_file_name(requirements)}")
+                    self.target_source = self.gen_file_name(requirements)
+                    self.console.print(f"The generated file name is: {self.target_source}")
 
+            # working on the task content.
+            task_cur = 0
             for task in self.step.tasks:
-                pass
+                if task_cur < self.project_state.task:
+                    continue
+                else:
+                    self.console.log(f"Working on task {task_cur + 1}/{len(self.step.tasks)}")
+                    self.project_state.task = task_cur
+                    if task.kind == 'generation':
+                        self.gen_task_content(task)
+                    elif task.kind == 'multiple_choice':
+                        self.ask_choice(task.description, task.resources)
 
+                task_cur += 1
             is_running = False
+
+        update_project_state(self.project_home, self.project_state.dict(exclude_none=True))

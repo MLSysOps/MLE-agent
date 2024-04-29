@@ -4,7 +4,7 @@ description: "Data collection in machine learning involves gathering, storing, a
 tasks:
   - name: "Identify Data Sources"
     kind: "multiple_choice"
-    description: "Identify the sources of data that are relevant to the problem you are trying to solve."
+    description: "Please select the data sources you will be using to collect data."
     resources:
       - name: "Databases"
       - name: "APIs"
