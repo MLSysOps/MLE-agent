@@ -110,9 +110,9 @@ class Chain:
 
         if self.project_state.target_file:
             sys_prompt = f"""
-            You are an Machine learning engineer, and you are currently working on an ML project using 
-            {self.project_state.lang} as the primary language.
-            Please modify (or add new features to) the following code to meet the task requirements. 
+            You are an Machine learning engineer, and you are currently working on an ML project using
+             {self.project_state.lang} as the primary language.
+            Please modify (or add new features to) the following code to meet the task requirements.
             
             Existing Code: {read_file_to_string(self.project_state.target_file)}
             
