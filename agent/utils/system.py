@@ -1,9 +1,7 @@
 import os
 import re
 import yaml
-from pydantic import BaseModel
 from rich.console import Console
-from typing import Type, TypeVar
 
 from agent.utils import Config
 from agent.types import ProjectState
@@ -184,3 +182,20 @@ def load_yaml_file(file_path: str):
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file)
     return data
+
+
+def read_file_to_string(file_path: str):
+    """
+    Reads the contents of a file and returns it as a string.
+
+    Args:
+    file_path (str): The path to the file that needs to be read.
+
+    Returns:
+    str: The contents of the file as a string.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+    except FileNotFoundError:
+        return None
