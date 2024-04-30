@@ -49,7 +49,7 @@ def vis_agent(input: str, llm: BaseChatModel):
     )
 
     chain = prompt | llm | output_parser
-    return chain.invoke({"input_file_path": input.split("\n")[0], "data_header": input.split("\n")[1:]})
+    return chain.invoke({"input_file_path": input.split("\n")[0], "sample_data": input.split("\n")[1:]})
 
 
 if __name__ == "__main__":
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
-    prompt = ("output.csv \n text, label")
+    prompt = ("output.csv \n TEXT, LABEL")
 
     vis_code = vis_agent.invoke(
         input=prompt,
