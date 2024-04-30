@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Read the data from output.csv
-data = pd.read_csv('output.csv')
+data = pd.read_csv('../output.csv')
 
 # Extract the headers for visualization
 headers = ['TEXT', 'LABEL']

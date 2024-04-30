@@ -53,7 +53,7 @@ def vis_agent(input: str, llm: BaseChatModel):
 
 
 if __name__ == "__main__":
-    config = load_config('../credential.json')
+    config = load_config('open_ai_key.json')
 
     OPENAI_API_KEY = config["OPENAI_API_KEY"]
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         llm=llm  # Assuming 'llm' is your instantiated language model
     )
 
-    with open("data_vis_GENERATED.py", "w") as py_file:
+    with open("imdb_project/data_vis_GENERATED.py", "w") as py_file:
         py_file.write(vis_code)
 
     print(vis_code)

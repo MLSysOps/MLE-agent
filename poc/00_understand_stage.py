@@ -56,7 +56,7 @@ def analyze_ml_development_stage(input: str, llm: BaseChatModel) -> MLDevelopmen
 
 if __name__ == "__main__":
 
-    config = load_config('../credential.json')
+    config = load_config('open_ai_key.json')
     OPENAI_API_KEY = config["OPENAI_API_KEY"]
     # Example usage:
     llm = ChatOpenAI(api_key=OPENAI_API_KEY)
