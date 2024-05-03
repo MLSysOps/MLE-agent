@@ -1,6 +1,8 @@
 import os
 import re
+import sys
 import yaml
+import subprocess
 from rich.console import Console
 
 from agent.utils import Config
@@ -199,3 +201,24 @@ def read_file_to_string(file_path: str):
             return file.read()
     except FileNotFoundError:
         return None
+
+
+def run_command(command):
+    """
+    Run a command in the shell and return the output and error.
+    :param command: the input command to run.
+    :return: the output and error.
+    """
+    try:
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+        output = ''
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+            output += line
+
+        return output
+    except Exception as e:
+        return str(e)
