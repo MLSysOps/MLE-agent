@@ -15,7 +15,6 @@ tasks:
   - name: "Collect Data"
     kind: "code_generation"
     description: "Collect data from the resources and store it in a structured format for analysis."
-    debug: "Please modify the above code to make the code is running without any errors."
   - name: "Train Text Classification Model"
     kind: "code_generation"
     description: "Train a text classification model using the collected data."

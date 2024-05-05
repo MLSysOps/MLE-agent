@@ -104,9 +104,9 @@ def update_project_state(project_path: str, content_dict: dict = None):
     try:
         with open(file_path, 'w') as file:
             yaml.dump(content_dict, file)
-        console.log(f"[green]File '{file_path}' updated successfully.")
+        console.log(f"[green]Project state updated successfully.")
     except IOError as error:
-        console.log(f"[red]Updating the file '{file_path}' failed due to: {error}")
+        console.log(f"[red]Updating the project state file '{file_path}' failed due to: {error}")
 
 
 def extract_and_save_file(input_text):

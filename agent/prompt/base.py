@@ -34,9 +34,24 @@ def pmpt_chain_code(lang: str, code: str) -> str:
     return f"""
     You are an Machine learning engineer, and you are currently working on an ML project using
      {lang} as the primary language.
-    Please modify (or add new features to) the following code to meet the task requirements.
+    Please modify (or add new changes to) the following code to meet the task requirements.
 
     Existing Code: {code}
+
+    The output format should be:
+
+    Code: {{code}}
+    """
+
+
+def pmpt_chain_debug(lang: str, code: str, error_log: str) -> str:
+    return f"""
+    You are an Machine learning engineer, and you are debugging a {lang} script with the source code and the error logs.
+    Please make sure the modified code meets the task requirements and can run successfully.
+
+    Existing Code: {code}
+    
+    Error Log: {error_log}
 
     The output format should be:
 
@@ -55,10 +70,4 @@ def pmpt_chain_filename(lang: str) -> str:
 
     File Name: {{name}}
 
-    """
-
-
-def pmpt_ml_project():
-    return f"""
-    
     """
