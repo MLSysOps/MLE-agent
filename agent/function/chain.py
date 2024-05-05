@@ -60,7 +60,6 @@ class Chain:
     def handle_streaming(self):
         """
         Handle the streaming completion.
-        :param completion: the completion.
         :return: the result.
         """
         text = ""
@@ -102,6 +101,7 @@ class Chain:
             target_name = extract_file_name(completion.choices[0].message.content)
             self.target_source = os.path.join(self.project_state.path, target_name)
 
+        # TODO: handle the keyboard interrupt.
         self.console.print(f"The generated file name is: {self.target_source}")
         confirm = questionary.confirm("Do you want to use this name?").ask()
         if not confirm:
@@ -133,7 +133,7 @@ class Chain:
             else:
                 self.console.log(
                     f"File {target_source} not found. "
-                    f"Please make sure the current script exists or generate a new one by deleting the `target_file` in the project.yml \n"
+                    f"Please make sure the script exists or deleting the `target_file` in the project.yml \n"
                 )
                 return None
 
@@ -158,16 +158,31 @@ class Chain:
 
         code = self.handle_streaming()
         # TODO: allow generating the command to run the code script.
+        # TODO: allow handling the issues that are not comes from the code script.
+        # TODO: allow handling the program timeout.
         if task.debug:
-            with self.console.status("Running the code script..."):
-                run_log, exit_code = run_command(["python", self.target_source])
-                console.log(run_log)
+            debug_success = False
+            command = f"python {self.target_source}"
+            with self.console.status(f"Running the code script with command: {command}"):
+                run_log, exit_code = run_command([command])
 
             if exit_code != 0:
                 for attempt in range(task.debug):
                     self.console.log("Debugging the code script...")
-                    self.chat_history.append({"role": 'system', "content": pmpt_chain_debug(language, code, run_log)})
+                    self.chat_history.append(
+                        {"role": 'user', "content": pmpt_chain_debug(language, self.user_requirement, code, run_log)})
                     code = self.handle_streaming()
+                    with self.console.status(f"Running the code script..."):
+                        run_log, exit_code = run_command([command])
+
+                    if exit_code == 0:
+                        debug_success = True
+                        self.console.log("Debugging successful, the code script has been saved.")
+                        break
+
+                if not debug_success:
+                    self.console.log(f"Debugging failed after {task.debug} attempts.")
+                    return None
 
         return code
 
@@ -176,42 +191,48 @@ class Chain:
         Execute the chain.
         :return: the result of the chain.
         """
-        is_running = True
-        while is_running:
-            if self.project_state.user_requirement:
-                self.console.print(f"User Requirement: {self.project_state.user_requirement}")
-            else:
-                self.user_requirement = questionary.text("What are the user requirements for the file name?").ask()
-                self.project_state.user_requirement = self.user_requirement
+        try:
+            is_running = True
+            while is_running:
+                if self.project_state.user_requirement:
+                    self.console.print(f"User Requirement: {self.project_state.user_requirement}")
+                else:
+                    self.user_requirement = questionary.text("What are the user requirements for the file name?").ask()
+                    self.project_state.user_requirement = self.user_requirement
 
-            if self.target_source is None:
-                if self.user_requirement:
-                    self.target_source = self.gen_file_name(self.user_requirement)
-                    self.console.print(f"The generated file name is: {self.target_source}")
+                if self.target_source is None:
+                    if self.user_requirement:
+                        self.target_source = self.gen_file_name(self.user_requirement)
+                        if self.target_source is None:
+                            return
+                        self.console.print(f"The generated file name is: {self.target_source}")
+                        self.update_project_state()
+
+                # working on the task content.
+                task_params = None
+                task_num = len(self.step.tasks)
+                for task in self.step.tasks:
+                    if self.project_state.task < task_num:
+                        self.console.log(f"Working on task: {task.name} ({self.project_state.task + 1}/{task_num})")
+                        if task.kind == 'code_generation':
+                            result = self.gen_task_content(task, task_params)
+                            if result is None:
+                                self.console.log("[red]Task failed. Aborting the chain.")
+                                return
+                            task_params = None
+
+                        if task.kind == 'multiple_choice':
+                            task_params = self.ask_choice(task)
+
+                        self.project_state.task += 1
+
+                    # update the project state after each task.
                     self.update_project_state()
 
-            # working on the task content.
-            task_params = None
-            task_num = len(self.step.tasks)
-            for task in self.step.tasks:
-                if self.project_state.task < task_num:
-                    self.console.log(f"Working on task: {task.name} ({self.project_state.task + 1}/{task_num})")
-                    if task.kind == 'code_generation':
-                        result = self.gen_task_content(task, task_params)
-                        if result is None:
-                            self.console.log("[red]Task failed. Aborting the chain.")
-                            return
-                        task_params = None
-
-                    if task.kind == 'multiple_choice':
-                        task_params = self.ask_choice(task)
-
-                    self.project_state.task += 1
-
-                # update the project state after each task.
-                self.update_project_state()
-
-            is_running = False
-            if self.project_state.task == task_num:
-                self.console.print("Looks like all tasks are completed.")
-                return
+                is_running = False
+                if self.project_state.task == task_num:
+                    self.console.print("Looks like all tasks are completed.")
+                    return
+        except KeyboardInterrupt:
+            self.console.print("The chain has been interrupted.")
+            return

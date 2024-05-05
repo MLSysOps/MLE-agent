@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import yaml
 import subprocess
 from rich.console import Console
@@ -141,7 +140,7 @@ def extract_and_save_file(input_text):
     return project_file_path, code
 
 
-def extract_file_name(text: str) -> str:
+def extract_file_name(text: str):
     """
     Extracts the file name from a given text string.
 
@@ -158,7 +157,7 @@ def extract_file_name(text: str) -> str:
         return None
 
 
-def extract_code(text: str) -> str:
+def extract_code(text: str):
     """
     Extracts the code block from a given text string.
 
@@ -218,6 +217,7 @@ def run_command(command):
             if not line and process.poll() is not None:
                 break
             output += line
+            print(line, end='')
 
         exit_code = process.wait()
         return output, exit_code
