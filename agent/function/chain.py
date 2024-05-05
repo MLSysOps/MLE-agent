@@ -9,6 +9,7 @@ from prompt_toolkit.history import FileHistory
 from agent.utils import *
 from agent.types import Step, Task
 from agent.const import CONFIG_TASK_HISTORY_FILE
+from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename
 
 config = Config()
 
@@ -53,17 +54,7 @@ class Chain:
         Generate a file name.
         :return: the file name.
         """
-        prompt = f"""
-        You are an Machine learning engineer, and you are currently working
-         on an ML project using {self.project_state.lang} as the primary language.
-        Now are are given a user requirement to generate a file name for the current task,
-         note the file suffix (e.g., .py) should be correct.
-        
-        Output format should be:
-        
-        File Name: {{name}}
-        
-        """
+        prompt = pmpt_chain_filename(self.project_state.lang)
         self.user_requirement = user_requirement
         self.chat_history.extend(
             [
@@ -98,28 +89,12 @@ class Chain:
 
         :return: the content of the task.
         """
-        sys_prompt = f"""
-        You are an Machine learning engineer, and you are currently working on an
-         ML project using {self.project_state.lang} as the primary language.
-        Please generate a code script for the current task based on following information.
-        
-        Output format should be:
-        
-        Code: {{code}}
-        """
-
+        sys_prompt = pmpt_chain_init(self.project_state.lang)
         if self.project_state.target_file:
-            sys_prompt = f"""
-            You are an Machine learning engineer, and you are currently working on an ML project using
-             {self.project_state.lang} as the primary language.
-            Please modify (or add new features to) the following code to meet the task requirements.
-            
-            Existing Code: {read_file_to_string(self.project_state.target_file)}
-            
-            The output format should be:
-        
-            Code: {{code}}
-            """
+            sys_prompt = pmpt_chain_code(
+                self.project_state.lang,
+                read_file_to_string(self.project_state.target_file)
+            )
 
         task_prompt = f"""
         User Requirement: {self.user_requirement}
@@ -182,7 +157,7 @@ class Chain:
             task_num = len(self.step.tasks)
             for task in self.step.tasks:
                 if self.project_state.task < task_num:
-                    self.console.log(f"Working on task {self.project_state.task + 1}/{task_num}")
+                    self.console.log(f"Working on task: {task.name} ({self.project_state.task + 1}/{task_num})")
                     if task.kind == 'code_generation':
                         self.gen_task_content(task, task_params)
                         task_params = None

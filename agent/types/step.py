@@ -19,6 +19,7 @@ class Task(BaseModel):
     description: str
     resources: Optional[List[Resource]] = None
     functions: Optional[List[str]] = None
+    debug: Optional[str] = None
 
 
 class Step(BaseModel):

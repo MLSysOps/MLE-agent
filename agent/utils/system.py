@@ -205,9 +205,9 @@ def read_file_to_string(file_path: str):
 
 def run_command(command):
     """
-    Run a command in the shell and return the output and error.
+    Run a command in the shell and return the output, error, and exit status.
     :param command: the input command to run.
-    :return: the output and error.
+    :return: a tuple containing the output, error (if any), and exit status.
     """
     try:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -219,6 +219,7 @@ def run_command(command):
                 break
             output += line
 
-        return output
+        exit_code = process.wait()
+        return output, exit_code
     except Exception as e:
-        return str(e)
+        return str(e), -1
