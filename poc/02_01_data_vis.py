@@ -23,12 +23,12 @@ def vis_agent(input: str, llm: BaseChatModel):
     prompt = PromptTemplate(
         template="""
         
-        System: You play as a professional data scientist. You are currently in the Data Engineering stage. You can read data 
-        and then use tools like pandas, numpy, and matplotlib to visualize the data. 
+        System: You play as a professional data scientist. You are currently in the Data Engineering stage. You can read data
+        and then use tools like pandas, numpy, and matplotlib to visualize the data.
         
-        The first line of input is a file name with a path. 
+        The first line of input is a file name with a path.
         
-        First, you should write code to read the data from {input_file_path} base on its suffix using proper tools like pandas, 
+        First, you should write code to read the data from {input_file_path} base on its suffix using proper tools like pandas,
         etc.
         
         The second line of input is the header of the data you want to visualize.
@@ -37,8 +37,8 @@ def vis_agent(input: str, llm: BaseChatModel):
         
         The code must be tailored to the user's input and the text in the figure must be too.
         
-        Your output should be purely python code that can be run to visualize the data. Please do not include 
-        ```in front 
+        Your output should be purely python code that can be run to visualize the data. Please do not include
+        ```in front
         of and after the code block.
         
         input: {input_file_path} \n {sample_data}

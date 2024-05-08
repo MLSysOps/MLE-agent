@@ -26,7 +26,7 @@ def model_selection_agent(input: str, llm: BaseChatModel):
         System: You play as a professional machine learning engineer. You are currently in the model training stage.
         You need to select and load a model for users to build a baseline given users query.
 
-        Your output should be purely python code that can be run to load the model from appropriate library. 
+        Your output should be purely python code that can be run to load the model from appropriate library.
         
         The user's input description is: {query}
         

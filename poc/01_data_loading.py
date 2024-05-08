@@ -68,17 +68,17 @@ def data_load_agent(input: str, llm: BaseChatModel):
     output_parser = StrOutputParser()
     prompt = PromptTemplate(
         template="""
-        You play as a professional data scientist. You are currently in the Data Engineering stage. You will understand 
+        You play as a professional data scientist. You are currently in the Data Engineering stage. You will understand
         users input and generate code to help users load data from Snowflake step by step. Please import the necessary
         packages to make sure the code can run successfully.
         
-        First, you should understand users' input and generate a SQL query to load data from Snowflake. 
+        First, you should understand users' input and generate a SQL query to load data from Snowflake.
         Do not add ; at the end of the query.
         
         The snowflake credentials are stored in ../snowflake_key.json. Please make sure to use the file to
         load the credentials and connect to snowflake.
         
-        Then, you should write code to execute the SQL query and load the data into a DataFrame. 
+        Then, you should write code to execute the SQL query and load the data into a DataFrame.
         Remember to close the connection.
         
         Finally, you will write code to show some data from the DataFrame.
