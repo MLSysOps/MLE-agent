@@ -1,0 +1,3 @@
+step: 3
+name: "Model Training"
+description: "Model training is the process where the selected machine learning model is trained on the preprocessed data. This involves feeding the data into the model multiple times, adjusting model parameters (weights) to minimize a loss function, and using optimization techniques like gradient descent to find the best model parameters."

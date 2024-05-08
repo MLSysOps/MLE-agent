@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from setuptools import find_packages, setup
 
-from agent.version import __version__
 # read the contents of README file
 from os import path
 from io import open  # for Python 2 and 3 compatibility
@@ -42,6 +41,10 @@ setup(
             "mle=agent.cli.cli:cli",
         ]
     },
+    package_data={
+        'steps': ['agent/templates/*.yml']
+    },
+    zip_safe=False,
     include_package_data=True,
     install_requires=requirements,
     setup_requires=['setuptools>=38.6.0'],

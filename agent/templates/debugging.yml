@@ -1,0 +1,15 @@
+step: 0
+name: "Debugging"
+description: "Debugging is the process of identifying and fixing errors in a software application."
+tasks:
+  - name: "Identify Bug"
+    kind: "reasoning"
+    description: "Please identify the bug and select the appropriate category to address the bug."
+    resources:
+      - name: "Code"
+      - name: "Running Environment"
+      - name: "File Operations"
+      - name: "Others"
+  - name: "Fix Bug"
+    kind: "code_generation"
+    description: "Based on the identified bug, the existing source code and the running logs, please fix the bug."

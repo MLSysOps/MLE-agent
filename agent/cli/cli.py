@@ -1,8 +1,13 @@
 import click
-import inquirer
+import questionary
 
 import agent
 from agent.utils import *
+from agent.types import Step
+from agent.function import Chat, Chain
+from agent.model import OpenAIModel
+from agent.prompt import pmpt_sys_init
+from agent.templates import load_step, get_step_mapping
 
 console = Console()
 # avoid the tokenizers parallelism issue
@@ -18,16 +23,11 @@ def build_config(general: bool = False):
     """
     configuration = Config()
     platform = LLM_TYPE_OPENAI
-    exe_questions = [
-        inquirer.Text(
-            "api_key",
-            message="What is your OpenAI API key?"
-        )
-    ]
+    api_key = questionary.text("What is your OpenAI API key?").ask()
 
     general_config = {
         'platform': platform,
-        'api_key': inquirer.prompt(exe_questions)['api_key'],
+        'api_key': api_key,
     }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
@@ -44,6 +44,25 @@ def build_config(general: bool = False):
         }
 
         configuration.write_section(platform, platform_config)
+
+
+def load_model():
+    """
+    load_model: load the model based on the configuration.
+    """
+    configuration = Config()
+    config_dict = configuration.read()
+    plat = config_dict['general']['platform']
+
+    model = None
+    if plat == LLM_TYPE_OPENAI:
+        model = OpenAIModel(
+            api_key=config_dict[CONFIG_SEC_GENERAL][CONFIG_SEC_API_KEY],
+            model=config_dict[LLM_TYPE_OPENAI].get('model'),
+            temperature=float(config_dict[LLM_TYPE_OPENAI]['temperature'])
+        )
+
+    return model
 
 
 @click.group()
@@ -65,31 +84,104 @@ def config(general):
 
 
 @cli.command()
-@click.argument('text', nargs=-1)
-def ask(text):
+def start():
     """
-    ASK the agent a question to build an ML project.
+    start: start the chat with LLM.
     """
-
-    console.log(text)
+    chain = Chain(load_step('data_collection.yml'), load_model())
+    chain.start()
 
 
 @cli.command()
-@click.argument('name')
-def new(name: str):
+def chat():
+    """
+    chat: start an interactive chat with LLM to work on your ML project.
+    """
+    # check the system configuration
+    configuration = Config()
+    if configuration.read() is None:
+        build_config()
+
+    model = load_model()
+    console.log("Welcome to MLE-Agent! :sunglasses:")
+    if model:
+        console.log(f"Model loaded: {model.model_type}, {model.model}")
+    console.line()
+
+    if configuration.read().get('project') is None:
+        console.log("You have not set up a project yet.")
+        console.log("Please create a new project first using 'mle new' command.")
+        return
+
+    project_path = configuration.read()['project']['path']
+    project_state = read_project_state(os.path.join(project_path, CONFIG_PROJECT_FILE))
+    console.log("> Current project:", project_path)
+
+    selected_language = project_state.lang
+    current_step = project_state.step
+    console.log("> Project language:", selected_language)
+
+    # start the interactive chat
+    console.line()
+    chat_app = Chat(model)
+    # set the initial system prompt
+    chat_app.add(role='system', content=pmpt_sys_init(selected_language, load_step(get_step_mapping(current_step))))
+    chat_app.start()
+
+
+@cli.command()
+def new():
     """
     new: create a new machine learning project.
     """
     configuration = Config()
-    project_initial_config = {
-        'name': name,
-        'description': 'A new machine learning project.',  # default description
-        'llm': configuration.read()['general']['platform'],
-        'step': 0
-    }
+    name = questionary.text("What is the name of the project?").ask()
+    if not name:
+        return
+
+    description = questionary.text("What is the description of this project? (Optional)").ask()
+    language = questionary.text("What is the major language for this project?").ask()
+
+    if not language:
+        console.log("Please provide a valid language. Aborted.")
+        return
 
     project_path = create_directory(name)
-    update_project_state(project_path, project_initial_config)
+    update_project_state(
+        project_path,
+        {
+            'step': 0,
+            'task': 0,
+            'name': name,
+            'description': description,
+            'llm': configuration.read()['general']['platform'],
+            'path': project_path,
+            'lang': language
+        }
+    )
+    configuration.write_section(
+        CONFIG_SEC_PROJECT, {
+            'path': project_path
+        }
+    )
+
+
+@cli.command()
+@click.argument('path', nargs=-1, type=click.Path(exists=True))
+def set_project(path):
+    """
+    project: set the current project.
+    :return:
+    """
+    configuration = Config()
+    project_path = " ".join(path)
+    project_config_path = os.path.join(project_path, CONFIG_PROJECT_FILE)
+    if not os.path.exists(project_config_path):
+        console.log("The project path is not valid. Please check if `project.yml` exists and try again.")
+        return
+
     configuration.write_section(CONFIG_SEC_PROJECT, {
         'path': project_path
     })
+
+    console.log(f"> Project set to {project_path}")

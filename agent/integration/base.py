@@ -1,11 +1,20 @@
-from abc import ABC, abstractmethod
+from .files import ReadPathFunc
 
 
-class Integration(ABC):
+def get_function(name: str):
+    """
+    Get the function by name.
+    :param name: the function name.
+    :return: the function.
+    """
+    if name == "read_path_content":
+        return ReadPathFunc
+    return None
 
-    def __init__(self):
-        self.integration_type = None
 
-    @abstractmethod
-    def get_credentials(self):
-        pass
+def get_all_func_schema():
+    """
+    Get all function schema.
+    :return: a list of function schema.
+    """
+    return [ReadPathFunc.openai_schema]

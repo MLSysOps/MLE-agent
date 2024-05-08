@@ -27,9 +27,12 @@ class Config:
 
         Returns: a dictionary of the configuration.
         """
-        self.reload_config(CONFIG_PATH)
-        config_dict = {}
+        if os.path.isfile(CONFIG_PATH):
+            self.reload_config(CONFIG_PATH)
+        else:
+            return None
 
+        config_dict = {}
         for section in self.config.sections():
             options_dict = {option: self.config.get(section, option) for option in self.config.options(section)}
             config_dict[section] = options_dict
@@ -54,20 +57,27 @@ class Config:
         else:
             raise ValueError("there is no '[openai]' section found in the configuration file.")
 
-    def write_section(self, section_name: str, config_dict: dict):
+    def write_section(self, section_name: str, config_dict: dict, overwrite: bool = False):
         """
         write_section: write the project configuration.
 
         @param section_name: the section name.
         @param config_dict: the configuration dictionary.
+        @param overwrite: a boolean indicating whether to overwrite the existing configuration.
 
         """
         if not self.config.has_section(section_name):
             self.config.add_section(section_name)
 
-        self.config[section_name] = config_dict
-
         # save the new configuration and reload.
         with open(self.config_path, 'w') as configfile:
-            self.config.write(configfile)
-            self.reload_config(self.config_path)
+            if overwrite:
+                self.config[section_name] = config_dict
+                self.config.write(configfile)
+                self.reload_config(self.config_path)
+            else:
+                existing_config = dict(self.read().get(section_name))
+                existing_config.update({key: value for key, value in config_dict.items() if key not in existing_config})
+                self.config[section_name] = existing_config
+                self.config.write(configfile)
+                self.reload_config(self.config_path)
