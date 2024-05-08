@@ -4,6 +4,8 @@ CONFIG_SEC_GENERAL = 'general'
 CONFIG_SEC_PROJECT = 'project'
 CONFIG_SEC_API_KEY = 'api_key'
 CONFIG_PROJECT_FILE = 'project.yml'
+CONFIG_CHAT_HISTORY_FILE = 'project.history'
+CONFIG_TASK_HISTORY_FILE = 'task.history'
 CONFIG_LLM_LIST = {  # with the default model.
     'OpenAI': 'gpt-3.5-turbo',
     'Gemini': 'gemini-pro',

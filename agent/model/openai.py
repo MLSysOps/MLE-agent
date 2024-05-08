@@ -1,15 +1,17 @@
 import importlib.util
 
 from .base import Model
+from agent.integration import get_all_func_schema
+from agent.const import LLM_TYPE_OPENAI
 
 
 class OpenAIModel(Model):
-    def __init__(self, api_key, version, temperature):
+    def __init__(self, api_key, model, temperature):
         """
         Initialize the OpenAI model.
         Args:
             api_key (str): The OpenAI API key.
-            version (str): The model version.
+            model (str): The model with version.
             temperature (float): The temperature value.
         """
         super().__init__()
@@ -26,12 +28,37 @@ class OpenAIModel(Model):
                 "More information, please refer to: https://openai.com/product"
             )
 
-        self.version = version
+        self.model = model
+        self.model_type = LLM_TYPE_OPENAI
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
-    def load_data(self, data):
-        pass
+    def completions(
+            self,
+            chat_history,
+            use_function=False,
+            stream=True
+    ):
+        """
+        Completions of the LLM model.
+        Args:
+            chat_history: The context (chat history).
+            use_function: The flag to use the function.
+            stream: The flag to stream the output.
+        """
 
-    def load_model(self, model_path):
-        pass
+        if use_function:
+            return self.client.chat.completions.create(
+                model=self.model,
+                messages=chat_history,
+                temperature=self.temperature,
+                functions=get_all_func_schema(),
+                stream=stream
+            )
+
+        return self.client.chat.completions.create(
+            model=self.model,
+            messages=chat_history,
+            temperature=self.temperature,
+            stream=stream
+        )
