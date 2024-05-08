@@ -1,6 +1,7 @@
-import snowflake.connector
-import pandas as pd
 import json
+
+import pandas as pd
+import snowflake.connector
 
 # Load snowflake credentials from file
 with open('../snowflake_key.json', 'r') as f:

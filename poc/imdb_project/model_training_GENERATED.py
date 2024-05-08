@@ -1,11 +1,12 @@
-import snowflake.connector
-import pandas as pd
 import json
-from transformers import DistilBertForSequenceClassification, DistilBertTokenizer
-from sklearn.model_selection import train_test_split
+
+import pandas as pd
+import snowflake.connector
 import torch
-from torch.utils.data import DataLoader, Dataset
 import wandb
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, Dataset
+from transformers import DistilBertForSequenceClassification, DistilBertTokenizer
 
 # Load snowflake credentials from file
 with open('../snowflake_key.json', 'r') as f:
@@ -34,6 +35,7 @@ conn.close()
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 inputs = tokenizer(df['TEXT'].tolist(), padding=True, truncation=True, max_length=512, return_tensors="pt")
 
+
 # Create a custom dataset for PyTorch
 class CustomDataset(Dataset):
     def __init__(self, encodings, labels):
@@ -48,6 +50,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.labels)
 
+
 # Split the data into training and validation sets
 X_train, X_val, y_train, y_val = train_test_split(inputs, df['LABEL'], test_size=0.2, random_state=42)
 
@@ -61,7 +64,8 @@ epochs = 3
 learning_rate = 5e-5
 
 # Initialize wandb
-wandb.init(project="your_project_name", config={"epochs": epochs, "batch_size": batch_size, "learning_rate": learning_rate})
+wandb.init(project="your_project_name",
+           config={"epochs": epochs, "batch_size": batch_size, "learning_rate": learning_rate})
 config = wandb.config
 
 # Initialize the model
