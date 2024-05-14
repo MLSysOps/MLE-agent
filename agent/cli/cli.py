@@ -3,11 +3,9 @@ import questionary
 
 import agent
 from agent.utils import *
-from agent.types import Step
-from agent.function import Chat, Chain
 from agent.model import OpenAIModel
 from agent.prompt import pmpt_sys_init
-from agent.templates import load_step, get_step_mapping
+from agent.function import Chat, Chain
 
 console = Console()
 # avoid the tokenizers parallelism issue
@@ -93,7 +91,8 @@ def start():
     if configuration.read() is None:
         build_config()
 
-    chain = Chain(load_step('data_collection.yml'), load_model())
+    project_plan_file = os.path.join(configuration.read()['project']['path'], CONFIG_PROJECT_FILE)
+    chain = Chain(load_plan(str(project_plan_file)), load_model())
     chain.start()
 
 
@@ -119,18 +118,17 @@ def chat():
         return
 
     project_path = configuration.read()['project']['path']
-    project_state = read_project_state(os.path.join(project_path, CONFIG_PROJECT_FILE))
+    project_plan = read_project_plan(str(os.path.join(project_path, CONFIG_PROJECT_FILE)))
     console.log("> Current project:", project_path)
 
-    selected_language = project_state.lang
-    current_step = project_state.step
+    selected_language = project_plan.lang
     console.log("> Project language:", selected_language)
 
     # start the interactive chat
     console.line()
     chat_app = Chat(model)
     # set the initial system prompt
-    chat_app.add(role='system', content=pmpt_sys_init(selected_language, load_step(get_step_mapping(current_step))))
+    chat_app.add(role='system', content=pmpt_sys_init(selected_language, project_plan))
     chat_app.start()
 
 
@@ -152,18 +150,19 @@ def new():
         return
 
     project_path = create_directory(name)
-    update_project_state(
+    update_project_plan(
         project_path,
         {
-            'step': 0,
-            'task': 0,
             'name': name,
+            'current_task': 0,
             'description': description,
             'llm': configuration.read()['general']['platform'],
-            'path': project_path,
+            'project': project_path,
             'lang': language
         }
     )
+
+    # write the project configuration
     configuration.write_section(
         CONFIG_SEC_PROJECT, {
             'path': project_path

@@ -1,3 +1,0 @@
-step: 4
-name: "Model Evaluation"
-description: "After training, the model is evaluated to assess its performance. This typically includes using metrics such as accuracy, precision, recall, and F1-score for classification models, or mean squared error and R² for regression models. Evaluation helps in determining how well the model is likely to perform on unseen data."

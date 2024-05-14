@@ -22,8 +22,13 @@ class Task(BaseModel):
     debug: Optional[int] = None
 
 
-class Step(BaseModel):
-    step: int
+class Plan(BaseModel):
     name: str
-    description: Optional[str] = None
+    project: str
+    current_task: int
+    lang: str
+    llm: str
+    target: Optional[str] = None
+    requirement: Optional[str] = None
     tasks: Optional[List[Task]] = None
+    description: Optional[str] = None

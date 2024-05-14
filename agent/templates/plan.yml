@@ -1,0 +1,25 @@
+name: "The name of AI project"
+description: "The description of the AI project"
+current_task: 0
+lang: "python"
+llm: "openAI/gpt-3.5-turbo"
+target: "<the path to the generate code>"
+requirement: "The requirements of the AI project"
+tasks:
+  - name: "Identify Data Sources"
+    kind: "multiple_choice"
+    description: "Please select the data sources you will be using to collect data."
+    resources:
+      - name: "Databases"
+      - name: "APIs"
+        choices: [ "Huggingface Datasets", "PyTorch Datasets", "Scikit-learn Datasets" ]
+      - name: "Files"
+      - name: "Cloud Storage"
+        choices: [ "AWS S3", "Snowflake" ]
+  - name: "Collect Data"
+    kind: "code_generation"
+    description: "Collect data from the resources and store it in a structured format for analysis."
+  - name: "Train Model"
+    debug: 3
+    kind: "code_generation"
+    description: "Train a text classification model using the collected data."

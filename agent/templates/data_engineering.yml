@@ -1,3 +1,0 @@
-step: 1
-name: "Data Engineering"
-description: "Data engineering focuses on the practical application of data collection and involves processing, cleansing, and verifying the integrity of data used for analysis. This step ensures that the dataset is ready for training by handling missing data, encoding categorical features, normalizing numerical data, and partitioning datasets into training, validation, and test sets."

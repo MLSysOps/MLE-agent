@@ -7,7 +7,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
 from agent.utils import *
-from agent.types import Step, Task
+from agent.types import Plan, Task
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
@@ -15,14 +15,13 @@ config = Config()
 
 
 class Chain:
-
-    def __init__(self, step: Step, llm_agent):
+    def __init__(self, plan: Plan, llm_agent):
         """
         Chain: the interactive chain of the current ML task.
-        :param step: the step of the chain.
+        :param plan: the plan of the chain.
         :param llm_agent: the language model agent.
         """
-        self.step = step
+        self.plan = plan
         self.agent = llm_agent
         self.chat_history = []
         self.console = Console()
@@ -32,22 +31,20 @@ class Chain:
             self.console.print("Please create a new project first using 'mle new' command then try again.")
             raise SystemExit
 
-        self.project_path = config.read()['project']['path']
-        self.project_state = read_project_state(str(os.path.join(self.project_path, CONFIG_PROJECT_FILE)))
         self.project_home = config.read().get('project')['path']
         self.session = PromptSession(
             history=FileHistory(str(os.path.join(self.project_home, CONFIG_TASK_HISTORY_FILE)))
         )
-        self.target_source = self.project_state.target_file
-        self.user_requirement = self.project_state.user_requirement
+        self.target_source = self.plan.target
+        self.user_requirement = self.plan.requirement
 
     def update_project_state(self):
         """
         Update the project state.
         :return: None
         """
-        update_project_state(self.project_home, self.project_state.dict(exclude_none=True))
-        return self.project_state
+        update_project_plan(self.project_home, self.plan.dict(exclude_none=True))
+        return self.plan
 
     def ask_choice(self, task: Task):
         """
@@ -93,7 +90,7 @@ class Chain:
         Generate a file name.
         :return: the file name.
         """
-        prompt = pmpt_chain_filename(self.project_state.lang)
+        prompt = pmpt_chain_filename(self.plan.lang)
         self.user_requirement = user_requirement
         self.chat_history.extend(
             [
@@ -105,7 +102,7 @@ class Chain:
         with self.console.status("Generating file name..."):
             completion = self.agent.completions(self.chat_history, stream=False)
             target_name = extract_file_name(completion.choices[0].message.content)
-            self.target_source = os.path.join(self.project_state.path, target_name)
+            self.target_source = str(os.path.join(self.plan.project, target_name))
 
         # TODO: handle the keyboard interrupt.
         self.console.print(f"The generated file name is: {self.target_source}")
@@ -113,10 +110,10 @@ class Chain:
         if not confirm:
             new_name = questionary.text("Please provide a new file name:", default=self.target_source).ask()
             if new_name:
-                self.target_source = os.path.join(self.project_state.path, new_name)
+                self.target_source = os.path.join(self.plan.path, new_name)
 
         # clear the chat history
-        self.project_state.target_file = self.target_source
+        self.plan.target = self.target_source
         self.chat_history = []
 
         return self.target_source
@@ -129,13 +126,13 @@ class Chain:
 
         :return: the content of the task.
         """
-        language = self.project_state.lang
-        target_source = self.project_state.target_file
+        language = self.plan.lang
+        target_source = self.plan.target
         sys_prompt = pmpt_chain_init(language)
         if target_source:
             source_content = read_file_to_string(target_source)
-            if source_content or self.project_state.task <= 1:
-                sys_prompt = pmpt_chain_code(self.project_state.lang, source_content)
+            if source_content or self.plan.current_task <= 1:
+                sys_prompt = pmpt_chain_code(self.plan.lang, source_content)
             else:
                 self.console.log(
                     f"File {target_source} not found. "
@@ -200,11 +197,11 @@ class Chain:
         try:
             is_running = True
             while is_running:
-                if self.project_state.user_requirement:
-                    self.console.print(f"User Requirement: {self.project_state.user_requirement}")
+                if self.plan.requirement:
+                    self.console.print(f"User Requirement: {self.plan.requirement}")
                 else:
                     self.user_requirement = questionary.text("What are the user requirements for the file name?").ask()
-                    self.project_state.user_requirement = self.user_requirement
+                    self.plan.requirement = self.user_requirement
 
                 if self.target_source is None:
                     if self.user_requirement:
@@ -215,11 +212,15 @@ class Chain:
                         self.update_project_state()
 
                 # working on the task content.
+                if self.plan.tasks is None:
+                    self.console.log("No tasks found in the project plan.")
+                    return
+
                 task_params = None
-                task_num = len(self.step.tasks)
-                for task in self.step.tasks:
-                    if self.project_state.task < task_num:
-                        self.console.log(f"Working on task: {task.name} ({self.project_state.task + 1}/{task_num})")
+                task_num = len(self.plan.tasks)
+                for task in self.plan.tasks:
+                    if self.plan.current_task < task_num:
+                        self.console.log(f"Working on task: {task.name} ({self.plan.current_task + 1}/{task_num})")
                         if task.kind == 'code_generation':
                             result = self.gen_task_content(task, task_params)
                             if result is None:
@@ -230,13 +231,13 @@ class Chain:
                         if task.kind == 'multiple_choice':
                             task_params = self.ask_choice(task)
 
-                        self.project_state.task += 1
+                        self.plan.current_task += 1
 
                     # update the project state after each task.
                     self.update_project_state()
 
                 is_running = False
-                if self.project_state.task == task_num:
+                if self.plan.current_task == task_num:
                     self.console.print("Looks like all tasks are completed.")
                     return
         except KeyboardInterrupt:

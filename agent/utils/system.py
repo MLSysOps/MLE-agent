@@ -5,8 +5,49 @@ import subprocess
 from rich.console import Console
 
 from agent.utils import Config
-from agent.types import ProjectState
+from agent.types import Plan
 from agent.const import CONFIG_PROJECT_FILE
+
+from typing import Type, TypeVar
+from pydantic import BaseModel, ValidationError
+
+T = TypeVar('T', bound=BaseModel)
+
+
+def load_plan(file_name: str) -> Plan:
+    """
+    Load a step from a .yaml file.
+    :param file_name: the name of the configuration file.
+    :return:
+    """
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    yml_path = os.path.join(dir_path, file_name)
+
+    with open(yml_path, 'r') as file:
+        data = yaml.safe_load(file)
+    try:
+        config = Plan(**data)
+        return config
+    except ValidationError as e:
+        print(f"Error in loading the plan file: {e}")
+        raise
+
+
+def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
+    """
+    Loads YAML data from a file and converts it into a Pydantic model.
+
+    Args:
+    file_path (str): Path to the YAML file.
+    model (Type[T]): The Pydantic model class to which the data should be converted.
+
+    Returns:
+    T: An instance of the specified Pydantic model class.
+    """
+    with open(file_path, 'r') as file:
+        data = yaml.safe_load(file)
+        return model(**data)
 
 
 def list_all_files(path):
@@ -63,10 +104,10 @@ def get_directory_name(path):
         return None
 
 
-def read_project_state(config_path: str = None):
+def read_project_plan(config_path: str = None):
     """
-    Read the project state.
-    :return: the project state.
+    Read the project plan.
+    :return: the project plan object.
     """
     console = Console()
     if not config_path:
@@ -79,7 +120,7 @@ def read_project_state(config_path: str = None):
     try:
         with open(config_path, 'r') as file:
             data = yaml.safe_load(file)
-            return ProjectState(**data)
+            return Plan(**data)
     except FileNotFoundError:
         console.log(f"[red]The file {config_path} does not exist.")
         return None
@@ -91,9 +132,9 @@ def read_project_state(config_path: str = None):
         return None
 
 
-def update_project_state(project_path: str, content_dict: dict = None):
+def update_project_plan(project_path: str, content_dict: dict = None):
     """
-    Update the project state.
+    Update the project plan.
     :param project_path: the path of the project.
     :param content_dict: the content dictionary to update.
     """

@@ -57,7 +57,7 @@ class Config:
         else:
             raise ValueError("there is no '[openai]' section found in the configuration file.")
 
-    def write_section(self, section_name: str, config_dict: dict, overwrite: bool = False):
+    def write_section(self, section_name: str, config_dict: dict, overwrite: bool = True):
         """
         write_section: write the project configuration.
 
