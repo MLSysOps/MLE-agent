@@ -26,6 +26,12 @@ class Chain:
         self.agent = llm_agent
         self.chat_history = []
         self.console = Console()
+        # if the project is not set up, then raise an error.
+        if config.read().get('project') is None:
+            self.console.print("You have not set up a project yet.")
+            self.console.print("Please create a new project first using 'mle new' command then try again.")
+            raise SystemExit
+
         self.project_path = config.read()['project']['path']
         self.project_state = read_project_state(str(os.path.join(self.project_path, CONFIG_PROJECT_FILE)))
         self.project_home = config.read().get('project')['path']

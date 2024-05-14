@@ -88,6 +88,11 @@ def start():
     """
     start: start the chat with LLM.
     """
+    # check the system configuration
+    configuration = Config()
+    if configuration.read() is None:
+        build_config()
+
     chain = Chain(load_step('data_collection.yml'), load_model())
     chain.start()
 
