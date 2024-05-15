@@ -200,7 +200,7 @@ class Chain:
                 if self.plan.requirement:
                     self.console.print(f"User Requirement: {self.plan.requirement}")
                 else:
-                    self.user_requirement = questionary.text("What are the user requirements for the file name?").ask()
+                    self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.user_requirement
 
                 if self.target_source is None:
@@ -208,12 +208,13 @@ class Chain:
                         self.target_source = self.gen_file_name(self.user_requirement)
                         if self.target_source is None:
                             return
-                        self.console.print(f"The generated file name is: {self.target_source}")
+                        self.console.print(f"The requirements are stored in: {self.target_source}")
                         self.update_project_state()
 
                 # working on the task content.
                 if self.plan.tasks is None:
-                    self.console.log("No tasks found in the project plan.")
+                    self.console.log("No tasks found in the project plan. Planning the tasks for you...")
+
                     return
 
                 task_params = None
