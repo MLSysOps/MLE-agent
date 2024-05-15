@@ -11,6 +11,8 @@ from agent.types import Plan, Task
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
+from .task_gen import plan_generator
+
 config = Config()
 
 
@@ -214,7 +216,8 @@ class Chain:
                 # working on the task content.
                 if self.plan.tasks is None:
                     self.console.log("No tasks found in the project plan. Planning the tasks for you...")
-
+                    # TODO: connect with the code generator.
+                    self.console.print(plan_generator(self.user_requirement, self.agent))
                     return
 
                 task_params = None
