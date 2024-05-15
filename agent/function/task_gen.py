@@ -4,7 +4,7 @@ from agent.templates import load_yml
 
 def plan_generator(requirement: str, llm_agent):
     prompt = f"""
-    You are an assistant that helps generate machine learning project plans based on the user's requirements. 
+    You are an assistant that helps generate machine learning project plans based on the user's requirements.
     The plan includes a list of tasks that can achieve the user's requirements.
     
     You should use the tasks defined in the task pool to generate a list,
