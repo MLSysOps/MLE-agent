@@ -12,7 +12,7 @@ from agent.templates.utils import match_plan
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
-from .generator import plan_generator, task_generator
+from .generator import plan_generator, task_selector, model_selector, dataset_selector
 
 config = Config()
 
@@ -218,9 +218,20 @@ class Chain:
                 if self.plan.tasks is None:
                     self.console.log("No tasks found in the project plan.")
                     with self.console.status("Planning the tasks for you..."):
-                        ml_task = task_generator(self.user_requirement, self.agent)
+                        ml_task = task_selector(self.user_requirement, self.agent)
                         self.console.print(f"[cyan]Task selected:[/cyan] {ml_task}")
-                        task_dicts = plan_generator(self.user_requirement, ml_task, self.agent)
+                        ml_model_framework = model_selector(self.user_requirement, self.agent)
+                        self.console.print(f"[cyan]Model selected:[/cyan] {ml_model_framework}")
+                        ml_dataset = dataset_selector(self.user_requirement, self.agent)
+                        self.console.print(f"[cyan]Dataset selected:[/cyan] {ml_dataset}")
+                        # generate the plan and tasks.
+                        task_dicts = plan_generator(
+                            self.user_requirement,
+                            self.agent,
+                            ml_task,
+                            ml_model_framework,
+                            ml_dataset
+                        )
                         self.console.print(task_dicts)
                         self.plan.tasks = []
                         for task_dict in task_dicts.get('tasks'):

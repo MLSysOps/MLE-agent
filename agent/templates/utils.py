@@ -34,3 +34,21 @@ def match_plan(task_dict: dict):
             return Task(**task)
 
     return None
+
+
+def get_models():
+    """
+    Load the models from the configuration files.
+    :return: the models.
+    """
+
+    return load_yml('resource.yml').get('model')
+
+
+def get_datasets():
+    """
+    Load the datasets from the configuration files.
+    :return: the datasets.
+    """
+
+    return load_yml('resource.yml').get('dataset')
