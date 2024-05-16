@@ -12,7 +12,13 @@ from agent.templates.utils import match_plan
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
-from .generator import plan_generator, task_selector, model_selector, dataset_selector
+from .generator import (
+    plan_generator,
+    task_selector,
+    model_selector,
+    dataset_selector,
+    dependency_generator
+)
 
 config = Config()
 
@@ -246,6 +252,18 @@ class Chain:
                     else:
                         self.console.print("Please check the plan and try again.")
                         return
+
+                # install the dependencies for this plan.
+                with self.console.status("Installing the dependencies for the plan..."):
+                    install_commands = dependency_generator(self.plan, self.agent).get('commands')
+                    self.console.log(f"[cyan]Commands are going to execute:[/cyan] {install_commands}")
+
+                # confirm the installation.
+                confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()
+                if confirm_install:
+                    run_command(install_commands)
+                else:
+                    self.console.print("Skipped the dependencies installation.")
 
                 task_params = None
                 task_num = len(self.plan.tasks)

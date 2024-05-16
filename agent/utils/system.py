@@ -14,6 +14,24 @@ from pydantic import BaseModel, ValidationError
 T = TypeVar('T', bound=BaseModel)
 
 
+def preprocess_json_string(json_string):
+    """
+    Preprocess a JSON string to handle single quotes and other special cases.
+    :param json_string: the input JSON string.
+    :return: the preprocessed JSON string.
+    """
+    # Replace single quotes with double quotes
+    json_string = re.sub(r"'", r'"', json_string)
+
+    # Handle cases where single quotes are used inside double quotes
+    json_string = re.sub(r'"\s*:\s*"', r'": "', json_string)
+    json_string = re.sub(r'"\s*,\s*"', r'", "', json_string)
+    json_string = re.sub(r'\[\s*"', r'["', json_string)
+    json_string = re.sub(r'"\s*\]', r'"]', json_string)
+
+    return json_string
+
+
 def load_plan(file_name: str) -> Plan:
     """
     Load a step from a .yaml file.
