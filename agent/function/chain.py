@@ -8,6 +8,7 @@ from prompt_toolkit.history import FileHistory
 
 from agent.utils import *
 from agent.types import Plan, Task
+from agent.templates.utils import match_plan
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
@@ -200,7 +201,7 @@ class Chain:
             is_running = True
             while is_running:
                 if self.plan.requirement:
-                    self.console.print(f"User Requirement: {self.plan.requirement}")
+                    self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
                 else:
                     self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.user_requirement
@@ -219,8 +220,21 @@ class Chain:
                     with self.console.status("Planning the tasks for you..."):
                         ml_task = task_generator(self.user_requirement, self.agent)
                         self.console.print(f"[cyan]Task selected:[/cyan] {ml_task}")
-                        self.console.print(plan_generator(self.user_requirement, ml_task, self.agent))
-                    return
+                        task_dicts = plan_generator(self.user_requirement, ml_task, self.agent)
+                        self.console.print(task_dicts)
+                        self.plan.tasks = []
+                        for task_dict in task_dicts.get('tasks'):
+                            task = match_plan(task_dict)
+                            if task:
+                                self.plan.tasks.append(task)
+
+                    # confirm the plan.
+                    confirm_plan = questionary.confirm("Are you sure to use this plan?").ask()
+                    if confirm_plan:
+                        self.update_project_state()
+                    else:
+                        self.console.print("Please check the plan and try again.")
+                        return
 
                 task_params = None
                 task_num = len(self.plan.tasks)

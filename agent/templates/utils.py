@@ -1,6 +1,8 @@
 import os
 import yaml
 
+from agent.types import Task
+
 
 def load_yml(file_name: str):
     """
@@ -16,3 +18,19 @@ def load_yml(file_name: str):
         data = yaml.safe_load(file)
 
     return data
+
+
+def match_plan(task_dict: dict):
+    """
+    Match a plan task name with the task description.
+    :param task_dict: the dictionary of tasks.
+    :return: a task object.
+    """
+
+    tasks = load_yml('plan.yml')
+    for task in tasks:
+        if task_dict.get('name').lower() == task['name'].lower():
+            task['description'] = task_dict.get('description')
+            return Task(**task)
+
+    return None

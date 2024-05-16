@@ -9,8 +9,11 @@
 - name: "Data Visualization"
   kind: "code_generation"
 - name: "Model Training"
+  debug: 3
   kind: "code_generation"
 - name: "Model Evaluation"
   kind: "code_generation"
 - name: "Model Deployment"
+  kind: "code_generation"
+- name: "Model Selection"
   kind: "code_generation"
