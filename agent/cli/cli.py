@@ -133,14 +133,16 @@ def chat():
 
 
 @cli.command()
-def new():
+@click.argument('name')
+def new(name):
     """
-    new: create a new machine learning project.
+    new: create a new machine learning project with the given NAME.
     """
-    configuration = Config()
-    name = questionary.text("What is the name of the project?").ask()
     if not name:
+        console.log("Please provide a valid project name. Aborted.")
         return
+
+    configuration = Config()
 
     description = questionary.text("What is the description of this project? (Optional)").ask()
     language = questionary.text("What is the major language for this project?").ask()
