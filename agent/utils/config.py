@@ -10,7 +10,7 @@ CONFIG_PATH = os.path.join(CONFIG_HOME, "config")
 
 class Config:
     """
-    Config: the overall system configuration for Termax.
+    Config: the overall system configuration for MLE-agent
     """
 
     def __init__(self):
