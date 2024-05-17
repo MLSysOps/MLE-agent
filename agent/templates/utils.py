@@ -30,25 +30,15 @@ def match_plan(task_dict: dict):
     tasks = load_yml('plan.yml')
     for task in tasks:
         if task_dict.get('name').lower() == task['name'].lower():
+            resource_list = []
+            if task.get('resources'):
+                for resource in task['resources']:
+                    if task_dict.get('resources'):
+                        if resource['name'] in task_dict.get('resources'):
+                            resource_list.append(resource)
+
+            task['resources'] = resource_list
             task['description'] = task_dict.get('description')
             return Task(**task)
 
     return None
-
-
-def get_models():
-    """
-    Load the models from the configuration files.
-    :return: the models.
-    """
-
-    return load_yml('resource.yml').get('model')
-
-
-def get_datasets():
-    """
-    Load the datasets from the configuration files.
-    :return: the datasets.
-    """
-
-    return load_yml('resource.yml').get('dataset')

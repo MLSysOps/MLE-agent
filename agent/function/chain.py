@@ -224,19 +224,20 @@ class Chain:
                 if self.plan.tasks is None:
                     self.console.log("No tasks found in the project plan.")
                     with self.console.status("Planning the tasks for you..."):
-                        ml_task = task_selector(self.user_requirement, self.agent)
-                        self.console.print(f"[cyan]Task selected:[/cyan] {ml_task}")
-                        ml_model_framework = model_selector(self.user_requirement, self.agent)
-                        self.console.print(f"[cyan]Model selected:[/cyan] {ml_model_framework}")
+                        ml_task_name = task_selector(self.user_requirement, self.agent)
+                        self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
+                        ml_model_arch = model_selector(self.user_requirement, self.agent)
+                        self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
                         ml_dataset = dataset_selector(self.user_requirement, self.agent)
                         self.console.print(f"[cyan]Dataset selected:[/cyan] {ml_dataset}")
+
                         # generate the plan and tasks.
                         task_dicts = plan_generator(
                             self.user_requirement,
                             self.agent,
-                            ml_task,
-                            ml_model_framework,
-                            ml_dataset
+                            ml_model_arch,
+                            ml_dataset,
+                            ml_task_name
                         )
                         self.console.print(task_dicts)
                         self.plan.tasks = []

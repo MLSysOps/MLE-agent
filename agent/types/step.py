@@ -4,6 +4,7 @@ from typing import List, Optional
 
 class Resource(BaseModel):
     name: str
+    uri: Optional[str] = None
     description: Optional[str] = None
     choices: Optional[List[str]] = None
 
@@ -16,7 +17,7 @@ class Function(BaseModel):
 class Task(BaseModel):
     name: str
     kind: str
-    description: str
+    description: Optional[str] = None
     resources: Optional[List[Resource]] = None
     functions: Optional[List[str]] = None
     debug: Optional[int] = None
