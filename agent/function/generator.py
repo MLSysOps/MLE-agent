@@ -108,7 +108,7 @@ def description_generator(requirement: str, task_list, llm_agent):
     
     "tasks": [
     {{'name': 'Data Pre-processing', 'resources': [],
-     'description': 'This task is first to preprocess the data. Second to ...'}}, 
+     'description': 'This task is first to preprocess the data. Second to ...'}},
     {{'name': 'Model Training', 'resources': 'PyTorch',
      'description': 'This task is to train the model using PyTorch, ...'}},
     {{'name': 'Model Deployment', 'resources': ['Flask'],
@@ -169,10 +169,10 @@ def plan_generator(
     EXAMPLE OUTPUT in JSON FORMAT:
     
     "tasks": [
-    {{'name': 'Data Collection', 'resources': [HuggingFace Dataset]}}, 
-    {{'name': 'Data Pre-processing', 'resources': []}}, 
-    {{'name': 'Model Training', 'resources': 'PyTorch'}},
-    {{'name': 'Model Deployment', 'resources': ['Flask']}}
+    {{'name': 'Data Collection', 'resources': [HuggingFace Dataset]}},
+     {{'name': 'Data Pre-processing', 'resources': []}},
+     {{'name': 'Model Training', 'resources': 'PyTorch'}},
+     {{'name': 'Model Deployment', 'resources': ['Flask']}}
     ]
     
     """
