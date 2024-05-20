@@ -1,4 +1,12 @@
-# MLE-agent
+<div align="center">
+ <img alt="ollama" height="200px" src="assets/keia_llama.webp">
+</div>
+
+# Keia (MLE-agent)
+
+:love_letter: Fathers' love for Keia :love_letter:
+
+Keia is a MLE agent that helps you to plan, execute, and optimize your AI projects.
 
 ## Installation
 
