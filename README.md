@@ -6,7 +6,7 @@
 
 :love_letter: Fathers' love for Keia :love_letter:
 
-Keia is a MLE agent that helps you to plan, execute, and optimize your AI projects.
+Keia is an MLE agent that helps you to plan, execute, and optimize your AI projects.
 
 ## Installation
 
