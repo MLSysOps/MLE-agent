@@ -37,7 +37,7 @@ class Chain:
         # if the project is not set up, then raise an error.
         if config.read().get('project') is None:
             self.console.print("You have not set up a project yet.")
-            self.console.print("Please create a new project first using 'mle new' command then try again.")
+            self.console.print("Please create a new project first using 'mle new project_name' command then try again.")
             raise SystemExit
 
         self.project_home = config.read().get('project')['path']
@@ -46,6 +46,7 @@ class Chain:
         )
         self.target_source = self.plan.target
         self.user_requirement = self.plan.requirement
+        self.project_name = self.plan.project_name
 
     def update_project_state(self):
         """
@@ -222,7 +223,7 @@ class Chain:
 
                 # working on the task content.
                 if self.plan.tasks is None:
-                    self.console.log("No tasks found in the project plan.")
+                    self.console.log(f"The project {self.project_name} has no plan for nows.")
                     with self.console.status("Planning the tasks for you..."):
                         ml_task_name = task_selector(self.user_requirement, self.agent)
                         self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")

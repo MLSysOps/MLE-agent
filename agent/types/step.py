@@ -24,7 +24,7 @@ class Task(BaseModel):
 
 
 class Plan(BaseModel):
-    name: str
+    project_name: str
     project: str
     current_task: int
     lang: str
