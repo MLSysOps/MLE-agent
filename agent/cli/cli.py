@@ -20,12 +20,16 @@ def build_config(general: bool = False):
     :return:
     """
     configuration = Config()
+
     platform = LLM_TYPE_OPENAI
     api_key = questionary.text("What is your OpenAI API key?").ask()
+
+    code_language = CODE_LANGUAGE
 
     general_config = {
         'platform': platform,
         'api_key': api_key,
+        'code_language': code_language
     }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
@@ -133,21 +137,21 @@ def chat():
 
 
 @cli.command()
-def new():
+@click.argument('name')
+def new(name):
     """
-    new: create a new machine learning project.
+    new: create a new machine learning project with the given NAME.
     """
-    configuration = Config()
-    name = questionary.text("What is the name of the project?").ask()
     if not name:
+        console.log("Please provide a valid project name. Aborted.")
         return
+
+    configuration = Config()
 
     description = questionary.text("What is the description of this project? (Optional)").ask()
-    language = questionary.text("What is the major language for this project?").ask()
 
-    if not language:
-        console.log("Please provide a valid language. Aborted.")
-        return
+    launch_env = questionary.select("Where do you want to launch the project?",
+                                    choices=["cloud", "local"]).ask()
 
     project_path = create_directory(name)
     update_project_plan(
@@ -158,7 +162,8 @@ def new():
             'description': description,
             'llm': configuration.read()['general']['platform'],
             'project': project_path,
-            'lang': language
+            'code_lang': configuration.read()['general']['code_language'],
+            'launch_env': launch_env
         }
     )
 

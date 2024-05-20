@@ -18,6 +18,9 @@ CONFIG_LLM_LIST = {  # with the default model.
 # LLMs
 LLM_TYPE_OPENAI = 'openai'
 
+# Main
+CODE_LANGUAGE = 'python'
+
 # Integrations
 INTEGRATIOIN_AWS_S3 = 'aws_s3'
 INTEGRATIOIN_HUGGINGFACE = 'huggingface'
