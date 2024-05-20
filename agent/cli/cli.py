@@ -162,7 +162,7 @@ def new(name):
             'description': description,
             'llm': configuration.read()['general']['platform'],
             'project': project_path,
-            'code_lang': configuration.read()['general']['code_language'],
+            'lang': configuration.read()['general']['code_language'],
             'launch_env': launch_env
         }
     )
