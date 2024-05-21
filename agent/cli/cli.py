@@ -14,7 +14,7 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 def build_config(general: bool = False):
     """
-    build_config: build the configuration for Termax.
+    build_config: build the configuration for MLE-agent.
     Args:
         general: a boolean indicating whether to build the general configuration only.
     :return:
@@ -80,7 +80,7 @@ def cli():
 @click.option('--general', '-g', is_flag=True, help="Set up the general configuration for MLE Agent.")
 def config(general):
     """
-    Set up the global configuration for Termax.
+    Set up the global configuration for MLE-agent.
     """
     build_config(general)
 
@@ -163,7 +163,7 @@ def new(name):
     update_project_plan(
         project_path,
         {
-            'name': name,
+            'project_name': name,
             'current_task': 0,
             'description': description,
             'llm': configuration.read()['general']['platform'],
