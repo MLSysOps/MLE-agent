@@ -220,7 +220,10 @@ class Chain:
                         self.console.print(f"The requirements are stored in: {self.target_source}")
                         self.update_project_state()
 
-                # working on the task content.
+                if self.user_requirement is None:
+                    return
+
+                    # working on the task content.
                 if self.plan.tasks is None:
                     self.console.log("No tasks found in the project plan.")
                     with self.console.status("Planning the tasks for you..."):
