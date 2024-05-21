@@ -95,6 +95,12 @@ def start():
     if configuration.read() is None:
         build_config()
 
+    if configuration.read().get('project') is None:
+        console.log("You have not set up a project yet.")
+        console.log("Please create a new project first using 'mle new' command,"
+                    " or set the project using 'mle set_project <project path>'.")
+        return
+
     project_plan_file = os.path.join(configuration.read()['project']['path'], CONFIG_PROJECT_FILE)
     chain = Chain(load_plan(str(project_plan_file)), load_model())
     chain.start()

@@ -104,7 +104,7 @@ def create_directory(dir_name: str):
 
     try:
         os.makedirs(path, exist_ok=True)
-        console.log(f"[green]Directory '{path}' created successfully.")
+        console.log(f"[green]Directory '{path}' created successfully. Use 'mle start' to start the project.")
     except OSError as error:
         console.log(f"[red]Creation of the directory '{path}' failed due to: {error}")
     return path
