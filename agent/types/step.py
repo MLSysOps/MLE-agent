@@ -29,7 +29,7 @@ class Plan(BaseModel):
     current_task: int
     lang: str
     llm: str
-    target: Optional[str] = None
+    training_entry_file: Optional[str] = None
     requirement: Optional[str] = None
     tasks: Optional[List[Task]] = None
     description: Optional[str] = None

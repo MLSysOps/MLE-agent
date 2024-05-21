@@ -41,10 +41,13 @@ class Chain:
             raise SystemExit
 
         self.project_home = config.read().get('project')['path']
+        self.project_setting_file = os.path.join(self.project_home, CONFIG_PROJECT_FILE)
+
         self.session = PromptSession(
             history=FileHistory(str(os.path.join(self.project_home, CONFIG_TASK_HISTORY_FILE)))
         )
-        self.target_source = self.plan.target
+
+        self.training_entry_file = self.plan.training_entry_file
         self.user_requirement = self.plan.requirement
         self.project_name = self.plan.project_name
 
@@ -90,9 +93,9 @@ class Chain:
                 if stop_reason == "stop":
                     code = extract_code(text)
                     if code:
-                        with open(self.target_source, 'w') as file:
+                        with open(self.training_entry_file, 'w') as file:
                             file.write(code)
-                        self.console.print(f"Code generated to: {self.target_source}")
+                        self.console.print(f"Code generated to: {self.training_entry_file}")
         return text
 
     def gen_file_name(self, user_requirement: str):
@@ -109,24 +112,24 @@ class Chain:
             ]
         )
 
-        with self.console.status("Generating file name..."):
+        with self.console.status("Preparing entry file name..."):
             completion = self.agent.completions(self.chat_history, stream=False)
             target_name = extract_file_name(completion.choices[0].message.content)
-            self.target_source = str(os.path.join(self.plan.project, target_name))
+            self.training_entry_file = str(os.path.join(self.plan.project, target_name))
 
         # TODO: handle the keyboard interrupt.
-        self.console.print(f"The generated file name is: {self.target_source}")
-        confirm = questionary.confirm("Do you want to use this name?").ask()
+        self.console.print(f"The entry file is: {self.training_entry_file}")
+        confirm = questionary.confirm("Do you want to use the file?").ask()
         if not confirm:
-            new_name = questionary.text("Please provide a new file name:", default=self.target_source).ask()
+            new_name = questionary.text("Please provide a new file name:", default=self.training_entry_file).ask()
             if new_name:
-                self.target_source = os.path.join(self.plan.path, new_name)
+                self.training_entry_file = os.path.join(self.plan.path, new_name)
 
         # clear the chat history
-        self.plan.target = self.target_source
+        self.plan.training_entry_file = self.training_entry_file
         self.chat_history = []
 
-        return self.target_source
+        return self.training_entry_file
 
     def gen_task_content(self, task: Task, params=None):
         """
@@ -137,15 +140,15 @@ class Chain:
         :return: the content of the task.
         """
         language = self.plan.lang
-        target_source = self.plan.target
+        training_entry_file = self.plan.training_entry_file
         sys_prompt = pmpt_chain_init(language)
-        if target_source:
-            source_content = read_file_to_string(target_source)
+        if training_entry_file:
+            source_content = read_file_to_string(training_entry_file)
             if source_content or self.plan.current_task <= 1:
                 sys_prompt = pmpt_chain_code(self.plan.lang, source_content)
             else:
                 self.console.log(
-                    f"File {target_source} not found. "
+                    f"File {training_entry_file} not found. "
                     f"Please make sure the script exists or deleting the `target_file` in the project.yml \n"
                 )
                 return None
@@ -175,7 +178,7 @@ class Chain:
         # TODO: allow handling the program timeout.
         if task.debug:
             debug_success = False
-            command = f"python {self.target_source}"
+            command = f"python {self.training_entry_file}"
             with self.console.status(f"Running the code script with command: {command}"):
                 run_log, exit_code = run_command([command])
 
@@ -209,16 +212,16 @@ class Chain:
             while is_running:
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
+
                 else:
                     self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.user_requirement
-
-                if self.target_source is None:
+                if self.training_entry_file is None:
                     if self.user_requirement:
-                        self.target_source = self.gen_file_name(self.user_requirement)
-                        if self.target_source is None:
+                        self.training_entry_file = self.gen_file_name(self.user_requirement)
+                        if self.training_entry_file is None:
                             return
-                        self.console.print(f"The requirements are stored in: {self.target_source}")
+                        self.console.print(f"Project requirements updated to: {self.project_setting_file}")
                         self.update_project_state()
 
                 if self.user_requirement is None:
@@ -226,7 +229,8 @@ class Chain:
 
                     # working on the task content.
                 if self.plan.tasks is None:
-                    self.console.log(f"The project {self.project_name} has no plan for nows.")
+                    self.console.log(f"The project [cyan]{self.project_name}[/cyan] has no existing plans. "
+                                     f"Start planning...")
                     with self.console.status("Planning the tasks for you..."):
                         ml_task_name = task_selector(self.user_requirement, self.agent)
                         self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
@@ -255,7 +259,7 @@ class Chain:
                     if confirm_plan:
                         self.update_project_state()
                     else:
-                        self.console.print("Please check the plan and try again.")
+                        self.console.print("Seems you are not satisfied with the plan. Aborting the chain.")
                         return
 
                 # install the dependencies for this plan.
