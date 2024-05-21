@@ -207,6 +207,9 @@ class Chain:
         try:
             is_running = True
             while is_running:
+                task_params = None
+                task_num = len(self.plan.tasks)
+
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
                 else:
@@ -221,10 +224,17 @@ class Chain:
                         self.console.print(f"The requirements are stored in: {self.target_source}")
                         self.update_project_state()
 
+                self.console.print(f"[cyan]Target script:[/cyan] {self.plan.target}")
+
                 if self.user_requirement is None:
                     return
 
-                    # working on the task content.
+                # check if all tasks are completed.
+                if self.plan.current_task == task_num:
+                    self.console.log(":tada: Looks like all tasks are completed.")
+                    return
+
+                # working on the task content.
                 if self.plan.tasks is None:
                     self.console.log(f"The project {self.project_name} has no plan for nows.")
                     with self.console.status("Planning the tasks for you..."):
@@ -270,8 +280,6 @@ class Chain:
                 else:
                     self.console.print("Skipped the dependencies installation.")
 
-                task_params = None
-                task_num = len(self.plan.tasks)
                 for task in self.plan.tasks:
                     if self.plan.current_task < task_num:
                         self.console.log(f"Working on task: {task.name} ({self.plan.current_task + 1}/{task_num})")
@@ -291,9 +299,6 @@ class Chain:
                     self.update_project_state()
 
                 is_running = False
-                if self.plan.current_task == task_num:
-                    self.console.print("Looks like all tasks are completed.")
-                    return
         except KeyboardInterrupt:
             self.console.print("The chain has been interrupted.")
             return
