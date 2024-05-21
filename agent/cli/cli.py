@@ -153,9 +153,7 @@ def new(name):
         return
 
     configuration = Config()
-
     description = questionary.text("What is the description of this project? (Optional)").ask()
-
     launch_env = questionary.select("Where do you want to launch the project?",
                                     choices=["cloud", "local"]).ask()
 
