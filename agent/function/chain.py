@@ -114,7 +114,6 @@ class Chain:
             target_name = extract_file_name(completion.choices[0].message.content)
             self.target_source = str(os.path.join(self.plan.project, target_name))
 
-        # TODO: handle the keyboard interrupt.
         self.console.print(f"The generated file name is: {self.target_source}")
         confirm = questionary.confirm("Do you want to use this name?").ask()
         if not confirm:
@@ -207,8 +206,6 @@ class Chain:
         try:
             is_running = True
             while is_running:
-                task_params = None
-                task_num = len(self.plan.tasks)
 
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
@@ -227,11 +224,6 @@ class Chain:
                 self.console.print(f"[cyan]Target script:[/cyan] {self.plan.target}")
 
                 if self.user_requirement is None:
-                    return
-
-                # check if all tasks are completed.
-                if self.plan.current_task == task_num:
-                    self.console.log(":tada: Looks like all tasks are completed.")
                     return
 
                 # working on the task content.
@@ -267,6 +259,13 @@ class Chain:
                     else:
                         self.console.print("Please check the plan and try again.")
                         return
+
+                task_params = None
+                task_num = len(self.plan.tasks)
+                # check if all tasks are completed.
+                if self.plan.current_task == task_num:
+                    self.console.log(":tada: Looks like all tasks are completed.")
+                    return
 
                 # install the dependencies for this plan.
                 with self.console.status("Installing the dependencies for the plan..."):

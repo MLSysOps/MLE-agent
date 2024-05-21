@@ -160,8 +160,10 @@ def new(name):
 
     configuration = Config()
     description = questionary.text("What is the description of this project? (Optional)").ask()
-    launch_env = questionary.select("Where do you want to launch the project?",
-                                    choices=["cloud", "local"]).ask()
+    debug_env = questionary.select(
+        "Where do you want to launch the project?",
+        choices=["cloud", "local", "not run"]
+    ).ask()
 
     project_path = create_directory(name)
     update_project_plan(
@@ -173,7 +175,7 @@ def new(name):
             'llm': configuration.read()['general']['platform'],
             'project': project_path,
             'lang': configuration.read()['general']['code_language'],
-            'launch_env': launch_env
+            'debug_env': debug_env
         }
     )
 

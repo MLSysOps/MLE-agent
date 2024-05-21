@@ -29,6 +29,7 @@ class Plan(BaseModel):
     current_task: int
     lang: str
     llm: str
+    debug_env: Optional[str] = None
     target: Optional[str] = None
     requirement: Optional[str] = None
     tasks: Optional[List[Task]] = None
