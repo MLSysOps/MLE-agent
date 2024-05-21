@@ -102,6 +102,12 @@ def start():
         return
 
     project_plan_file = os.path.join(configuration.read()['project']['path'], CONFIG_PROJECT_FILE)
+
+    # check if the project plan file exists
+    if not os.path.exists(project_plan_file):
+        console.log("The project.yml does not exist on the workspace. Aborted.")
+        return
+
     chain = Chain(load_plan(str(project_plan_file)), load_model())
     chain.start()
 
