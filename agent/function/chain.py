@@ -11,7 +11,7 @@ from agent.types import Plan, Task
 from agent.integration import read_csv_file
 from agent.hub.utils import match_plan
 from agent.types.const import CONFIG_TASK_HISTORY_FILE
-from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
+from agent.utils.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
 from .generator import (
     plan_generator,

@@ -5,8 +5,8 @@ import questionary
 import agent
 from agent.utils import *
 from agent.model import OpenAIModel
-from agent.prompt import pmpt_sys_init
 from agent.function import Chat, Chain
+from agent.utils.prompt import pmpt_sys_init
 
 console = Console()
 # avoid the tokenizers parallelism issue
