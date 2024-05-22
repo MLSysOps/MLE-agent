@@ -230,30 +230,36 @@ class Chain:
                 if not self.user_requirement:
                     raise SystemExit("The user requirement is not provided.")
 
-                # project dataset setup
-                if self.plan.dataset is None:
-                    dataset = dataset_detector(self.user_requirement, self.agent)
-                    self.plan.dataset = dataset
-
-                self.console.print(f"[cyan]Raw Dataset:[/cyan] {self.plan.dataset}")
-
-                if not self.plan.dataset:
-                    raise SystemExit("The dataset is not provided.")
-                else:
-                    self.update_project_state()
-
                 # working on the task content.
                 if self.plan.tasks is None:
                     self.console.log(f"The project [cyan]{self.project_name}[/cyan] has no existing plans. "
                                      f"Start planning...")
-                    with self.console.status("Planning the tasks for you..."):
-                        ml_task_name = task_selector(self.user_requirement, self.agent)
-                        self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
-                        ml_model_arch = model_selector(self.user_requirement, self.agent)
-                        self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
-                        ml_dataset = dataset_selector(self.user_requirement, self.agent)
-                        self.console.print(f"[cyan]Dataset selected:[/cyan] {ml_dataset}")
 
+                    ml_task_name = task_selector(self.user_requirement, self.agent)
+                    self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
+                    ml_model_arch = model_selector(self.user_requirement, self.agent)
+                    self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
+
+                    # project dataset setup
+                    if self.plan.dataset is None:
+                        dataset = dataset_detector(self.user_requirement, self.agent)
+
+                        if dataset == 'no_data_information_provided':
+                            dataset = dataset_selector(self.user_requirement, self.agent)
+                        elif dataset == 'csv_table_data':
+                            dataset = questionary.text("Please provide the CSV data path:").ask()
+                        else:
+                            pass
+
+                        self.plan.dataset = dataset
+
+                    ml_dataset = self.plan.dataset
+                    self.console.print(f"[cyan]Dataset:[/cyan] {self.plan.dataset}")
+
+                    if ml_dataset is None:
+                        raise SystemExit("The dataset is not provided. Aborted.")
+
+                    with self.console.status("Planning the tasks for you..."):
                         # generate the plan and tasks.
                         task_dicts = plan_generator(
                             self.user_requirement,
