@@ -3,7 +3,7 @@ import os.path
 from datetime import datetime
 from typing import List, Dict
 
-from agent.const import *
+from agent.types.const import *
 from agent.utils import Config, CONFIG_HOME
 
 import chromadb

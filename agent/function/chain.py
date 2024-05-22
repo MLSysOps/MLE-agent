@@ -9,8 +9,8 @@ from prompt_toolkit.history import FileHistory
 from agent.utils import *
 from agent.types import Plan, Task
 from agent.integration import read_csv_file
-from agent.templates.utils import match_plan
-from agent.const import CONFIG_TASK_HISTORY_FILE
+from agent.hub.utils import match_plan
+from agent.types.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
 from .generator import (
@@ -135,11 +135,10 @@ class Chain:
 
         return self.training_entry_file
 
-    def gen_task_content(self, task: Task, params=None):
+    def gen_task_content(self, task: Task):
         """
         Generate the content of the current task.
         :param task: the task to work on.
-        :param params: the parameters of the previous task.
 
         :return: the content of the task.
         """
@@ -163,11 +162,6 @@ class Chain:
         Current task: {task.name}
         Task description: {task.description}
         """
-
-        if params:
-            task_prompt += f"""
-            Resources: {params}
-            """
 
         # handle the data collection task.
         if task.name == "Data Collection":
@@ -257,7 +251,7 @@ class Chain:
                         elif self.plan.data_kind == 'csv_table_data':
                             self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
 
-                    self.console.print(f"[cyan]Data source:[/cyan] {self.plan.data_kind}")
+                    self.console.print(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
                     if self.plan.dataset is None:
                         raise SystemExit("The dataset information is not provided. Aborted.")
 
@@ -307,19 +301,14 @@ class Chain:
                 for task in self.plan.tasks:
                     if self.plan.current_task < task_num:
                         self.console.log(f"Working on task: {task.name} ({self.plan.current_task + 1}/{task_num})")
+                        # TODO: add supports for other kind of tasks.
                         if task.kind == 'code_generation':
-                            result = self.gen_task_content(task, task_params)
+                            result = self.gen_task_content(task)
                             if result is None:
                                 self.console.log("[red]Task failed. Aborting the chain.")
                                 return
-                            task_params = None
-
-                        if task.kind == 'multiple_choice':
-                            task_params = self.ask_choice(task)
 
                         self.plan.current_task += 1
-
-                    # update the project state after each task.
                     self.update_project_state()
 
                 is_running = False

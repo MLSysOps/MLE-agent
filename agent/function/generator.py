@@ -1,7 +1,7 @@
 import json
 
 from agent.types import Plan
-from agent.templates import load_yml
+from agent.hub import load_yml
 from agent.utils import preprocess_json_string
 from agent.prompt import (
     pmpt_chain_dependency,

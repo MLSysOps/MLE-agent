@@ -2,7 +2,7 @@ import os
 import configparser
 from pathlib import Path
 
-from agent.const import *
+from agent.types.const import *
 
 CONFIG_HOME = os.path.join(str(Path.home()), ".mle")
 CONFIG_PATH = os.path.join(CONFIG_HOME, "config")

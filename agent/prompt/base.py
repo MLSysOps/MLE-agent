@@ -1,5 +1,5 @@
 from agent.types import Plan
-from agent.templates import load_yml
+from agent.hub import load_yml
 
 
 def pmpt_sys_init(

@@ -6,7 +6,7 @@ from rich.console import Console
 
 from agent.utils import Config
 from agent.types import Plan
-from agent.const import CONFIG_PROJECT_FILE
+from agent.types.const import CONFIG_PROJECT_FILE
 
 from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError

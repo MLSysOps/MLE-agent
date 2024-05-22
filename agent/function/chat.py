@@ -1,5 +1,4 @@
 import os
-import json
 from rich.live import Live
 from rich.panel import Panel
 from rich.console import Console
@@ -9,9 +8,8 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
 from agent.utils import Config
+from agent.types.const import CONFIG_CHAT_HISTORY_FILE
 from agent.utils import extract_and_save_file, list_all_files
-from agent.integration import get_function
-from agent.const import CONFIG_CHAT_HISTORY_FILE
 
 config = Config()
 
@@ -40,34 +38,6 @@ class Chat:
         self.chat_history.append({"role": role, "content": content})
         return self.chat_history
 
-    def handle_function_call(self, name, arguments):
-        """
-        Handle the function call.
-        :param name: the function name.
-        :param arguments: the function arguments.
-        :return:
-        """
-        self.chat_history.append(
-            {
-                "role": "assistant",
-                "content": "",
-                "function_call": {"name": name, "arguments": arguments},
-            }
-        )
-
-        if arguments != "":
-            dict_args = json.loads(arguments)
-            joined_args = ", ".join(f'{k}="{v}"' for k, v in dict_args.items())
-        else:
-            dict_args = {}
-            joined_args = ""
-        self.console.log(f"> @FunctionCall `{name}({joined_args})` \n\n")
-
-        results = get_function(name).execute(**dict_args)
-        self.chat_history.append({"role": "function", "content": results, "name": name})
-
-        return results
-
     def handle_response(self, prompt):
         """
         Handle the response from the chat.
@@ -75,10 +45,8 @@ class Chat:
         :return:
         """
         text = ''
-        func_name = func_arguments = ""
-
         self.chat_history.append({"role": "user", "content": prompt})
-        response = self.agent.completions(self.chat_history, stream=True, use_function=True)
+        response = self.agent.completions(self.chat_history, stream=True)
 
         for token in response:
             content = token.choices[0].delta.content
@@ -86,18 +54,7 @@ class Chat:
                 text = text + content
                 yield text
 
-            function_call = token.choices[0].delta.function_call
-            if function_call:
-                if function_call.name:
-                    func_name = function_call.name
-                if function_call.arguments:
-                    func_arguments += function_call.arguments
-
             stop_reason = token.choices[0].finish_reason
-            if stop_reason == "function_call":
-                self.handle_function_call(func_name, func_arguments)
-                yield from self.handle_response(prompt)
-
             if stop_reason == "stop":
                 saved_file, _ = extract_and_save_file(text)
                 if saved_file:
