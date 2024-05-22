@@ -3,6 +3,7 @@ import yaml
 import questionary
 import sky
 
+
 class Executor:
     def __init__(self, project_name: str, workdir: str):
         self.project_name = project_name

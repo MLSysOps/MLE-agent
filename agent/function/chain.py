@@ -118,9 +118,11 @@ class Chain:
             target_name = extract_file_name(completion.choices[0].message.content)
             self.training_entry_file = str(os.path.join(self.plan.project, target_name))
 
+
         # TODO: handle the keyboard interrupt.
         self.console.print(f"The entry file is: {self.training_entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
+
         if not confirm:
             new_name = questionary.text("Please provide a new file name:", default=self.training_entry_file).ask()
             if new_name:
@@ -275,6 +277,13 @@ class Chain:
                         self.console.print("Seems you are not satisfied with the plan. Aborting the chain.")
                         return
 
+                task_params = None
+                task_num = len(self.plan.tasks)
+                # check if all tasks are completed.
+                if self.plan.current_task == task_num:
+                    self.console.log(":tada: Looks like all tasks are completed.")
+                    return
+
                 # install the dependencies for this plan.
                 with self.console.status("Installing the dependencies for the plan..."):
                     install_commands = dependency_generator(self.plan, self.agent).get('commands')
@@ -287,8 +296,6 @@ class Chain:
                 else:
                     self.console.print("Skipped the dependencies installation.")
 
-                task_params = None
-                task_num = len(self.plan.tasks)
                 for task in self.plan.tasks:
                     if self.plan.current_task < task_num:
                         self.console.log(f"Working on task: {task.name} ({self.plan.current_task + 1}/{task_num})")
@@ -308,9 +315,6 @@ class Chain:
                     self.update_project_state()
 
                 is_running = False
-                if self.plan.current_task == task_num:
-                    self.console.print("Looks like all tasks are completed.")
-                    return
         except KeyboardInterrupt:
             self.console.print("The chain has been interrupted.")
             return

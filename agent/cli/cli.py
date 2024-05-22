@@ -102,6 +102,12 @@ def start():
         return
 
     project_plan_file = os.path.join(configuration.read()['project']['path'], CONFIG_PROJECT_FILE)
+
+    # check if the project plan file exists
+    if not os.path.exists(project_plan_file):
+        console.log("The project.yml does not exist on the workspace. Aborted.")
+        return
+
     chain = Chain(load_plan(str(project_plan_file)), load_model())
     chain.start()
 
@@ -153,11 +159,11 @@ def new(name):
         return
 
     configuration = Config()
-
     description = questionary.text("What is the description of this project? (Optional)").ask()
-
-    launch_env = questionary.select("Where do you want to launch the project?",
-                                    choices=["cloud", "local"]).ask()
+    debug_env = questionary.select(
+        "Where do you want to launch the project?",
+        choices=["cloud", "local", "not run"]
+    ).ask()
 
     project_path = create_directory(name)
     update_project_plan(
@@ -169,7 +175,7 @@ def new(name):
             'llm': configuration.read()['general']['platform'],
             'project': project_path,
             'lang': configuration.read()['general']['code_language'],
-            'launch_env': launch_env
+            'debug_env': debug_env
         }
     )
 

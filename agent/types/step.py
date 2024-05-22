@@ -31,6 +31,7 @@ class Plan(BaseModel):
     lang: str
     llm: str
     training_entry_file: Optional[str] = None
+    debug_env: Optional[str] = None
     requirement: Optional[str] = None
     dataset: Optional[str] = None
     tasks: Optional[List[Task]] = None

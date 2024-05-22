@@ -29,10 +29,3 @@
       uri: "https://pytorch.org"
 - name: "Model Evaluation"
   kind: "code_generation"
-- name: "Model Deployment"
-  kind: "code_generation"
-  resources:
-    - name: "Flask"
-      uri: "https://flask.palletsprojects.com/en/3.0.x/"
-    - name: "FastAPI"
-      uri: "https://fastapi.tiangolo.com/"
