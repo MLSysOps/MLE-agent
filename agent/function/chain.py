@@ -212,7 +212,7 @@ class Chain:
                     self.console.print(f"Project requirements updated to: {self.project_setting_file}")
                     self.update_project_state()
 
-                # Step 2: Ask for the related dataset
+                # Step 2.1: Ask for the related dataset and do some analysis for task planning
                 if self.plan.data_kind is None:
                     self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                     if self.plan.data_kind == 'no_data_information_provided':
@@ -221,8 +221,10 @@ class Chain:
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
 
                 self.console.print(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                if self.plan.dataset is None:
-                    raise SystemExit("The dataset information is not provided. Aborted.")
+                if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
+                    raise SystemExit("Wrong dataset information. Aborted.")
+                else:
+                    self.console.print(f"[cyan]Dataset examples:[/cyan] {read_csv_file(self.plan.dataset)}")
 
                 # Step 3: Choose the model architecture and tasks based on the requirement and dataset
                 if self.plan.tasks is None:

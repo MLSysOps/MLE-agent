@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def read_csv_file(file_path, limit=None, column_only=False):
+def read_csv_file(file_path, limit=3, column_only=False):
     """
     Reads a CSV file and returns a DataFrame with a limited number of rows or only column names.
 
