@@ -125,12 +125,10 @@ def pmpt_dataset_detector():
 def pmpt_model_selection():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.
-    You are required to detect if the user has provide dataset information as listed below.
 
-    - You should choose a dataset source from the list below based on the user's requirements.
-    - You should only return the choice name.
-    - Noted: if the user's requirements do not contain any information, you should select 'no-data-information-provided'
-    and return.
+    - You should choose an AI model framework that can achieve the user's requirements.
+    - You should only return the framework name.
+    - Note: it if the model architecture name, not the framework builds the model.
 
     OUTPUT should only a name without any punctuation.
 
