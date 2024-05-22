@@ -143,7 +143,7 @@ class Chain:
 
         # handle the data collection task.
         if task.name == "Data Collection":
-            if self.plan.data_kind == 'csv_table_data':
+            if self.plan.data_kind == 'csv_data':
                 task_prompt += f"""
                 Data source: {self.plan.dataset}
                 Dataset examples: {read_csv_file(self.plan.dataset, column_only=True)}
@@ -217,14 +217,16 @@ class Chain:
                     self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                     if self.plan.data_kind == 'no_data_information_provided':
                         self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
-                    elif self.plan.data_kind == 'csv_table_data':
+                    elif self.plan.data_kind == 'csv_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
 
                 self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
                 if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
                     raise SystemExit("Wrong dataset information. Aborted.")
                 else:
-                    self.console.log(f"[cyan]Dataset examples:[/cyan] {read_csv_file(self.plan.dataset)}")
+                    csv_data_sample = read_csv_file(self.plan.dataset)
+                    self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                    self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.plan.tasks is None:
@@ -233,6 +235,9 @@ class Chain:
 
                     ml_task_name = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
                     self.console.log(f"[cyan]Task detected:[/cyan] {ml_task_name}")
+                    self.requirement += f"\n\nML Task: {ml_task_name}"
+
+                    # TODO: search the best model from kaggle, huggingface, etc
                     ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
                     self.console.log(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
 

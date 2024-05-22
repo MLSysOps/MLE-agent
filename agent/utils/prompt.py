@@ -140,30 +140,31 @@ def pmpt_dataset_detect():
 
 def pmpt_model_select():
     return f"""
-    You are an ML project expert provides consultation to the user based on the user's requirements.
+    You are an ML project expert tasked with providing consultation to the user based on the user's requirements, 
+    provided data samples, and selected ML tasks.
 
-    - You should choose an AI model architecture that can achieve the user's requirements.
-    - You should only return the architecture name.
-    - Note: it is the model architecture name, not the deep learning framework builds the model.
+    - Carefully analyze the provided user requirements, data samples, and ML tasks.
+    - Choose the AI model architecture that can best achieve the user's requirements.
+    - Only return the architecture name.
+    - Note: it is the model architecture name, not the deep learning framework that builds the model.
 
-    OUTPUT should only a name without any punctuation.
-
+    OUTPUT should only be a name without any punctuation.
     """
 
 
 def pmpt_task_select():
     return f"""
-    You are an ML project expert that determines the tasks based on the user's requirements.
-    
-    - You should select a task from the following task list.
-    - You should not return other information except the task name.
-    
+    You are an ML project expert tasked with determining the appropriate tasks based on the user's requirements 
+    and provided data samples.
+
+    - Carefully analyze the provided user requirements and data samples.
+    - Select the most appropriate task from the following task list.
+    - Return only the task name without any additional information or punctuation.
+
     AVAILABLE TASKS:
-    
     {load_yml('task.yml')}
-    
-    OUTPUT should only a name without any punctuation.
-    
+
+    OUTPUT should only be a name without any punctuation.
     """
 
 
