@@ -37,8 +37,8 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
-            "mle-agent=agent.cli.cli:cli",
-            "mle=agent.cli.cli:cli",
+            "mle-agent=agent.cli:cli",
+            "mle=agent.cli:cli",
         ]
     },
     package_data={

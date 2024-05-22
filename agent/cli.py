@@ -1,3 +1,4 @@
+import sys
 import click
 import questionary
 
@@ -20,9 +21,11 @@ def build_config(general: bool = False):
     :return:
     """
     configuration = Config()
-
     platform = LLM_TYPE_OPENAI
     api_key = questionary.text("What is your OpenAI API key?").ask()
+
+    if not api_key:
+        sys.exit(0)
 
     code_language = CODE_LANGUAGE
 
@@ -162,7 +165,7 @@ def new(name):
     description = questionary.text("What is the description of this project? (Optional)").ask()
     debug_env = questionary.select(
         "Where do you want to launch the project?",
-        choices=["cloud", "local", "not run"]
+        choices=["cloud", "local", "not running"]
     ).ask()
 
     project_path = create_directory(name)
