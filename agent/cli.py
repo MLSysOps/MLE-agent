@@ -41,7 +41,7 @@ def build_config(general: bool = False):
         platform_config = {
             "model": 'gpt-3.5-turbo',
             'temperature': 0.7,
-            'max_tokens': 2000,
+            'max_tokens': 16_385,
             'top_p': 1.0,
             'top_k': 32,
             'stop_sequences': 'None',
