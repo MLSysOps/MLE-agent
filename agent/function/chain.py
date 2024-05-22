@@ -194,47 +194,48 @@ class Chain:
         try:
             is_running = True
             while is_running:
-                # project requirement setup
+                # Step 1: Ask for user requirements
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
                 else:
                     self.requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.requirement
-                if self.entry_file is None:
-                    if self.requirement:
-                        self.entry_file = self.gen_file_name(self.requirement)
-                        if self.entry_file is None:
-                            raise SystemExit("The file name is not generated.")
-                        self.console.print(f"Project requirements updated to: {self.project_setting_file}")
-                        self.update_project_state()
 
                 if not self.requirement:
                     raise SystemExit("The user requirement is not provided.")
 
-                # working on the task content.
+                # Generate entry file name based on requirement
+                if self.entry_file is None:
+                    self.entry_file = self.gen_file_name(self.requirement)
+                    if self.entry_file is None:
+                        raise SystemExit("The file name is not generated.")
+                    self.console.print(f"Project requirements updated to: {self.project_setting_file}")
+                    self.update_project_state()
+
+                # Step 2: Ask for the related dataset
+                if self.plan.data_kind is None:
+                    self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
+                    if self.plan.data_kind == 'no_data_information_provided':
+                        self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
+                    elif self.plan.data_kind == 'csv_table_data':
+                        self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+
+                self.console.print(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                if self.plan.dataset is None:
+                    raise SystemExit("The dataset information is not provided. Aborted.")
+
+                # Step 3: Choose the model architecture and tasks based on the requirement and dataset
                 if self.plan.tasks is None:
-                    self.console.log(f"The project [cyan]{self.project_name}[/cyan] has no existing plans. "
-                                     f"Start planning...")
+                    self.console.log(
+                        f"The project [cyan]{self.project_name}[/cyan] has no existing plans. Start planning...")
 
                     ml_task_name = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
                     self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
                     ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
                     self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
 
-                    # project dataset setup
-                    if self.plan.data_kind is None:
-                        self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
-                        if self.plan.data_kind == 'no_data_information_provided':
-                            self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
-                        elif self.plan.data_kind == 'csv_table_data':
-                            self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
-
-                    self.console.print(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                    if self.plan.dataset is None:
-                        raise SystemExit("The dataset information is not provided. Aborted.")
-
+                    # Step 4: Generate the plan and tasks
                     with self.console.status("Planning the tasks for you..."):
-                        # generate the plan and tasks.
                         task_dicts = plan_generator(
                             self.requirement,
                             self.agent,
@@ -249,7 +250,7 @@ class Chain:
                             if task:
                                 self.plan.tasks.append(task)
 
-                    # confirm the plan.
+                    # Confirm the plan
                     confirm_plan = questionary.confirm("Are you sure to use this plan?").ask()
                     if confirm_plan:
                         self.update_project_state()
@@ -257,7 +258,6 @@ class Chain:
                         self.console.print("Seems you are not satisfied with the plan. Aborting the chain.")
                         return
 
-                task_params = None
                 task_num = len(self.plan.tasks)
                 # check if all tasks are completed.
                 if self.plan.current_task == task_num:
