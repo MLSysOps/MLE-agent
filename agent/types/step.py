@@ -26,11 +26,13 @@ class Task(BaseModel):
 class Plan(BaseModel):
     project_name: str
     project: str
+    launch_env: str
     current_task: int
     lang: str
     llm: str
+    training_entry_file: Optional[str] = None
     debug_env: Optional[str] = None
-    target: Optional[str] = None
     requirement: Optional[str] = None
+    dataset: Optional[str] = None
     tasks: Optional[List[Task]] = None
     description: Optional[str] = None
