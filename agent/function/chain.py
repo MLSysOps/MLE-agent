@@ -50,6 +50,7 @@ class Chain:
         self.training_entry_file = self.plan.training_entry_file
         self.user_requirement = self.plan.requirement
         self.project_name = self.plan.project_name
+        self.dataset = self.plan.dataset
 
     def update_project_state(self):
         """
@@ -210,9 +211,9 @@ class Chain:
         try:
             is_running = True
             while is_running:
+                # project requirement setup
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
-
                 else:
                     self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.user_requirement
@@ -220,14 +221,26 @@ class Chain:
                     if self.user_requirement:
                         self.training_entry_file = self.gen_file_name(self.user_requirement)
                         if self.training_entry_file is None:
-                            return
+                            raise SystemExit("The file name is not generated.")
                         self.console.print(f"Project requirements updated to: {self.project_setting_file}")
                         self.update_project_state()
 
-                if self.user_requirement is None:
-                    return
+                if not self.user_requirement:
+                    raise SystemExit("The user requirement is not provided.")
 
-                    # working on the task content.
+                # project dataset setup
+                if self.plan.dataset:
+                    self.console.print(f"[cyan]Raw Dataset:[/cyan] {self.plan.dataset}")
+                else:
+                    self.dataset = questionary.text("Where is your raw dataset?").ask()
+                    self.plan.dataset = self.dataset
+
+                if not self.dataset:
+                    raise SystemExit("The dataset is not provided.")
+                else:
+                    self.update_project_state()
+
+                # working on the task content.
                 if self.plan.tasks is None:
                     self.console.log(f"The project [cyan]{self.project_name}[/cyan] has no existing plans. "
                                      f"Start planning...")
