@@ -55,20 +55,6 @@ class Chain:
         update_project_plan(self.project_home, self.plan.dict(exclude_none=True))
         return self.plan
 
-    def ask_choice(self, task: Task):
-        """
-        Ask a choice question.
-        :param task: the task to work on.
-        :return: the answer.
-        """
-        source_kind = questionary.select(task.description, [c.name for c in task.resources]).ask()
-        if source_kind:
-            for choice in task.resources:
-                if choice.name == source_kind:
-                    if choice.choices:
-                        return questionary.select("Please select", choice.choices).ask()
-                    return source_kind
-
     def handle_streaming(self):
         """
         Handle the streaming completion.
