@@ -108,11 +108,11 @@ def pmpt_chain_dependency(lang: str) -> str:
     """
 
 
-def pmpt_dataset_selection():
+def pmpt_dataset_select():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.
 
-    - You should choose a dataset that can achieve the user's requirements.
+    - You should choose a dataset that can meet the user's requirements.
     - You only return the dataset name.
     - Noted: it is the name of the dataset, not the platform hosts the dataset.
 
@@ -121,7 +121,7 @@ def pmpt_dataset_selection():
     """
 
 
-def pmpt_dataset_detector():
+def pmpt_dataset_detect():
     return f"""
     You are an ML project expert that detects the dataset based on the user's requirements.
 
@@ -138,20 +138,20 @@ def pmpt_dataset_detector():
     """
 
 
-def pmpt_model_selection():
+def pmpt_model_select():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.
 
-    - You should choose an AI model framework that can achieve the user's requirements.
-    - You should only return the framework name.
-    - Note: it if the model architecture name, not the framework builds the model.
+    - You should choose an AI model architecture that can achieve the user's requirements.
+    - You should only return the architecture name.
+    - Note: it is the model architecture name, not the deep learning framework builds the model.
 
     OUTPUT should only a name without any punctuation.
 
     """
 
 
-def pmpt_task_selection():
+def pmpt_task_select():
     return f"""
     You are an ML project expert that determines the tasks based on the user's requirements.
     

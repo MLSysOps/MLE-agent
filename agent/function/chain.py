@@ -13,14 +13,7 @@ from agent.hub.utils import match_plan
 from agent.types.const import CONFIG_TASK_HISTORY_FILE
 from agent.utils.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
 
-from .generator import (
-    plan_generator,
-    task_selector,
-    model_selector,
-    dataset_selector,
-    dependency_generator,
-    datasource_detector
-)
+from .generator import plan_generator, dependency_generator, req_based_generator
 
 config = Config()
 
@@ -50,7 +43,7 @@ class Chain:
         )
 
         self.entry_file = self.plan.entry_file
-        self.user_requirement = self.plan.requirement
+        self.requirement = self.plan.requirement
         self.project_name = self.plan.project_name
         self.dataset = self.plan.dataset
 
@@ -106,12 +99,11 @@ class Chain:
         Generate a file name.
         :return: the file name.
         """
-        prompt = pmpt_chain_filename(self.plan.lang)
-        self.user_requirement = user_requirement
+        self.requirement = user_requirement
         self.chat_history.extend(
             [
-                {"role": 'system', "content": prompt},
-                {"role": 'user', "content": self.user_requirement}
+                {"role": 'system', "content": pmpt_chain_filename(self.plan.lang)},
+                {"role": 'user', "content": self.requirement}
             ]
         )
 
@@ -157,7 +149,7 @@ class Chain:
                 return None
 
         task_prompt = f"""
-        User Requirement: {self.user_requirement}
+        User Requirement: {self.requirement}
         Primary language: {language}
         Current task: {task.name}
         Task description: {task.description}
@@ -192,7 +184,7 @@ class Chain:
                 for attempt in range(task.debug):
                     self.console.log("Debugging the code script...")
                     self.chat_history.append(
-                        {"role": 'user', "content": pmpt_chain_debug(language, self.user_requirement, code, run_log)})
+                        {"role": 'user', "content": pmpt_chain_debug(language, self.requirement, code, run_log)})
                     code = self.handle_streaming()
                     with self.console.status(f"Running the code script..."):
                         run_log, exit_code = run_command([command])
@@ -220,17 +212,17 @@ class Chain:
                 if self.plan.requirement:
                     self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
                 else:
-                    self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
-                    self.plan.requirement = self.user_requirement
+                    self.requirement = questionary.text("Hi, what are your requirements?").ask()
+                    self.plan.requirement = self.requirement
                 if self.entry_file is None:
-                    if self.user_requirement:
-                        self.entry_file = self.gen_file_name(self.user_requirement)
+                    if self.requirement:
+                        self.entry_file = self.gen_file_name(self.requirement)
                         if self.entry_file is None:
                             raise SystemExit("The file name is not generated.")
                         self.console.print(f"Project requirements updated to: {self.project_setting_file}")
                         self.update_project_state()
 
-                if not self.user_requirement:
+                if not self.requirement:
                     raise SystemExit("The user requirement is not provided.")
 
                 # working on the task content.
@@ -238,16 +230,16 @@ class Chain:
                     self.console.log(f"The project [cyan]{self.project_name}[/cyan] has no existing plans. "
                                      f"Start planning...")
 
-                    ml_task_name = task_selector(self.user_requirement, self.agent)
+                    ml_task_name = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
                     self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
-                    ml_model_arch = model_selector(self.user_requirement, self.agent)
+                    ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
                     self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
 
                     # project dataset setup
                     if self.plan.data_kind is None:
-                        self.plan.data_kind = datasource_detector(self.user_requirement, self.agent)
+                        self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                         if self.plan.data_kind == 'no_data_information_provided':
-                            self.plan.dataset = dataset_selector(self.user_requirement, self.agent)
+                            self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
                         elif self.plan.data_kind == 'csv_table_data':
                             self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
 
@@ -258,7 +250,7 @@ class Chain:
                     with self.console.status("Planning the tasks for you..."):
                         # generate the plan and tasks.
                         task_dicts = plan_generator(
-                            self.user_requirement,
+                            self.requirement,
                             self.agent,
                             ml_model_arch,
                             self.plan.dataset,

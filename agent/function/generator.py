@@ -3,15 +3,23 @@ import json
 from agent.types import Plan
 from agent.hub import load_yml
 from agent.utils import preprocess_json_string
-from agent.utils.prompt import (
-    pmpt_chain_dependency,
-    pmpt_dataset_selection,
-    pmpt_model_selection,
-    pmpt_task_selection,
-    pmpt_dataset_detector,
-    pmpt_task_desc,
-    pmpt_plan
-)
+from agent.utils.prompt import pmpt_chain_dependency, pmpt_task_desc, pmpt_plan
+
+
+def req_based_generator(requirement: str, sys_prompt: str, llm_agent):
+    """
+    Generate the project plan based on the user's requirements.
+    :param requirement: the user's requirements.
+    :param sys_prompt: the system prompt.
+    :param llm_agent: the language model agent.
+    :return: the project plan.
+    """
+    chat_history = [
+        {"role": 'system', "content": sys_prompt},
+        {"role": 'user', "content": requirement}
+    ]
+    resp = llm_agent.completions(chat_history, stream=False)
+    return resp.choices[0].message.content
 
 
 def dependency_generator(plan: Plan, llm_agent):
@@ -28,65 +36,6 @@ def dependency_generator(plan: Plan, llm_agent):
     resp = llm_agent.completions(chat_history, stream=False)
     results = resp.choices[0].message.content
     return json.loads(preprocess_json_string(results))
-
-
-def datasource_detector(requirement: str, llm_agent):
-    """
-    Detect the dataset based on the user's requirements.
-    :param requirement: the user's requirements.
-    :param llm_agent: the language model agent.
-    :return: the dataset name.
-    """
-    chat_history = [
-        {"role": 'system', "content": pmpt_dataset_detector()},
-        {"role": 'user', "content": requirement}
-    ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    return resp.choices[0].message.content
-
-
-def dataset_selector(requirement: str, llm_agent):
-    """
-    Select the dataset based on the user's requirements.
-    :param requirement: the user's requirements.
-    :param llm_agent: the language model agent.
-    :return: the dataset name.
-    """
-    chat_history = [
-        {"role": 'system', "content": pmpt_dataset_selection()},
-        {"role": 'user', "content": requirement}
-    ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    return resp.choices[0].message.content
-
-
-def model_selector(requirement: str, llm_agent):
-    """
-    Select the model based on the user's requirements.
-    :param requirement: the user's requirements.
-    :param llm_agent: the language model agent.
-    :return: the model name.
-    """
-    chat_history = [
-        {"role": 'system', "content": pmpt_model_selection()},
-        {"role": 'user', "content": requirement}
-    ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    return resp.choices[0].message.content
-
-
-def task_selector(requirement: str, llm_agent):
-    """
-    Select the task based on the user's requirements.
-    :param requirement: the user's requirements.
-    :param llm_agent: the language model agent.
-    :return: the task name.
-    """
-    resp = llm_agent.completions([
-        {"role": 'system', "content": pmpt_task_selection()},
-        {"role": 'user', "content": requirement}
-    ], stream=False)
-    return resp.choices[0].message.content
 
 
 def description_generator(requirement: str, task_list, llm_agent):
