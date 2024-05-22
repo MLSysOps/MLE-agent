@@ -11,6 +11,7 @@
       uri: "https://pytorch.org/hub/"
     - name: "NLTK Data"
       uri: "https://www.nltk.org/data.html"
+    - name: "Local Files"
 - name: "Data Pre-processing"
   kind: "code_generation"
 - name: "Data Visualization"

@@ -30,7 +30,7 @@ def dependency_generator(plan: Plan, llm_agent):
     return json.loads(preprocess_json_string(results))
 
 
-def dataset_detector(requirement: str, llm_agent):
+def datasource_detector(requirement: str, llm_agent):
     """
     Detect the dataset based on the user's requirements.
     :param requirement: the user's requirements.
@@ -114,7 +114,7 @@ def plan_generator(
         requirement: str,
         llm_agent,
         ml_model_arch: str,
-        ml_dataset_name: str,
+        ml_dataset: str,
         ml_task_name: str
 ):
     """
@@ -122,7 +122,7 @@ def plan_generator(
     :param requirement: the user's requirements.
     :param llm_agent: the language model agent.
     :param ml_model_arch: the AI model architecture.
-    :param ml_dataset_name: the dataset name.
+    :param ml_dataset: the dataset prompt.
     :param ml_task_name: the ML task name.
     :return: the project plan.
     """
@@ -150,7 +150,7 @@ def plan_generator(
     
     - ML task kind: {ml_task_name}
     - AI model architecture: {ml_model_arch}
-    - Dataset: {ml_dataset_name}
+    - Dataset: {ml_dataset}
     """
 
     chat_history = [

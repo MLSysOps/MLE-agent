@@ -8,6 +8,7 @@ from prompt_toolkit.history import FileHistory
 
 from agent.utils import *
 from agent.types import Plan, Task
+from agent.integration import read_csv_file
 from agent.templates.utils import match_plan
 from agent.const import CONFIG_TASK_HISTORY_FILE
 from agent.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
@@ -18,7 +19,7 @@ from .generator import (
     model_selector,
     dataset_selector,
     dependency_generator,
-    dataset_detector
+    datasource_detector
 )
 
 config = Config()
@@ -168,6 +169,14 @@ class Chain:
             Resources: {params}
             """
 
+        # handle the data collection task.
+        if task.name == "Data Collection":
+            if self.plan.data_kind == 'csv_table_data':
+                task_prompt += f"""
+                Data source: {self.plan.dataset}
+                Dataset examples: {read_csv_file(self.plan.dataset, column_only=True)}
+                """
+
         self.chat_history.extend(
             [
                 {"role": 'system', "content": sys_prompt},
@@ -241,23 +250,16 @@ class Chain:
                     self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
 
                     # project dataset setup
+                    if self.plan.data_kind is None:
+                        self.plan.data_kind = datasource_detector(self.user_requirement, self.agent)
+                        if self.plan.data_kind == 'no_data_information_provided':
+                            self.plan.dataset = dataset_selector(self.user_requirement, self.agent)
+                        elif self.plan.data_kind == 'csv_table_data':
+                            self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+
+                    self.console.print(f"[cyan]Data source:[/cyan] {self.plan.data_kind}")
                     if self.plan.dataset is None:
-                        dataset = dataset_detector(self.user_requirement, self.agent)
-
-                        if dataset == 'no_data_information_provided':
-                            dataset = dataset_selector(self.user_requirement, self.agent)
-                        elif dataset == 'csv_table_data':
-                            dataset = questionary.text("Please provide the CSV data path:").ask()
-                        else:
-                            pass
-
-                        self.plan.dataset = dataset
-
-                    ml_dataset = self.plan.dataset
-                    self.console.print(f"[cyan]Dataset:[/cyan] {self.plan.dataset}")
-
-                    if ml_dataset is None:
-                        raise SystemExit("The dataset is not provided. Aborted.")
+                        raise SystemExit("The dataset information is not provided. Aborted.")
 
                     with self.console.status("Planning the tasks for you..."):
                         # generate the plan and tasks.
@@ -265,7 +267,7 @@ class Chain:
                             self.user_requirement,
                             self.agent,
                             ml_model_arch,
-                            ml_dataset,
+                            self.plan.dataset,
                             ml_task_name
                         )
                         self.console.print(task_dicts)

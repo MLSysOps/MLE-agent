@@ -33,5 +33,6 @@ class Plan(BaseModel):
     debug_env: Optional[str] = None
     requirement: Optional[str] = None
     dataset: Optional[str] = None
+    data_kind: Optional[str] = None
     tasks: Optional[List[Task]] = None
     description: Optional[str] = None
