@@ -67,7 +67,9 @@ def pmpt_chain_filename(lang: str) -> str:
     You are a Machine Learning Engineer working on a project that primarily uses {lang}.
     Your task is to generate a file name based on the given user requirements.
     Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
-
+    
+    You must provide a name to avoid Nonetype error.
+    
     The output format should be:
 
     File Name: {{name}}

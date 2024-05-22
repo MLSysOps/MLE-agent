@@ -26,7 +26,6 @@ class Task(BaseModel):
 class Plan(BaseModel):
     project_name: str
     project: str
-    launch_env: str
     current_task: int
     lang: str
     llm: str
