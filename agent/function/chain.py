@@ -118,7 +118,6 @@ class Chain:
             target_name = extract_file_name(completion.choices[0].message.content)
             self.training_entry_file = str(os.path.join(self.plan.project, target_name))
 
-
         # TODO: handle the keyboard interrupt.
         self.console.print(f"The entry file is: {self.training_entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
