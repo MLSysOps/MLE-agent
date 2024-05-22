@@ -9,7 +9,7 @@ from prompt_toolkit.history import FileHistory
 
 from agent.utils import Config
 from agent.types.const import CONFIG_CHAT_HISTORY_FILE
-from agent.utils import extract_and_save_file, list_all_files
+from agent.utils import list_all_files
 
 config = Config()
 
@@ -56,9 +56,8 @@ class Chat:
 
             stop_reason = token.choices[0].finish_reason
             if stop_reason == "stop":
-                saved_file, _ = extract_and_save_file(text)
-                if saved_file:
-                    self.console.log(f"Generating code to: {saved_file}")
+                # TODO: take actions on stop (e.g., generated code file)
+                pass
 
         self.chat_history.append({"role": "assistant", "content": text})
 

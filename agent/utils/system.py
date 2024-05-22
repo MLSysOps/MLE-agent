@@ -282,3 +282,21 @@ def run_command(command):
         return output, exit_code
     except Exception as e:
         return str(e), -1
+
+
+def list_dir_structure(start_path):
+    """
+    List all files and directories under the given path.
+    :param start_path: the path to start listing from.
+    :return:
+    """
+    return_str = ""
+    for root, dirs, files in os.walk(start_path):
+        level = root.replace(start_path, '').count(os.sep)
+        indent = ' ' * 4 * level
+        subindent = ' ' * 4 * (level + 1)
+        return_str += f'{indent}{os.path.basename(root)}/\n'
+        for f in files:
+            return_str += f'{subindent}{f}\n'
+
+    return return_str

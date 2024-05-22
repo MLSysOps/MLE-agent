@@ -1,24 +1,40 @@
 from agent.types import Plan
 from agent.hub import load_yml
 
+from .system import read_file_to_string
 
-def pmpt_sys_init(
+
+def pmpt_chat_init(
         lang: str,
         plan: Plan
 ) -> str:
-    return f"""
-    You are an Machine learning engineer, and you are currently working on an ML project using {lang}
-     as the primary language. The ML project contains multiple steps, and each step is a task that
-      you need to complete by generating a code script and the corresponding file name based on the user requirements.
-    
-    Now, you are currently working on {plan.tasks[plan.current_task - 1]} task.
-    The output format should be:
-    
-    File Name: {{name}}
-    
-    Code: {{code}}
-    
-    """
+    current_task = plan.tasks[plan.current_task - 1]
+    target_source_code = read_file_to_string(plan.entry_file)
+    if target_source_code is None:
+        return f"""
+        You are an Machine learning engineer, and you are currently working on an ML project using {lang}
+         as the primary language. And now you should answer the user's questions based on the following information.
+        
+        USEFUL INFORMATION:
+        
+        - Project Language: {lang}
+        - Your project plan: {plan.dict()}
+        - The current task you are working on: {current_task.dict()}
+        
+        """
+    else:
+        return f"""
+        You are an Machine learning engineer, and you are currently working on an ML project using {lang}
+         as the primary language. And now you should answer the user's questions based on the following information.
+        
+        USEFUL INFORMATION:
+        
+        - Project Language: {lang}
+        - Your project plan: {plan.dict()}
+        - The current task you are working on: {current_task.dict()}
+        - The source code you have written for the whole project: {read_file_to_string(plan.entry_file)}
+        
+        """
 
 
 def pmpt_chain_init(lang: str) -> str:

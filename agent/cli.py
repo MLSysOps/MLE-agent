@@ -6,7 +6,7 @@ import agent
 from agent.utils import *
 from agent.model import OpenAIModel
 from agent.function import Chat, Chain
-from agent.utils.prompt import pmpt_sys_init
+from agent.utils.prompt import pmpt_chat_init
 
 console = Console()
 # avoid the tokenizers parallelism issue
@@ -138,16 +138,21 @@ def chat():
 
     project_path = configuration.read()['project']['path']
     project_plan = read_project_plan(str(os.path.join(project_path, CONFIG_PROJECT_FILE)))
-    console.log("> Current project:", project_path)
+    console.log("> [green]Current project:[/green]", project_path)
 
     selected_language = project_plan.lang
-    console.log("> Project language:", selected_language)
+    console.log("> [green]Project language:[/green]", selected_language)
+
+    current_task = project_plan.tasks[project_plan.current_task - 1]
+    console.log("> [green]Current task:[/green]", current_task.name)
+    console.log("> [green]Task progress:[/green]", f"{project_plan.current_task}/{len(project_plan.tasks)}")
+    console.log("> [green]Task description:[/green]", current_task.description)
 
     # start the interactive chat
     console.line()
     chat_app = Chat(model)
     # set the initial system prompt
-    chat_app.add(role='system', content=pmpt_sys_init(selected_language, project_plan))
+    chat_app.add(role='system', content=pmpt_chat_init(selected_language, project_plan))
     chat_app.start()
 
 
