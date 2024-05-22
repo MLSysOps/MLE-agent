@@ -8,6 +8,7 @@ from agent.prompt import (
     pmpt_dataset_selection,
     pmpt_model_selection,
     pmpt_task_selection,
+    pmpt_dataset_detector,
     pmpt_task_desc,
     pmpt_plan
 )
@@ -27,6 +28,21 @@ def dependency_generator(plan: Plan, llm_agent):
     resp = llm_agent.completions(chat_history, stream=False)
     results = resp.choices[0].message.content
     return json.loads(preprocess_json_string(results))
+
+
+def dataset_detector(requirement: str, llm_agent):
+    """
+    Detect the dataset based on the user's requirements.
+    :param requirement: the user's requirements.
+    :param llm_agent: the language model agent.
+    :return: the dataset name.
+    """
+    chat_history = [
+        {"role": 'system', "content": pmpt_dataset_detector()},
+        {"role": 'user', "content": requirement}
+    ]
+    resp = llm_agent.completions(chat_history, stream=False)
+    return resp.choices[0].message.content
 
 
 def dataset_selector(requirement: str, llm_agent):

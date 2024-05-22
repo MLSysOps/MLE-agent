@@ -17,7 +17,8 @@ from .generator import (
     task_selector,
     model_selector,
     dataset_selector,
-    dependency_generator
+    dependency_generator,
+    dataset_detector
 )
 
 config = Config()
@@ -230,13 +231,13 @@ class Chain:
                     raise SystemExit("The user requirement is not provided.")
 
                 # project dataset setup
-                if self.plan.dataset:
-                    self.console.print(f"[cyan]Raw Dataset:[/cyan] {self.plan.dataset}")
-                else:
-                    self.dataset = questionary.text("Where is your raw dataset?").ask()
-                    self.plan.dataset = self.dataset
+                if self.plan.dataset is None:
+                    dataset = dataset_detector(self.user_requirement, self.agent)
+                    self.plan.dataset = dataset
 
-                if not self.dataset:
+                self.console.print(f"[cyan]Raw Dataset:[/cyan] {self.plan.dataset}")
+
+                if not self.plan.dataset:
                     raise SystemExit("The dataset is not provided.")
                 else:
                     self.update_project_state()

@@ -75,7 +75,7 @@ def pmpt_chain_filename(lang: str) -> str:
     File Name: {{name}}
     """
 
-  
+
 def pmpt_chain_dependency(lang: str) -> str:
     return f"""
     You are an ML project expert that detect which dependencies the user need to install
@@ -105,13 +105,32 @@ def pmpt_dataset_selection():
     """
 
 
+def pmpt_dataset_detector():
+    return f"""
+    You are an ML project expert that detects the dataset based on the user's requirements.
+
+    - You should detect the data source based on the user's requirements.
+    - You only return the dataset name.
+    - Noted: If the requirement doesn't contain the data source information, select 'no_data_information_provided'
+    
+    AVAILABLE OPTIONS:
+    
+    {load_yml('data.yml')}
+
+    OUTPUT should only a name without any punctuation.
+
+    """
+
+
 def pmpt_model_selection():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.
+    You are required to detect if the user has provide dataset information as listed below.
 
-    - You should choose an AI model framework that can achieve the user's requirements.
-    - You should only return the framework name.
-    - Note: it if the model architecture name, not the framework builds the model.
+    - You should choose a dataset source from the list below based on the user's requirements.
+    - You should only return the choice name.
+    - Noted: if the user's requirements do not contain any information, you should select 'no-data-information-provided'
+    and return.
 
     OUTPUT should only a name without any punctuation.
 
