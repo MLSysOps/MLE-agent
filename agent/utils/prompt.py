@@ -140,7 +140,7 @@ def pmpt_dataset_detect():
 
 def pmpt_model_select():
     return f"""
-    You are an ML project expert tasked with providing consultation to the user based on the user's requirements, 
+    You are an ML project expert tasked with providing consultation to the user based on the user's requirements,
     provided data samples, and selected ML tasks.
 
     - Carefully analyze the provided user requirements, data samples, and ML tasks.
@@ -154,7 +154,7 @@ def pmpt_model_select():
 
 def pmpt_task_select():
     return f"""
-    You are an ML project expert tasked with determining the appropriate tasks based on the user's requirements 
+    You are an ML project expert tasked with determining the appropriate tasks based on the user's requirements
     and provided data samples.
 
     - Carefully analyze the provided user requirements and data samples.
