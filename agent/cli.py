@@ -100,7 +100,7 @@ def start():
 
     if configuration.read().get('project') is None:
         console.log("You have not set up a project yet.")
-        console.log("Please create a new project first using 'mle new' command,"
+        console.log("Please create a new project first using 'mle new your_project_name' command,"
                     " or set the project using 'mle set_project <project path>'.")
         return
 
@@ -108,7 +108,7 @@ def start():
 
     # check if the project plan file exists
     if not os.path.exists(project_plan_file):
-        console.log("The project.yml does not exist on the workspace. Aborted.")
+        console.log(f"The {CONFIG_PROJECT_FILE} does not exist in the workspace. Aborted.")
         return
 
     chain = Chain(load_plan(str(project_plan_file)), load_model())
