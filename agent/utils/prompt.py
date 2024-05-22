@@ -11,7 +11,7 @@ def pmpt_sys_init(
      as the primary language. The ML project contains multiple steps, and each step is a task that
       you need to complete by generating a code script and the corresponding file name based on the user requirements.
     
-    Now, you are currently working on {plan.current_task}:{plan.tasks[plan.current_task].name} task.
+    Now, you are currently working on {plan.tasks[plan.current_task - 1]} task.
     The output format should be:
     
     File Name: {{name}}

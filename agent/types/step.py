@@ -29,7 +29,7 @@ class Plan(BaseModel):
     current_task: int
     lang: str
     llm: str
-    training_entry_file: Optional[str] = None
+    entry_file: Optional[str] = None
     debug_env: Optional[str] = None
     requirement: Optional[str] = None
     dataset: Optional[str] = None

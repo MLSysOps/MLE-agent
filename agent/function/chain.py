@@ -49,7 +49,7 @@ class Chain:
             history=FileHistory(str(os.path.join(self.project_home, CONFIG_TASK_HISTORY_FILE)))
         )
 
-        self.training_entry_file = self.plan.training_entry_file
+        self.entry_file = self.plan.entry_file
         self.user_requirement = self.plan.requirement
         self.project_name = self.plan.project_name
         self.dataset = self.plan.dataset
@@ -96,9 +96,9 @@ class Chain:
                 if stop_reason == "stop":
                     code = extract_code(text)
                     if code:
-                        with open(self.training_entry_file, 'w') as file:
+                        with open(self.entry_file, 'w') as file:
                             file.write(code)
-                        self.console.print(f"Code generated to: {self.training_entry_file}")
+                        self.console.print(f"Code generated to: {self.entry_file}")
         return text
 
     def gen_file_name(self, user_requirement: str):
@@ -118,22 +118,22 @@ class Chain:
         with self.console.status("Preparing entry file name..."):
             completion = self.agent.completions(self.chat_history, stream=False)
             target_name = extract_file_name(completion.choices[0].message.content)
-            self.training_entry_file = str(os.path.join(self.plan.project, target_name))
+            self.entry_file = str(os.path.join(self.plan.project, target_name))
 
         # TODO: handle the keyboard interrupt.
-        self.console.print(f"The entry file is: {self.training_entry_file}")
+        self.console.print(f"The entry file is: {self.entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
 
         if not confirm:
-            new_name = questionary.text("Please provide a new file name:", default=self.training_entry_file).ask()
+            new_name = questionary.text("Please provide a new file name:", default=self.entry_file).ask()
             if new_name:
-                self.training_entry_file = os.path.join(self.plan.path, new_name)
+                self.entry_file = os.path.join(self.plan.path, new_name)
 
         # clear the chat history
-        self.plan.training_entry_file = self.training_entry_file
+        self.plan.entry_file = self.entry_file
         self.chat_history = []
 
-        return self.training_entry_file
+        return self.entry_file
 
     def gen_task_content(self, task: Task):
         """
@@ -143,15 +143,15 @@ class Chain:
         :return: the content of the task.
         """
         language = self.plan.lang
-        training_entry_file = self.plan.training_entry_file
+        entry_file = self.plan.entry_file
         sys_prompt = pmpt_chain_init(language)
-        if training_entry_file:
-            source_content = read_file_to_string(training_entry_file)
+        if entry_file:
+            source_content = read_file_to_string(entry_file)
             if source_content or self.plan.current_task <= 1:
                 sys_prompt = pmpt_chain_code(self.plan.lang, source_content)
             else:
                 self.console.log(
-                    f"File {training_entry_file} not found. "
+                    f"File {entry_file} not found. "
                     f"Please make sure the script exists or deleting the `target_file` in the project.yml \n"
                 )
                 return None
@@ -184,7 +184,7 @@ class Chain:
         # TODO: allow handling the program timeout.
         if task.debug:
             debug_success = False
-            command = f"python {self.training_entry_file}"
+            command = f"python {self.entry_file}"
             with self.console.status(f"Running the code script with command: {command}"):
                 run_log, exit_code = run_command([command])
 
@@ -222,10 +222,10 @@ class Chain:
                 else:
                     self.user_requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.user_requirement
-                if self.training_entry_file is None:
+                if self.entry_file is None:
                     if self.user_requirement:
-                        self.training_entry_file = self.gen_file_name(self.user_requirement)
-                        if self.training_entry_file is None:
+                        self.entry_file = self.gen_file_name(self.user_requirement)
+                        if self.entry_file is None:
                             raise SystemExit("The file name is not generated.")
                         self.console.print(f"Project requirements updated to: {self.project_setting_file}")
                         self.update_project_state()

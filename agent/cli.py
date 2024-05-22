@@ -209,3 +209,47 @@ def set_project(path):
     })
 
     console.log(f"> Project set to {project_path}")
+
+
+@cli.command()
+def status():
+    """
+    status: display the current status of the project.
+    """
+    configuration = Config()
+    if configuration.read().get('project') is None:
+        console.log("You have not set up a project yet.")
+        console.log("Please create a new project first using 'mle new' command.")
+        return
+
+    project_path = configuration.read()['project']['path']
+    project_plan = read_project_plan(str(os.path.join(project_path, CONFIG_PROJECT_FILE)))
+
+    console.log("> [green]Current project:[/green]", project_plan.project_name)
+    console.log("> [green]Project path:[/green]", project_path)
+    console.log("> [green]Project entry file:[/green]", project_plan.entry_file)
+    console.log("> [green]Project language:[/green]", project_plan.lang)
+    console.line()
+    # display the current task name
+    current_task = project_plan.tasks[project_plan.current_task - 1]
+    console.log("> [green]Current task:[/green]", current_task.name)
+    console.log("> [green]Task progress:[/green]", f"{project_plan.current_task}/{len(project_plan.tasks)}")
+    console.log("> [green]Task description:[/green]", current_task.description)
+
+    if current_task.resources:
+        console.line()
+        console.log("> [green]Resources:[/green]")
+        for resource in current_task.resources:
+            console.log(f"- {resource.name}: {resource.uri}")
+
+    if current_task.functions:
+        console.line()
+        console.log("> [green]Functions:[/green]")
+        for function in current_task.functions:
+            console.log(f"- {function.name}: {function.description}")
+
+    if current_task.debug:
+        console.line()
+        console.log("> [green]Debugging:[/green]")
+        console.log(f"- Maximum debug attempts: {current_task.debug}")
+        console.log(f"- Debugging environment: {project_plan.debug_env}")

@@ -73,7 +73,7 @@ class Chat:
             with Live(console=self.console) as live:
                 for text in self.handle_response(prompt):
                     live.update(
-                        Panel(Markdown(text), title="[bold magenta]MLE Assistant[/]", border_style="magenta"),
+                        Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
                         refresh=True
                     )
         else:
