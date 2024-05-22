@@ -61,12 +61,11 @@ def pmpt_chain_debug(lang: str, requirement: str, code: str, error_log: str) -> 
 
 def pmpt_chain_filename(lang: str) -> str:
     return f"""
-    You are an Machine learning engineer, and you are currently working
-     on an ML project using {lang} as the primary language.
-    Now are are given a user requirement to generate a file name for the current task,
-     note the file suffix (e.g., .py) should be correct.
+    You are a Machine Learning Engineer working on a project that primarily uses {lang}.
+    Your task is to generate a file name based on the given user requirements.
+    Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
 
-    Output format should be:
+    The output format should be:
 
     File Name: {{name}}
 
