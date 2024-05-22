@@ -31,8 +31,8 @@ class Chain:
         self.console = Console()
         # if the project is not set up, then raise an error.
         if config.read().get('project') is None:
-            self.console.print("You have not set up a project yet.")
-            self.console.print("Please create a new project first using 'mle new project_name' command then try again.")
+            self.console.log("You have not set up a project yet.")
+            self.console.log("Please create a new project first using 'mle new project_name' command then try again.")
             raise SystemExit
 
         self.project_home = config.read().get('project')['path']
@@ -77,7 +77,7 @@ class Chain:
                     if code:
                         with open(self.entry_file, 'w') as file:
                             file.write(code)
-                        self.console.print(f"Code generated to: {self.entry_file}")
+                        self.console.log(f"Code generated to: {self.entry_file}")
         return text
 
     def gen_file_name(self, user_requirement: str):
@@ -99,7 +99,7 @@ class Chain:
             self.entry_file = str(os.path.join(self.plan.project, target_name))
 
         # TODO: handle the keyboard interrupt.
-        self.console.print(f"The entry file is: {self.entry_file}")
+        self.console.log(f"The entry file is: {self.entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
 
         if not confirm:
@@ -194,9 +194,9 @@ class Chain:
         try:
             is_running = True
             while is_running:
-                # Step 1: Ask for user requirements
+                self.console.log("[bold red]Step 1: User requirements understanding[bold red]")
                 if self.plan.requirement:
-                    self.console.print(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
+                    self.console.log(f"[cyan]User Requirement:[/cyan] {self.plan.requirement}")
                 else:
                     self.requirement = questionary.text("Hi, what are your requirements?").ask()
                     self.plan.requirement = self.requirement
@@ -209,10 +209,10 @@ class Chain:
                     self.entry_file = self.gen_file_name(self.requirement)
                     if self.entry_file is None:
                         raise SystemExit("The file name is not generated.")
-                    self.console.print(f"Project requirements updated to: {self.project_setting_file}")
+                    self.console.log(f"Project requirements updated to: {self.project_setting_file}")
                     self.update_project_state()
 
-                # Step 2.1: Ask for the related dataset and do some analysis for task planning
+                self.console.log("[bold red]Step 2: Data quick review[bold red]")
                 if self.plan.data_kind is None:
                     self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                     if self.plan.data_kind == 'no_data_information_provided':
@@ -220,23 +220,24 @@ class Chain:
                     elif self.plan.data_kind == 'csv_table_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
 
-                self.console.print(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
                 if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
                     raise SystemExit("Wrong dataset information. Aborted.")
                 else:
-                    self.console.print(f"[cyan]Dataset examples:[/cyan] {read_csv_file(self.plan.dataset)}")
+                    self.console.log(f"[cyan]Dataset examples:[/cyan] {read_csv_file(self.plan.dataset)}")
 
-                # Step 3: Choose the model architecture and tasks based on the requirement and dataset
+                self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.plan.tasks is None:
                     self.console.log(
                         f"The project [cyan]{self.project_name}[/cyan] has no existing plans. Start planning...")
 
                     ml_task_name = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
-                    self.console.print(f"[cyan]Task detected:[/cyan] {ml_task_name}")
+                    self.console.log(f"[cyan]Task detected:[/cyan] {ml_task_name}")
                     ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
-                    self.console.print(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
+                    self.console.log(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
 
                     # Step 4: Generate the plan and tasks
+                    self.console.log("[bold red]Step 4: Plan generation[bold red]")
                     with self.console.status("Planning the tasks for you..."):
                         task_dicts = plan_generator(
                             self.requirement,
@@ -245,7 +246,7 @@ class Chain:
                             self.plan.dataset,
                             ml_task_name
                         )
-                        self.console.print(task_dicts)
+                        self.console.log(task_dicts)
                         self.plan.tasks = []
                         for task_dict in task_dicts.get('tasks'):
                             task = match_plan(task_dict)
@@ -257,7 +258,7 @@ class Chain:
                     if confirm_plan:
                         self.update_project_state()
                     else:
-                        self.console.print("Seems you are not satisfied with the plan. Aborting the chain.")
+                        self.console.log("Seems you are not satisfied with the plan. Aborting the chain.")
                         return
 
                 task_num = len(self.plan.tasks)
@@ -276,7 +277,7 @@ class Chain:
                 if confirm_install:
                     run_command(install_commands)
                 else:
-                    self.console.print("Skipped the dependencies installation.")
+                    self.console.log("Skipped the dependencies installation.")
 
                 for task in self.plan.tasks:
                     if self.plan.current_task < task_num:
@@ -293,5 +294,5 @@ class Chain:
 
                 is_running = False
         except KeyboardInterrupt:
-            self.console.print("The chain has been interrupted.")
+            self.console.log("The chain has been interrupted.")
             return
