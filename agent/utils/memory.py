@@ -102,7 +102,7 @@ class Memory:
         """
         peek: peek the memery.
         Args:
-            collection: the name of the collection to peek, default is the command history.
+            collection: the name of the collection to peek.
             n_results: the number of results to return.
 
         Returns: the top k results.
