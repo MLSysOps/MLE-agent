@@ -213,8 +213,8 @@ def pmpt_plan(task_list):
             {{"name": "Public Datasets Collection", "resources": ["HuggingFace Datasets"]}},
             {{"name": "Data Loading", "resources": ["pandas"]}},
             {{"name": "Data Pre-processing", "resources": ["scikit-learn preprocessing"]}},
-            {{"name": "Model Training", "resources": ["PyTorch"]}},
-            {{"name": "Model Evaluation", "resources": ["Scikit-learn Metrics"]}}
+            {{"name": "Model Training", "resources": ["huggingface transformers", "wandbs"]}},
+            {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
         ]
     }}
     """
