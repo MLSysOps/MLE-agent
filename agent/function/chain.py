@@ -44,8 +44,6 @@ class Chain:
 
         self.entry_file = self.plan.entry_file
         self.requirement = self.plan.requirement
-        self.project_name = self.plan.project_name
-        self.dataset = self.plan.dataset
 
     def update_project_state(self):
         """
@@ -214,43 +212,66 @@ class Chain:
                     self.update_project_state()
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
-                if self.plan.data_kind is None:
+                if self.plan.data_kind:
+                    self.console.log(f"[cyan]Data kind:[/cyan] {self.plan.data_kind}")
+                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                else:
                     self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                     if self.plan.data_kind == 'no_data_information_provided':
                         self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
                     elif self.plan.data_kind == 'csv_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+                    self.update_project_state()
 
-                self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
-                    raise SystemExit("Wrong dataset information. Aborted.")
-                else:
-                    csv_data_sample = read_csv_file(self.plan.dataset)
-                    self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
-                    self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                    if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
+                        raise SystemExit("Wrong dataset information. Aborted.")
+                    else:
+                        csv_data_sample = read_csv_file(self.plan.dataset)
+                        self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                        self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
-                if self.plan.tasks is None:
-                    self.console.log(
-                        f"The project [cyan]{self.project_name}[/cyan] has no existing plans. Start planning...")
+                if self.plan.ml_task_type is None:
+                    ml_task_type = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
+                    self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
+                    confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
+                    if confirm_ml_task_type:
+                        self.plan.ml_task_type = ml_task_type
+                        self.update_project_state()
+                    else:
+                        self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
+                        return
 
-                    ml_task_name = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
-                    self.console.log(f"[cyan]Task detected:[/cyan] {ml_task_name}")
-                    self.requirement += f"\n\nML Task: {ml_task_name}"
+                self.console.log(f"[cyan]Task detected:[/cyan] {self.plan.ml_task_type}")
+                self.requirement += f"\n\nML task type: {self.plan.ml_task_type}"
 
+                if self.plan.ml_model_arch is None:
                     # TODO: search the best model from kaggle, huggingface, etc
                     ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
-                    self.console.log(f"[cyan]Model architecture selected:[/cyan] {ml_model_arch}")
+                    self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
+                    confirm_ml_model_arch = questionary.confirm("Are you sure to use this ml arch?").ask()
+                    if confirm_ml_model_arch:
+                        self.plan.ml_model_arch = ml_model_arch
+                        self.update_project_state()
+                    else:
+                        self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
+                        return
 
-                    # Step 4: Generate the plan and tasks
-                    self.console.log("[bold red]Step 4: Plan generation[bold red]")
+                self.console.log(f"[cyan]Model architecture selected:[/cyan] {self.plan.ml_model_arch}")
+                self.requirement += f"\n\nModel architecture: {self.plan.ml_model_arch}"
+
+                self.console.log("[bold red]Step 4: Plan generation[bold red]")
+                if self.plan.tasks is None:
+                    self.console.log(
+                        f"The project [cyan]{self.plan.project_name}[/cyan] has no existing plans. Start planning...")
                     with self.console.status("Planning the tasks for you..."):
                         task_dicts = plan_generator(
                             self.requirement,
                             self.agent,
-                            ml_model_arch,
+                            self.plan.ml_model_arch,
                             self.plan.dataset,
-                            ml_task_name
+                            self.plan.ml_task_type
                         )
                         self.console.log(task_dicts)
                         self.plan.tasks = []
