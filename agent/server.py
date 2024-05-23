@@ -20,12 +20,40 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello World"}
+    return {"message": "Welcome to MLE-Agent!"}
 
 
-@app.post("/items/")
-def create_item(name: str):
-    return {"name": name, "status": "Item created"}
+@app.post("/config/")
+def config():
+    """
+    Configure the MLE-Agent.
+    :return: the configuration data.
+    """
+    return {"status": "Configured"}
+
+
+@app.post("/project/")
+def create_project():
+    """
+    Create a new project.
+    :return: the data of the new project.
+    """
+    return {"status": "Project created"}
+
+
+@app.get("/project/{project_id}")
+def get_project(project_id: int):
+    return {"project_id": project_id}
+
+
+# run
+@app.get("/run/")
+def run_project():
+    """
+    run_project: Run the project.
+    :return: the run status.
+    """
+    return {"status": "Running"}
 
 
 def start_server(address: str = '0.0.0.0', port: int = 8080):

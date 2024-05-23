@@ -18,7 +18,7 @@ class Memory:
             data_path: str = CONFIG_HOME
     ):
         """
-        RAG for Termax: memory and external knowledge management.
+        RAG for MLE-Agent: memory and external knowledge management.
         Args:
             data_path: the path to store the data.
 
