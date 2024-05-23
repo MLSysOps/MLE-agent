@@ -5,6 +5,7 @@ import questionary
 import agent
 from agent.utils import *
 from agent.model import OpenAIModel
+from agent.server import start_server
 from agent.function import Chat, Chain
 from agent.utils.prompt import pmpt_chat_init
 
@@ -214,6 +215,19 @@ def set_project(path):
     })
 
     console.log(f"> Project set to {project_path}")
+
+
+@cli.command()
+@click.option('--port', '-p', default=8000, help="The port to run the server.")
+@click.option('--address', '-a', default='0.0.0.0', help="The address to run the server.")
+def server(port, address):
+    """
+    server: launch the MLE-Agent RESTful API server.
+    :param port: the target port.
+    :param address: the target address.
+    :return: None
+    """
+    start_server(address, port)
 
 
 @cli.command()

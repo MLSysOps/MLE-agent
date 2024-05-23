@@ -1,5 +1,5 @@
 """
-The service of MLE-Agent
+The RESTful server of MLE-Agent
 """
 
 import uvicorn
@@ -28,5 +28,11 @@ def create_item(name: str):
     return {"name": name, "status": "Item created"}
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+def start_server(address: str = '0.0.0.0', port: int = 8080):
+    """
+    Start the server.
+    :param address: the server address.
+    :param port: the server port.
+    :return: None
+    """
+    uvicorn.run(app, host=address, port=port)
