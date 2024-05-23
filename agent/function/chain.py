@@ -212,24 +212,21 @@ class Chain:
                     self.update_project_state()
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
-                if self.plan.data_kind:
-                    self.console.log(f"[cyan]Data kind:[/cyan] {self.plan.data_kind}")
-                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                else:
+                if self.plan.data_kind is None and self.plan.dataset is None:
                     self.plan.data_kind = req_based_generator(self.requirement, pmpt_dataset_detect(), self.agent)
                     if self.plan.data_kind == 'no_data_information_provided':
                         self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
                     elif self.plan.data_kind == 'csv_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
-                    self.update_project_state()
 
-                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                    if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
-                        raise SystemExit("Wrong dataset information. Aborted.")
-                    else:
-                        csv_data_sample = read_csv_file(self.plan.dataset)
-                        self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
-                        self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
+                    raise SystemExit("Wrong dataset information. Aborted.")
+                else:
+                    csv_data_sample = read_csv_file(self.plan.dataset)
+                    self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                    self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                    self.update_project_state()
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.plan.ml_task_type is None:
@@ -265,13 +262,11 @@ class Chain:
                 if self.plan.tasks is None:
                     self.console.log(
                         f"The project [cyan]{self.plan.project_name}[/cyan] has no existing plans. Start planning...")
+                    self.requirement += f"\n\nDataset: {self.plan.dataset}"
                     with self.console.status("Planning the tasks for you..."):
                         task_dicts = plan_generator(
                             self.requirement,
                             self.agent,
-                            self.plan.ml_model_arch,
-                            self.plan.dataset,
-                            self.plan.ml_task_type
                         )
                         self.console.log(task_dicts)
                         self.plan.tasks = []

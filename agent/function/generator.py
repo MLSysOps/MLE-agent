@@ -62,46 +62,24 @@ def description_generator(requirement: str, task_list, llm_agent):
 def plan_generator(
         requirement: str,
         llm_agent,
-        ml_model_arch: str,
-        ml_dataset: str,
-        ml_task_name: str
 ):
     """
     Generate the project plan based on the user's requirements.
     :param requirement: the user's requirements.
     :param llm_agent: the language model agent.
-    :param ml_model_arch: the AI model architecture.
-    :param ml_dataset: the dataset prompt.
-    :param ml_task_name: the ML task name.
     :return: the project plan.
     """
     task_list = []
     for task in load_yml('plan.yml'):
-        if task.get('resources'):
-            task_list.append(
-                {
-                    'name': task['name'],
-                    'resources': [r['name'] for r in task.get('resources')]
-                }
-            )
-        else:
-            task_list.append(
-                {
-                    'name': task['name'],
-                    'resources': []
-                }
-            )
-
-    requirement += f"""
-    \n
-    
-    You should generate the plan base on the:
-    
-    - ML task kind: {ml_task_name}
-    - AI model architecture: {ml_model_arch}
-    - Dataset: {ml_dataset}
-    """
-
+        print(task['name'] + '\n')
+        task_list.append(
+            {
+                'name': task['name'],
+                'prompt': task['prompt'],
+                'resources': [r['name'] for r in task.get('resources')]
+            }
+        )
+    print(requirement)
     chat_history = [
         {"role": 'system', "content": pmpt_plan(json.dumps(task_list))},
         {"role": 'user', "content": requirement}
