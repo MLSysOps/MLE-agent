@@ -105,7 +105,8 @@ class Chain:
         if not confirm:
             new_name = questionary.text("Please provide a new file name:", default=self.entry_file).ask()
             if new_name:
-                self.entry_file = os.path.join(self.plan.path, new_name)
+                self.entry_file = new_name
+                self.console.log(f"The entry file is: {self.entry_file}")
 
         # clear the chat history
         self.plan.entry_file = self.entry_file
