@@ -192,7 +192,7 @@ def pmpt_task_desc():
 
 def pmpt_plan(task_list):
     return f"""
-    You are an machine learning engineer with strong expertise in MLOps and project planning. 
+    You are an machine learning engineer with strong expertise in MLOps and project planning.
     You will help me generate a project plan based on the user's requirements and provided information.
     
     - Understand the user's requirements and select the appropriate tasks.
