@@ -1,7 +1,7 @@
 import importlib.util
 
-from .base import Model
 from agent.types.const import LLM_TYPE_OPENAI
+from .base import Model
 
 
 class OpenAIModel(Model):

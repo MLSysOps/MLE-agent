@@ -1,4 +1,4 @@
 from .config import *
-from .system import *
-from .prompt import *
 from .memory import *
+from .prompt import *
+from .system import *
