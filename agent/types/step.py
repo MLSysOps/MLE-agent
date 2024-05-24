@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class Resource(BaseModel):
@@ -34,5 +35,7 @@ class Plan(BaseModel):
     requirement: Optional[str] = None
     dataset: Optional[str] = None
     data_kind: Optional[str] = None
+    ml_task_type: str = None
+    ml_model_arch: str = None
     tasks: Optional[List[Task]] = None
     description: Optional[str] = None

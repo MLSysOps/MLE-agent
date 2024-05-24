@@ -1,15 +1,15 @@
 import os
 import re
-import yaml
 import subprocess
+from typing import Type, TypeVar
+
+import yaml
+from pydantic import BaseModel, ValidationError
 from rich.console import Console
 
-from agent.utils import Config
 from agent.types import Plan
 from agent.types.const import CONFIG_PROJECT_FILE
-
-from typing import Type, TypeVar
-from pydantic import BaseModel, ValidationError
+from agent.utils import Config
 
 T = TypeVar('T', bound=BaseModel)
 

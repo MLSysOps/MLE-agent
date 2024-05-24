@@ -1,12 +1,13 @@
 import sys
+
 import click
 import questionary
 
 import agent
-from agent.utils import *
-from agent.model import OpenAIModel
 from agent.server import start_server
 from agent.function import Chat, Chain
+from agent.model import OpenAIModel
+from agent.utils import *
 from agent.utils.prompt import pmpt_chat_init
 
 console = Console()

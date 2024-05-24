@@ -1,6 +1,5 @@
-from agent.types import Plan
 from agent.hub import load_yml
-
+from agent.types import Plan
 from .system import read_file_to_string
 
 
@@ -193,24 +192,28 @@ def pmpt_task_desc():
 
 def pmpt_plan(task_list):
     return f"""
-    You are an ML project leader that generates the project plans based on the user's requirements.
-    The plan includes a list of tasks that can achieve the user's requirements.
+    You are an machine learning engineer with strong expertise in MLOps and project planning. 
+    You will help me generate a project plan based on the user's requirements and provided information.
     
-    - You use the tasks only from the following task list.
-    - You should select as less as possible resources to achieve the requirements.
-    - Please return the plan in JSON format, without any other information.
-    
+    - Understand the user's requirements and select the appropriate tasks.
+    - Use the tasks only from the following task list.
+    - Understand the task requirements and select the necessary resources.
+    - Use appropriate resources for each task to track the experiment and make the project reproducible.
+    - Select the minimum resources necessary to achieve the requirements.
+    - Return the plan in JSON format, without any other information.
+
     AVAILABLE TASKS AND RESOURCES:
-    
     {task_list}
-    
+
     EXAMPLE OUTPUT in JSON FORMAT:
-    
-    "tasks": [
-    {{'name': 'Data Collection', 'resources': [HuggingFace Dataset]}},
-     {{'name': 'Data Pre-processing', 'resources': []}},
-     {{'name': 'Model Training', 'resources': 'PyTorch'}},
-     {{'name': 'Model Deployment', 'resources': ['Flask']}}
-    ]
-    
+
+    {{
+        "tasks": [
+            {{"name": "Public Datasets Collection", "resources": ["HuggingFace Datasets"]}},
+            {{"name": "Data Loading", "resources": ["pandas"]}},
+            {{"name": "Data Pre-processing", "resources": ["scikit-learn preprocessing"]}},
+            {{"name": "Model Training", "resources": ["huggingface transformers", "wandbs"]}},
+            {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
+        ]
+    }}
     """
