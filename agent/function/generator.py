@@ -71,7 +71,6 @@ def plan_generator(
     """
     task_list = []
     for task in load_yml('plan.yml'):
-        print(task['name'] + '\n')
         task_list.append(
             {
                 'name': task['name'],
@@ -79,7 +78,6 @@ def plan_generator(
                 'resources': [r['name'] for r in task.get('resources')]
             }
         )
-    print(requirement)
     chat_history = [
         {"role": 'system', "content": pmpt_plan(json.dumps(task_list))},
         {"role": 'user', "content": requirement}
