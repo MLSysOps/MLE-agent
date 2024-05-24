@@ -2,6 +2,8 @@ rich
 click
 openai
 pyyaml
+uvicorn
+fastapi
 questionary
 prompt_toolkit
 pandas~=2.2.2
