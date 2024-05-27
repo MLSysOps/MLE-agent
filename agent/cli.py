@@ -5,7 +5,7 @@ import questionary
 
 import agent
 from agent.server import start_server
-from agent.function import Chat, Chain
+from agent.function import Chat, PlanAgent
 from agent.model import OpenAIModel
 from agent.utils import *
 from agent.utils.prompt import pmpt_chat_init
@@ -113,7 +113,7 @@ def start():
         console.log(f"The {CONFIG_PROJECT_FILE} does not exist in the workspace. Aborted.")
         return
 
-    chain = Chain(load_plan(str(project_plan_file)), load_model())
+    chain = PlanAgent(load_plan(str(project_plan_file)), load_model())
     chain.start()
 
 

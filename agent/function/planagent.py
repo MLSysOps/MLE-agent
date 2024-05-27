@@ -16,10 +16,10 @@ from .generator import plan_generator, dependency_generator, req_based_generator
 config = Config()
 
 
-class Chain:
+class PlanAgent:
     def __init__(self, plan: Plan, llm_agent):
         """
-        Chain: the interactive chain of the current ML task.
+        PlanAgent: the interactive chain of the current ML task.
         :param plan: the plan of the chain.
         :param llm_agent: the language model agent.
         """
@@ -314,5 +314,5 @@ class Chain:
 
                 is_running = False
         except KeyboardInterrupt:
-            self.console.log("The chain has been interrupted.")
+            self.console.log("MLE Plan Agent has been interrupted.")
             return
