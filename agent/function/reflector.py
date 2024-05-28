@@ -5,6 +5,7 @@ class Reflector:
         self.reflector = reflector
 
     def reflect(self, letter):
+        # TODO: after code generation
         # TODO: allow generating the command to run the code script.
         # TODO: allow handling the issues that are not comes from the code script.
         # TODO: allow handling the program timeout.
