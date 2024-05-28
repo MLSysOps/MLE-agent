@@ -35,19 +35,7 @@ def pmpt_chat_init(
         
         """
 
-def pmpt_chain_debug(lang: str, requirement: str, code: str, error_log: str) -> str:
-    return f"""
-    You are an Machine learning engineer, and you are debugging a {lang} script with the source code and the error logs.
-    Please make sure the modified code meets the task requirements and can run successfully.
 
-    - User Requirement: {requirement}
-    - Existing Code: {code}
-    - Error Log: {error_log}
-
-    The output format should be:
-
-    Code: {{code}}
-    """
 
 
 def pmpt_chain_filename(lang: str) -> str:
@@ -172,21 +160,4 @@ def pmpt_plan(task_list):
             {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
         ]
     }}
-    """
-
-
-def pmpt_code_dependency() -> str:
-    return f"""
-    You are an ML project expert that detect which dependencies the user need to install
-    to meet the project plan requirements. And generate a list of shell commands to install the dependencies.
-
-    - The project is written in.
-    - The commands should be in the form of a list.
-    - The commands should be able to run in the user's environment.
-
-    EXAMPLE OUTPUT in JSON FORMAT:
-
-    'commands': ['python -m pip install torch', 'pip install transformers', 'apt-get install build-essential']
-    'dependencies': ['torch', 'transformers', 'build-essential']
-
     """

@@ -4,6 +4,21 @@ class Reflector:
     def __init__(self, reflector):
         self.reflector = reflector
 
+    def pmpt_chain_debug(lang: str, requirement: str, code: str, error_log: str) -> str:
+        return f"""
+        You are an Machine learning engineer, and you are debugging a {lang} script with the source code and the error logs.
+        Please make sure the modified code meets the task requirements and can run successfully.
+
+        - User Requirement: {requirement}
+        - Existing Code: {code}
+        - Error Log: {error_log}
+
+        The output format should be:
+
+        Code: {{code}}
+        """
+    
+
     def reflect(self, letter):
         # TODO: after code generation
         # TODO: allow generating the command to run the code script.
