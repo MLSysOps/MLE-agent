@@ -31,15 +31,13 @@ class SetupAgent:
         EXAMPLE OUTPUT in JSON FORMAT:
     
         'commands': ['python -m pip install torch', 'pip install transformers', 'apt-get install build-essential']
+        'dependencies': ['torch', 'transformers', 'build-essential']
     
         """
 
     def dependency_generator(self):
         """
-        Select the dependencies for the project plan.
-        :param plan: the project plan.
-        :param llm_agent: the language model agent.
-        :return: the dependencies.
+        Generate the dependencies for the project plan.
         """
         chat_history = [
             {"role": 'system', "content": self.pmpt_code_dependency()},
@@ -55,7 +53,8 @@ class SetupAgent:
         """
         with self.console.status("Guessing and preparing the dependencies for the project plan..."):
             install_commands = self.dependency_generator().get('commands')
-            self.console.log(f"[cyan]Will install the following dependencies:[/cyan] {install_commands}")
+            dependencies = self.dependency_generator().get('dependencies')
+            self.console.log(f"[cyan]Will install the following dependencies:[/cyan] {dependencies}")
 
         # confirm the installation.
         confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()

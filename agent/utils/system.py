@@ -261,28 +261,32 @@ def read_file_to_string(file_path: str):
         return None
 
 
-def run_command(command):
+import subprocess
+
+
+def run_command(commands):
     """
-    Run a command in the shell and return the output, error, and exit status.
-    :param command: the input command to run.
-    :return: a tuple containing the output, error (if any), and exit status.
+    Run multiple commands in the shell and return the outputs, errors, and exit statuses.
+    :param commands: the list of input commands to run.
+    :return: a list of tuples containing the output, error (if any), and exit status for each command.
     """
-    try:
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    results = []
+    for command in commands:
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-        output = ''
-        while True:
-            line = process.stdout.readline()
-            if not line and process.poll() is not None:
-                break
-            output += line
-            print(line, end='')
+            output = ''
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                output += line
+                print(line, end='')
 
-        exit_code = process.wait()
-        return output, exit_code
-    except Exception as e:
-        return str(e), -1
-
+            exit_code = process.wait()
+            results.append((output, exit_code))
+        except Exception as e:
+            results.append((str(e), -1))
 
 def list_dir_structure(start_path):
     """
