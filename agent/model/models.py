@@ -34,7 +34,7 @@ class OllamaModel(Model):
         Args:
             chat_history: The context (chat history).
         """
-        return self.client.chat(model=self.model, messages=chat_history)
+        return self.client.chat(model=self.model, messages=chat_history)['message']['content']
 
     def stream(self, chat_history):
         """

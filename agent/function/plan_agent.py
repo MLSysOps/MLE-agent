@@ -91,7 +91,6 @@ class PlanAgent:
             target_name = extract_file_name(self.agent.query(self.chat_history))
             self.entry_file = str(os.path.join(self.plan.project, target_name))
 
-        # TODO: handle the keyboard interrupt.
         self.console.log(f"The entry file is: {self.entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
 
@@ -216,10 +215,10 @@ class PlanAgent:
                         if os.path.exists(self.plan.dataset) is False:
                             raise SystemExit("The dataset path is not valid.")
 
-                self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
                 if self.plan.dataset is None:
                     raise SystemExit("There is no dataset information. Aborted.")
                 else:
+                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
                     if self.plan.data_kind == 'csv_data':
                         csv_data_sample = read_csv_file(self.plan.dataset)
                         self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
