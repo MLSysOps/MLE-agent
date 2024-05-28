@@ -1,17 +1,15 @@
 import questionary
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
-from rich.live import Live
-from rich.markdown import Markdown
-from rich.panel import Panel
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-from agent.types import Task
+
 from agent.utils import *
-from agent.utils.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
+from agent.utils.prompt import pmpt_chain_filename
 from .generator import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
+from .code_generator import CodeGenerator
 
 config = Config()
 
@@ -51,29 +49,6 @@ class PlanAgent:
         update_project_plan(self.project_home, self.plan.dict(exclude_none=True))
         return self.plan
 
-    def handle_streaming(self):
-        """
-        Handle the streaming completion.
-        :return: the result.
-        """
-        text = ""
-        with Live(console=self.console) as live:
-            for token in self.agent.stream(self.chat_history):
-                if token:
-                    text = text + token
-                    live.update(
-                        Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
-                        refresh=True
-                    )
-
-            # save the code to the entry file.
-            code = extract_code(text)
-            if code:
-                with open(self.entry_file, 'w') as file:
-                    file.write(code)
-        self.console.log(f"Code generated to: {self.entry_file}")
-        return text
-
     def gen_file_name(self, user_requirement: str):
         """
         Generate a file name.
@@ -105,79 +80,6 @@ class PlanAgent:
         self.chat_history = []
 
         return self.entry_file
-
-    def gen_task_content(self, task: Task):
-        """
-        Generate the content of the current task.
-        :param task: the task to work on.
-
-        :return: the content of the task.
-        """
-        language = self.plan.lang
-        entry_file = self.plan.entry_file
-        sys_prompt = pmpt_chain_init(language)
-        if entry_file:
-            source_content = read_file_to_string(entry_file)
-            if source_content or self.plan.current_task <= 1:
-                sys_prompt = pmpt_chain_code(self.plan.lang, source_content)
-            else:
-                self.console.log(
-                    f"File {entry_file} not found. "
-                    f"Please make sure the script exists or deleting the `target_file` in the project.yml \n"
-                )
-                return None
-
-        task_prompt = f"""
-        User Requirement: {self.requirement}
-        Primary language: {language}
-        Current task: {task.name}
-        Task description: {task.description}
-        """
-
-        # handle the data collection task.
-        if task.name == "Data Collection":
-            if self.plan.data_kind == 'csv_data':
-                task_prompt += f"""
-                Data source: {self.plan.dataset}
-                Dataset examples: {read_csv_file(self.plan.dataset, column_only=True)}
-                """
-
-        self.chat_history.extend(
-            [
-                {"role": 'system', "content": sys_prompt},
-                {"role": 'user', "content": task_prompt}
-            ]
-        )
-
-        code = self.handle_streaming()
-        # TODO: allow generating the command to run the code script.
-        # TODO: allow handling the issues that are not comes from the code script.
-        # TODO: allow handling the program timeout.
-        if task.debug:
-            debug_success = False
-            command = f"python {self.entry_file}"
-            with self.console.status(f"Running the code script with command: {command}"):
-                run_log, exit_code = run_command([command])
-
-            if exit_code != 0:
-                for attempt in range(task.debug):
-                    self.console.log("Debugging the code script...")
-                    self.chat_history.append(
-                        {"role": 'user', "content": pmpt_chain_debug(language, self.requirement, code, run_log)})
-                    code = self.handle_streaming()
-                    with self.console.status(f"Running the code script..."):
-                        run_log, exit_code = run_command([command])
-
-                    if exit_code == 0:
-                        debug_success = True
-                        self.console.log("Debugging successful, the code script has been saved.")
-                        break
-
-                if not debug_success:
-                    self.console.log(f"Debugging failed after {task.debug} attempts.")
-                    return None
-
-        return code
 
     def start(self):
         """
@@ -288,18 +190,10 @@ class PlanAgent:
                 setup_agent = SetupAgent(self.agent, self.plan)
                 setup_agent.invoke()
 
-                for task in self.plan.tasks:
-                    if self.plan.current_task < task_num:
-                        self.console.log(f"Working on task: {task.name} ({self.plan.current_task + 1}/{task_num})")
-                        # TODO: add supports for other kind of tasks.
-                        if task.kind == 'code_generation':
-                            result = self.gen_task_content(task)
-                            if result is None:
-                                self.console.log("[red]Task failed. Aborting the chain.")
-                                return
-
-                        self.plan.current_task += 1
-                    self.update_project_state()
+                # code generation
+                self.console.log("[bold red]Step 5: Code generation[bold red]")
+                code_generation_agent = CodeGenerator(self.agent, self.plan, self.requirement)
+                code_generation_agent.invoke(task_num)
 
                 is_running = False
         except KeyboardInterrupt:
