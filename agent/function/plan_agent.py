@@ -240,7 +240,6 @@ class PlanAgent:
                         self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
                         return
 
-                self.console.log(f"[cyan]Task detected:[/cyan] {self.plan.ml_task_type}")
                 self.requirement += f"\n\nML task type: {self.plan.ml_task_type}"
 
                 if self.plan.ml_model_arch is None:
