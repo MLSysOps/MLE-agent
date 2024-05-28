@@ -216,10 +216,12 @@ class PlanAgent:
                         self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
                     elif self.plan.data_kind == 'csv_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+                        if os.path.exists(self.plan.dataset) is False:
+                            raise SystemExit("The dataset path is not valid.")
 
                 self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
-                    raise SystemExit("Wrong dataset information. Aborted.")
+                if self.plan.dataset is None:
+                    raise SystemExit("There is no dataset information. Aborted.")
                 else:
                     csv_data_sample = read_csv_file(self.plan.dataset)
                     self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
