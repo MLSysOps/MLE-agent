@@ -260,10 +260,6 @@ def read_file_to_string(file_path: str):
     except FileNotFoundError:
         return None
 
-
-import subprocess
-
-
 def run_command(commands):
     """
     Run multiple commands in the shell and return the outputs, errors, and exit statuses.

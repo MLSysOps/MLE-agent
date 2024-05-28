@@ -35,33 +35,6 @@ def pmpt_chat_init(
         
         """
 
-
-def pmpt_chain_init(lang: str) -> str:
-    return f"""
-    You are an Machine learning engineer, and you are currently working on an
-     ML project using {lang} as the primary language.
-    Please generate a code script for the current task based on following information.
-
-    Output format should be:
-
-    Code: {{code}}
-    """
-
-
-def pmpt_chain_code(lang: str, code: str) -> str:
-    return f"""
-    You are an Machine learning engineer, and you are currently working on an ML project using
-     {lang} as the primary language.
-    Please modify (or add new changes to) the following code to meet the task requirements.
-
-    Existing Code: {code}
-
-    The output format should be:
-
-    Code: {{code}}
-    """
-
-
 def pmpt_chain_debug(lang: str, requirement: str, code: str, error_log: str) -> str:
     return f"""
     You are an Machine learning engineer, and you are debugging a {lang} script with the source code and the error logs.
