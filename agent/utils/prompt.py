@@ -91,22 +91,6 @@ def pmpt_chain_filename(lang: str) -> str:
     """
 
 
-def pmpt_chain_dependency(lang: str) -> str:
-    return f"""
-    You are an ML project expert that detect which dependencies the user need to install
-    to meet the project plan requirements. And generate a list of shell commands to install the dependencies.
-    
-    - The project is written in {lang}.
-    - The commands should be in the form of a list.
-    - The commands should be able to run in the user's environment.
-    
-    EXAMPLE OUTPUT in JSON FORMAT:
-    
-    'commands': ['python -m pip install torch', 'pip install transformers', 'apt-get install build-essential']
-    
-    """
-
-
 def pmpt_dataset_select():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.

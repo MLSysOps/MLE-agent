@@ -1,9 +1,7 @@
 import json
 
 from agent.hub import load_yml
-from agent.types import Plan
-from agent.utils import preprocess_json_string
-from agent.utils.prompt import pmpt_chain_dependency, pmpt_task_desc, pmpt_plan
+from agent.utils.prompt import pmpt_task_desc, pmpt_plan
 
 
 def req_based_generator(requirement: str, sys_prompt: str, llm_agent):
@@ -20,22 +18,6 @@ def req_based_generator(requirement: str, sys_prompt: str, llm_agent):
     ]
     resp = llm_agent.completions(chat_history, stream=False)
     return resp.choices[0].message.content
-
-
-def dependency_generator(plan: Plan, llm_agent):
-    """
-    Select the dependencies for the project plan.
-    :param plan: the project plan.
-    :param llm_agent: the language model agent.
-    :return: the dependencies.
-    """
-    chat_history = [
-        {"role": 'system', "content": pmpt_chain_dependency(plan.lang)},
-        {"role": 'user', "content": json.dumps(plan.dict())}
-    ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    results = resp.choices[0].message.content
-    return json.loads(preprocess_json_string(results))
 
 
 def description_generator(requirement: str, task_list, llm_agent):

@@ -7,11 +7,11 @@ from rich.panel import Panel
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-from agent.types import Plan, Task
-from agent.types.const import CONFIG_TASK_HISTORY_FILE
+from agent.types import Task
 from agent.utils import *
 from agent.utils.prompt import pmpt_chain_init, pmpt_chain_code, pmpt_chain_filename, pmpt_chain_debug
-from .generator import plan_generator, dependency_generator, req_based_generator
+from .generator import plan_generator, req_based_generator
+from .setup_agent import SetupAgent
 
 config = Config()
 
@@ -288,16 +288,8 @@ class PlanAgent:
                     return
 
                 # install the dependencies for this plan.
-                with self.console.status("Installing the dependencies for the plan..."):
-                    install_commands = dependency_generator(self.plan, self.agent).get('commands')
-                    self.console.log(f"[cyan]Commands are going to execute:[/cyan] {install_commands}")
-
-                # confirm the installation.
-                confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()
-                if confirm_install:
-                    run_command(install_commands)
-                else:
-                    self.console.log("Skipped the dependencies installation.")
+                setup_agent = SetupAgent(self.agent, self.plan)
+                setup_agent.invoke()
 
                 for task in self.plan.tasks:
                     if self.plan.current_task < task_num:
