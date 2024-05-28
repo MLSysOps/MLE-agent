@@ -4,6 +4,48 @@ from agent.types.const import LLM_TYPE_OPENAI
 from .base import Model
 
 
+class OllamaModel(Model):
+    def __init__(self, model: str, host_url=None):
+        """
+        Initialize the Ollama model.
+        Args:
+            host_url (str): The Ollama Host url.
+            model (str): The model version.
+        """
+        super().__init__()
+
+        dependency = "ollama"
+        spec = importlib.util.find_spec(dependency)
+        if spec is not None:
+            self.model = model
+            self.ollama = importlib.import_module(dependency)
+            self.client = self.ollama.Client(host=host_url)
+        else:
+            raise ImportError(
+                "It seems you didn't install ollama. In order to enable the Ollama client related features, "
+                "please make sure ollama Python package has been installed. "
+                "More information, please refer to: https://github.com/ollama/ollama-python"
+            )
+
+    def completions(
+            self,
+            chat_history,
+            stream=True
+    ):
+        """
+        Completions of the LLM model.
+        Args:
+            chat_history: The context (chat history).
+            stream: The flag to stream the output.
+        """
+
+        return self.client.chat(
+            model=self.model,
+            messages=chat_history,
+            stream=stream
+        )
+
+
 class OpenAIModel(Model):
     def __init__(self, api_key, model, temperature):
         """
