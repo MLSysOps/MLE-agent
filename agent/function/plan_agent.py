@@ -58,10 +58,9 @@ class PlanAgent:
         """
         text = ""
         with Live(console=self.console) as live:
-            for token in self.agent.completions(self.chat_history, stream=True):
-                content = token.choices[0].delta.content
-                if content:
-                    text = text + content
+            for token in self.agent.stream(self.chat_history):
+                if token:
+                    text = text + token
                     live.update(
                         Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
                         refresh=True
@@ -89,8 +88,7 @@ class PlanAgent:
         )
 
         with self.console.status("Preparing entry file name..."):
-            completion = self.agent.completions(self.chat_history, stream=False)
-            target_name = extract_file_name(completion.choices[0].message.content)
+            target_name = extract_file_name(self.agent.query(self.chat_history))
             self.entry_file = str(os.path.join(self.plan.project, target_name))
 
         # TODO: handle the keyboard interrupt.

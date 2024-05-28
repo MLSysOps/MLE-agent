@@ -6,7 +6,7 @@ import questionary
 import agent
 from agent.server import start_server
 from agent.function import Chat, PlanAgent
-from agent.model import OpenAIModel
+from agent.model import OpenAIModel, OllamaModel
 from agent.utils import *
 from agent.utils.prompt import pmpt_chat_init
 
@@ -23,24 +23,31 @@ def build_config(general: bool = False):
     :return:
     """
     configuration = Config()
-    platform = LLM_TYPE_OPENAI
-    api_key = questionary.text("What is your OpenAI API key?").ask()
+    platform = questionary.select(
+        "Which language model platform do you want to use?",
+        choices=[LLM_TYPE_OPENAI, LLM_TYPE_OLLAMA]
+    ).ask()
 
-    if not api_key:
-        sys.exit(0)
+    # write the Ollama configuration
+    if platform == LLM_TYPE_OLLAMA:
+        model = questionary.text("What is the Ollama model version?").ask()
 
-    code_language = CODE_LANGUAGE
+        if not model:
+            sys.exit(0)
 
-    general_config = {
-        'platform': platform,
-        'api_key': api_key,
-        'code_language': code_language
-    }
-
-    configuration.write_section(CONFIG_SEC_GENERAL, general_config)
-
-    if not general:
         platform_config = {
+            "model": 'llama3'
+        }
+
+    # write the OpenAI configuration
+    elif platform == LLM_TYPE_OPENAI:
+        api_key = questionary.text("What is your OpenAI API key?").ask()
+
+        if not api_key:
+            sys.exit(0)
+
+        platform_config = {
+            "api_key": api_key,
             "model": 'gpt-3.5-turbo',
             'temperature': 0.7,
             'max_tokens': 16_385,
@@ -49,7 +56,18 @@ def build_config(general: bool = False):
             'stop_sequences': 'None',
             'candidate_count': 1
         }
+    else:
+        console.log("The platform is not supported. Aborted.")
+        sys.exit(0)
 
+    code_language = CODE_LANGUAGE
+    general_config = {
+        'platform': platform,
+        'code_language': code_language
+    }
+
+    configuration.write_section(CONFIG_SEC_GENERAL, general_config)
+    if not general:
         configuration.write_section(platform, platform_config)
 
 
@@ -64,10 +82,12 @@ def load_model():
     model = None
     if plat == LLM_TYPE_OPENAI:
         model = OpenAIModel(
-            api_key=config_dict[CONFIG_SEC_GENERAL][CONFIG_SEC_API_KEY],
+            api_key=config_dict[LLM_TYPE_OPENAI][CONFIG_SEC_API_KEY],
             model=config_dict[LLM_TYPE_OPENAI].get('model'),
             temperature=float(config_dict[LLM_TYPE_OPENAI]['temperature'])
         )
+    if plat == LLM_TYPE_OLLAMA:
+        model = OllamaModel(model=config_dict[LLM_TYPE_OLLAMA].get('model'))
 
     return model
 

@@ -46,7 +46,7 @@ class Chat:
         """
         text = ''
         self.chat_history.append({"role": "user", "content": prompt})
-        response = self.agent.completions(self.chat_history, stream=True)
+        response = self.agent.query(self.chat_history, stream=True)
 
         for token in response:
             content = token.choices[0].delta.content

@@ -8,15 +8,12 @@ CONFIG_CHAT_HISTORY_FILE = 'project.history'
 CONFIG_TASK_HISTORY_FILE = 'task.history'
 CONFIG_LLM_LIST = {  # with the default model.
     'OpenAI': 'gpt-3.5-turbo',
-    'Gemini': 'gemini-pro',
-    'Claude': 'claude-3-opus-20240229',
-    'Mistral': 'mistral-small-latest',
-    'Qianfan': 'ERNIE-3.5-8K',
-    'Qianwen': 'qwen-turbo'
+    'Ollama': 'llama3',
 }
 
 # LLMs
 LLM_TYPE_OPENAI = 'openai'
+LLM_TYPE_OLLAMA = 'ollama'
 
 # Main
 CODE_LANGUAGE = 'python'

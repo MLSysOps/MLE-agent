@@ -1,6 +1,6 @@
 import importlib.util
 
-from agent.types.const import LLM_TYPE_OPENAI
+from agent.types.const import LLM_TYPE_OPENAI, LLM_TYPE_OLLAMA
 from agent.model.base import Model
 
 
@@ -18,6 +18,7 @@ class OllamaModel(Model):
         spec = importlib.util.find_spec(dependency)
         if spec is not None:
             self.model = model
+            self.model_type = LLM_TYPE_OLLAMA
             self.ollama = importlib.import_module(dependency)
             self.client = self.ollama.Client(host=host_url)
         else:
@@ -27,23 +28,26 @@ class OllamaModel(Model):
                 "More information, please refer to: https://github.com/ollama/ollama-python"
             )
 
-    def completions(
-            self,
-            chat_history,
-            stream=True
-    ):
+    def query(self, chat_history):
         """
-        Completions of the LLM model.
+        Query the LLM model.
         Args:
             chat_history: The context (chat history).
-            stream: The flag to stream the output.
         """
+        return self.client.chat(model=self.model, messages=chat_history)
 
-        return self.client.chat(
-            model=self.model,
-            messages=chat_history,
-            stream=stream
-        )
+    def stream(self, chat_history):
+        """
+        Stream the output from the LLM model.
+        Args:
+            chat_history: The context (chat history).
+        """
+        for chunk in self.client.chat(
+                model=self.model,
+                messages=chat_history,
+                stream=True
+        ):
+            yield chunk['message']['content']
 
 
 class OpenAIModel(Model):
@@ -60,8 +64,7 @@ class OpenAIModel(Model):
         dependency = "openai"
         spec = importlib.util.find_spec(dependency)
         if spec is not None:
-            self.OpenAI = importlib.import_module(dependency).OpenAI
-            self.RateLimitError = importlib.import_module(dependency).RateLimitError
+            self.openai = importlib.import_module(dependency).OpenAI
         else:
             raise ImportError(
                 "It seems you didn't install openai. In order to enable the OpenAI client related features, "
@@ -72,47 +75,34 @@ class OpenAIModel(Model):
         self.model = model
         self.model_type = LLM_TYPE_OPENAI
         self.temperature = temperature
-        self.client = self.OpenAI(api_key=api_key)
+        self.client = self.openai(api_key=api_key)
 
-    def stream_completions(
-            self,
-            chat_history
-    ):
+    def query(self, chat_history):
         """
-        Stream completions of the LLM model.
+        Query the LLM model.
         Args:
             chat_history: The context (chat history).
         """
 
-        return self.client.chat.completions.create(
+        completion = self.client.chat.completions.create(
             model=self.model,
             messages=chat_history,
             temperature=self.temperature,
-            stream=True
+            stream=False
         )
 
-    def completions(
-            self,
-            chat_history,
-            stream=True
-    ):
+        return completion.choices[0].message.content
+
+    def stream(self, chat_history):
         """
-        Completions of the LLM model.
+        Stream the output from the LLM model.
         Args:
             chat_history: The context (chat history).
-            stream: The flag to stream the output.
         """
-
-        return self.client.chat.completions.create(
-            model=self.model,
-            messages=chat_history,
-            temperature=self.temperature,
-            stream=stream
-        )
-
-
-if __name__ == '__main__':
-    model = OllamaModel("llama3")
-    stream = model.completions([{'role': 'user', 'content': 'Why is the sky blue?'}], stream=True)
-    for chunk in stream:
-        print(chunk['message']['content'], end='', flush=True)
+        for chunk in self.client.chat.completions.create(
+                model=self.model,
+                messages=chat_history,
+                temperature=self.temperature,
+                stream=True
+        ):
+            yield chunk.choices[0].delta.content

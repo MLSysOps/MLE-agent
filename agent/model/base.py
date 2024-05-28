@@ -7,5 +7,9 @@ class Model(ABC):
         self.model_type = None
 
     @abstractmethod
-    def completions(self, chat_history, use_function):
+    def query(self, chat_history):
+        pass
+
+    @abstractmethod
+    def stream(self, chat_history):
         pass
