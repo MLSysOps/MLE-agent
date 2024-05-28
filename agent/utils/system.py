@@ -162,7 +162,7 @@ def update_project_plan(project_path: str, content_dict: dict = None):
     try:
         with open(file_path, 'w') as file:
             yaml.dump(content_dict, file)
-        console.log(f"[green]Project state updated successfully.")
+        # console.log(f"[green]Project state updated successfully.")
     except IOError as error:
         console.log(f"[red]Updating the project state file '{file_path}' failed due to: {error}")
 
@@ -283,6 +283,7 @@ def run_command(commands):
             results.append((output, exit_code))
         except Exception as e:
             results.append((str(e), -1))
+
 
 def list_dir_structure(start_path):
     """

@@ -56,7 +56,7 @@ def pmpt_chain_filename(lang: str) -> str:
     Your task is to generate a file name based on the given user requirements.
     Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
     
-    You must provide a name to avoid Nonetype error.
+    You must provide a name to avoid NoneType error.
     
     The output format should be:
 
@@ -82,14 +82,13 @@ def pmpt_dataset_detect():
     You are an ML project expert that detects the dataset based on the user's requirements.
 
     - You should detect the data source based on the user's requirements.
-    - You only return the dataset name.
     - Noted: If the requirement doesn't contain the data source information, select 'no_data_information_provided'
     
     AVAILABLE OPTIONS:
     
     {load_yml('data.yml')}
 
-    OUTPUT should only a name without any punctuation.
+    OUTPUT should only a name from the list without any punctuation.
 
     """
 
@@ -173,4 +172,21 @@ def pmpt_plan(task_list):
             {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
         ]
     }}
+    """
+
+
+def pmpt_code_dependency() -> str:
+    return f"""
+    You are an ML project expert that detect which dependencies the user need to install
+    to meet the project plan requirements. And generate a list of shell commands to install the dependencies.
+
+    - The project is written in.
+    - The commands should be in the form of a list.
+    - The commands should be able to run in the user's environment.
+
+    EXAMPLE OUTPUT in JSON FORMAT:
+
+    'commands': ['python -m pip install torch', 'pip install transformers', 'apt-get install build-essential']
+    'dependencies': ['torch', 'transformers', 'build-essential']
+
     """

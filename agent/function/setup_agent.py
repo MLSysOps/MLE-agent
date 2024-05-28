@@ -6,6 +6,7 @@ from rich.console import Console
 from agent.types import Plan
 from agent.utils import preprocess_json_string
 from agent.utils.system import run_command
+from agent.utils.prompt import pmpt_code_dependency
 
 
 class SetupAgent:
@@ -19,33 +20,15 @@ class SetupAgent:
 
         self.console = Console()
 
-    def pmpt_code_dependency(self) -> str:
-        return f"""
-        You are an ML project expert that detect which dependencies the user need to install
-        to meet the project plan requirements. And generate a list of shell commands to install the dependencies.
-    
-        - The project is written in.
-        - The commands should be in the form of a list.
-        - The commands should be able to run in the user's environment.
-    
-        EXAMPLE OUTPUT in JSON FORMAT:
-    
-        'commands': ['python -m pip install torch', 'pip install transformers', 'apt-get install build-essential']
-        'dependencies': ['torch', 'transformers', 'build-essential']
-    
-        """
-
     def dependency_generator(self):
         """
         Generate the dependencies for the project plan.
         """
         chat_history = [
-            {"role": 'system', "content": self.pmpt_code_dependency()},
+            {"role": 'system', "content": pmpt_code_dependency()},
             {"role": 'user', "content": json.dumps(self.plan.dict())}
         ]
-        resp = self.agent.completions(chat_history, stream=False)
-        results = resp.choices[0].message.content
-        return json.loads(preprocess_json_string(results))
+        return json.loads(preprocess_json_string(self.agent.query(chat_history)))
 
     def invoke(self):
         """

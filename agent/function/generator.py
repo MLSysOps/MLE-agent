@@ -16,8 +16,7 @@ def req_based_generator(requirement: str, sys_prompt: str, llm_agent):
         {"role": 'system', "content": sys_prompt},
         {"role": 'user', "content": requirement}
     ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    return resp.choices[0].message.content
+    return llm_agent.query(chat_history)
 
 
 def description_generator(requirement: str, task_list, llm_agent):
@@ -37,8 +36,7 @@ def description_generator(requirement: str, task_list, llm_agent):
         {"role": 'system', "content": pmpt_task_desc()},
         {"role": 'user', "content": user_prompt}
     ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    return json.loads(resp.choices[0].message.content)
+    return json.loads(llm_agent.query(chat_history))
 
 
 def plan_generator(
@@ -64,8 +62,7 @@ def plan_generator(
         {"role": 'system', "content": pmpt_plan(json.dumps(task_list))},
         {"role": 'user', "content": requirement}
     ]
-    resp = llm_agent.completions(chat_history, stream=False)
-    target_tasks = resp.choices[0].message.content
+    target_tasks = llm_agent.query(chat_history)
 
     # generate the completed plan with detailed description
     return description_generator(requirement, target_tasks, llm_agent)
