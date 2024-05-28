@@ -67,13 +67,12 @@ class PlanAgent:
                         refresh=True
                     )
 
-                stop_reason = token.choices[0].finish_reason
-                if stop_reason == "stop":
-                    code = extract_code(text)
-                    if code:
-                        with open(self.entry_file, 'w') as file:
-                            file.write(code)
-                        self.console.log(f"Code generated to: {self.entry_file}")
+            # save the code to the entry file.
+            code = extract_code(text)
+            if code:
+                with open(self.entry_file, 'w') as file:
+                    file.write(code)
+        self.console.log(f"Code generated to: {self.entry_file}")
         return text
 
     def gen_file_name(self, user_requirement: str):
@@ -255,7 +254,6 @@ class PlanAgent:
                         self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
                         return
 
-                self.console.log(f"[cyan]Model architecture selected:[/cyan] {self.plan.ml_model_arch}")
                 self.requirement += f"\n\nModel architecture: {self.plan.ml_model_arch}"
 
                 if self.plan.tasks is None:

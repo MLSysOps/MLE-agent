@@ -1,7 +1,7 @@
 import importlib.util
 
 from agent.types.const import LLM_TYPE_OPENAI
-from .base import Model
+from agent.model.base import Model
 
 
 class OllamaModel(Model):
@@ -74,6 +74,23 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.OpenAI(api_key=api_key)
 
+    def stream_completions(
+            self,
+            chat_history
+    ):
+        """
+        Stream completions of the LLM model.
+        Args:
+            chat_history: The context (chat history).
+        """
+
+        return self.client.chat.completions.create(
+            model=self.model,
+            messages=chat_history,
+            temperature=self.temperature,
+            stream=True
+        )
+
     def completions(
             self,
             chat_history,
@@ -92,3 +109,10 @@ class OpenAIModel(Model):
             temperature=self.temperature,
             stream=stream
         )
+
+
+if __name__ == '__main__':
+    model = OllamaModel("llama3")
+    stream = model.completions([{'role': 'user', 'content': 'Why is the sky blue?'}], stream=True)
+    for chunk in stream:
+        print(chunk['message']['content'], end='', flush=True)
