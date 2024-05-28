@@ -63,11 +63,9 @@ class PlanAgent:
         )
 
         with self.console.status("Preparing entry file name..."):
-            completion = self.agent.completions(self.chat_history, stream=False)
-            target_name = extract_file_name(completion.choices[0].message.content)
+            target_name = extract_file_name(self.agent.query(self.chat_history))
             self.entry_file = str(os.path.join(self.plan.project, target_name))
 
-        # TODO: handle the keyboard interrupt.
         self.console.log(f"The entry file is: {self.entry_file}")
         confirm = questionary.confirm("Do you want to use the file?").ask()
 
@@ -116,15 +114,18 @@ class PlanAgent:
                         self.plan.dataset = req_based_generator(self.requirement, pmpt_dataset_select(), self.agent)
                     elif self.plan.data_kind == 'csv_data':
                         self.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+                        if os.path.exists(self.plan.dataset) is False:
+                            raise SystemExit("The dataset path is not valid.")
 
-                self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
-                if self.plan.dataset is None or os.path.exists(self.plan.dataset) is False:
-                    raise SystemExit("Wrong dataset information. Aborted.")
+                if self.plan.dataset is None:
+                    raise SystemExit("There is no dataset information. Aborted.")
                 else:
-                    csv_data_sample = read_csv_file(self.plan.dataset)
-                    self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
-                    self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
-                    self.update_project_state()
+                    self.console.log(f"[cyan]Data source:[/cyan] {self.plan.dataset}")
+                    if self.plan.data_kind == 'csv_data':
+                        csv_data_sample = read_csv_file(self.plan.dataset)
+                        self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                        self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                        self.update_project_state()
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.plan.ml_task_type is None:
@@ -138,7 +139,6 @@ class PlanAgent:
                         self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
                         return
 
-                self.console.log(f"[cyan]Task detected:[/cyan] {self.plan.ml_task_type}")
                 self.requirement += f"\n\nML task type: {self.plan.ml_task_type}"
 
                 if self.plan.ml_model_arch is None:
@@ -153,11 +153,10 @@ class PlanAgent:
                         self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
                         return
 
-                self.console.log(f"[cyan]Model architecture selected:[/cyan] {self.plan.ml_model_arch}")
                 self.requirement += f"\n\nModel architecture: {self.plan.ml_model_arch}"
 
-                self.console.log("[bold red]Step 4: Plan generation[bold red]")
                 if self.plan.tasks is None:
+                    self.console.log("[bold red]Step 4: Plan generation[bold red]")
                     self.console.log(
                         f"The project [cyan]{self.plan.project_name}[/cyan] has no existing plans. Start planning...")
                     self.requirement += f"\n\nDataset: {self.plan.dataset}"
