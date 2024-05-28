@@ -80,22 +80,19 @@ class CodeGenerator:
         """
         text = ""
         with Live(console=self.console) as live:
-            for token in self.agent.completions(self.chat_history, stream=True):
-                content = token.choices[0].delta.content
-                if content:
-                    text = text + content
+            for token in self.agent.query(self.chat_history):
+                if token:
+                    text = text + token
                     live.update(
                         Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
                         refresh=True
                     )
 
-                stop_reason = token.choices[0].finish_reason
-                if stop_reason == "stop":
-                    code = extract_code(text)
-                    if code:
-                        with open(self.plan.entry_file, 'w') as file:
-                            file.write(code)
-                        self.console.log(f"Code generated to: {self.plan.entry_file}")
+            code = extract_code(text)
+            if code:
+                with open(self.plan.entry_file, 'w') as file:
+                    file.write(code)
+                self.console.log(f"Code generated to: {self.plan.entry_file}")
         return text
 
     def gen_code(self, task: Task):
