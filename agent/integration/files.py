@@ -33,5 +33,4 @@ def read_csv_file(file_path, limit=3, column_only=False):
             print(f"Error reading the CSV file: {e}")
             return None
     else:
-        print("File does not exist.")
         return None

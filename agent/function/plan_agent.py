@@ -223,10 +223,11 @@ class PlanAgent:
                 if self.plan.dataset is None:
                     raise SystemExit("There is no dataset information. Aborted.")
                 else:
-                    csv_data_sample = read_csv_file(self.plan.dataset)
-                    self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
-                    self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
-                    self.update_project_state()
+                    if self.plan.data_kind == 'csv_data':
+                        csv_data_sample = read_csv_file(self.plan.dataset)
+                        self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                        self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                        self.update_project_state()
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.plan.ml_task_type is None:
@@ -257,8 +258,8 @@ class PlanAgent:
                 self.console.log(f"[cyan]Model architecture selected:[/cyan] {self.plan.ml_model_arch}")
                 self.requirement += f"\n\nModel architecture: {self.plan.ml_model_arch}"
 
-                self.console.log("[bold red]Step 4: Plan generation[bold red]")
                 if self.plan.tasks is None:
+                    self.console.log("[bold red]Step 4: Plan generation[bold red]")
                     self.console.log(
                         f"The project [cyan]{self.plan.project_name}[/cyan] has no existing plans. Start planning...")
                     self.requirement += f"\n\nDataset: {self.plan.dataset}"
