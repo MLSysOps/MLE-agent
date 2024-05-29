@@ -1,14 +1,14 @@
 from agent.hub import load_yml
-from agent.types import Plan
+from agent.types import Project
 from .system import read_file_to_string
 
 
 def pmpt_chat_init(
         lang: str,
-        plan: Plan
+        project: Project
 ) -> str:
-    current_task = plan.tasks[plan.current_task - 1]
-    target_source_code = read_file_to_string(plan.entry_file)
+    current_task = project.plan.tasks[project.plan.current_task - 1]
+    target_source_code = read_file_to_string(project.entry_file)
     if target_source_code is None:
         return f"""
         You are an Machine learning engineer, and you are currently working on an ML project using {lang}
@@ -17,7 +17,7 @@ def pmpt_chat_init(
         USEFUL INFORMATION:
         
         - Project Language: {lang}
-        - Your project plan: {plan.dict()}
+        - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
         
         """
@@ -29,13 +29,11 @@ def pmpt_chat_init(
         USEFUL INFORMATION:
         
         - Project Language: {lang}
-        - Your project plan: {plan.dict()}
+        - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
-        - The source code you have written for the whole project: {read_file_to_string(plan.entry_file)}
+        - The source code you have written for the whole project: {read_file_to_string(project.entry_file)}
         
         """
-
-
 
 
 def pmpt_chain_filename(lang: str) -> str:
@@ -156,7 +154,7 @@ def pmpt_plan(task_list):
             {{"name": "Public Datasets Collection", "resources": ["HuggingFace Datasets"]}},
             {{"name": "Data Loading", "resources": ["pandas"]}},
             {{"name": "Data Pre-processing", "resources": ["scikit-learn preprocessing"]}},
-            {{"name": "Model Training", "resources": ["huggingface transformers", "wandbs"]}},
+            {{"name": "Model Training", "resources": ["huggingface transformers", "wandb"]}},
             {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
         ]
     }}

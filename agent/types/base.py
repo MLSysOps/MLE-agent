@@ -1,6 +1,11 @@
+from enum import Enum
+from pydantic import BaseModel
 from typing import List, Optional
 
-from pydantic import BaseModel
+
+class DebugEnv(str, Enum):
+    local = "local"
+    cloud = "cloud"
 
 
 class Resource(BaseModel):
@@ -25,17 +30,21 @@ class Task(BaseModel):
 
 
 class Plan(BaseModel):
-    project_name: str
-    project: str
     current_task: int
-    lang: str
-    llm: str
-    entry_file: Optional[str] = None
-    debug_env: Optional[str] = None
-    requirement: Optional[str] = None
     dataset: Optional[str] = None
     data_kind: Optional[str] = None
-    ml_task_type: str = None
-    ml_model_arch: str = None
+    ml_task_type: Optional[str] = None
+    ml_model_arch: Optional[str] = None
     tasks: Optional[List[Task]] = None
+
+
+class Project(BaseModel):
+    name: str
+    path: str
+    lang: str
+    llm: str
+    plan: Optional[Plan] = None
+    entry_file: Optional[str] = None
+    debug_env: Optional[str] = DebugEnv.local
     description: Optional[str] = None
+    requirement: Optional[str] = None
