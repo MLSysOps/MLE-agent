@@ -1,24 +1,9 @@
-from rich.console import Console
-from rich.live import Live
-from rich.markdown import Markdown
-from rich.panel import Panel
-
-from agent.types import Task, Project
-from agent.utils import Config, read_file_to_string, extract_code, update_project_state
-
-config = Config()
+from agent.types import Task
+from agent.utils import read_file_to_string, update_project_state
+from .base_agent import BaseAgent
 
 
-class CodeGenerator:
-    def __init__(self, agent, project: Project):
-        self.agent = agent
-        self.project = project
-
-        self.chat_history = []
-        self.console = Console()
-        self.project_home = config.read().get('project')['path']
-
-        # TODO: Decide if we need previous Chat history or start a new one.
+class CodeGenerator(BaseAgent):
 
     def system_pmpt_code_gen_new(self) -> str:
         return f"""
@@ -41,6 +26,7 @@ class CodeGenerator:
         Please make sure only output code with appropriate comments and documentation.
         Please think step by step.
 
+
         Existing Code: {code}
 
         The output format should be:
@@ -48,12 +34,13 @@ class CodeGenerator:
         Code: {{code}}
         """
 
-    def task_prompt(self, task: Task) -> str:
+    def task_prompt(self, task: Task, requirement) -> str:
 
         # TODO: need to find a better way to read user's requirement
+        # TODO: 3 requirements are ugly
 
         return f"""
-        User Requirement: {self.project.requirement}
+        User Requirement: {requirement}
         Primary Language: {self.project.lang}
         Current Task: {task.name}
         Task Description: {task.description}
@@ -61,34 +48,16 @@ class CodeGenerator:
         Make sure to incorporate some MLOps code using some MLOps tools for better ML management and reproducibility
         """
 
-    def handle_streaming(self):
-        """
-        Handle the streaming completion.
-        :return: the result.
-        """
-        text = ""
-        with Live(console=self.console) as live:
-            for token in self.agent.query(self.chat_history):
-                if token:
-                    text = text + token
-                    live.update(
-                        Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
-                        refresh=True
-                    )
-
-            code = extract_code(text)
-            if code:
-                with open(self.project.entry_file, 'w') as file:
-                    file.write(code)
-                self.console.log(f"Code generated to: {self.project.entry_file}")
-        return text
-
-    def gen_code(self, task: Task):
+    def gen_code(self, task: Task, requirement):
         """
         Generate the content of the current task.
         :param task: the task to work on
 
         :return: the content of the task.
+
+        Parameters
+        ----------
+        requirement
         """
         entry_file = self.project.entry_file
         sys_prompt = self.system_pmpt_code_gen_new()
@@ -106,7 +75,7 @@ class CodeGenerator:
         self.chat_history.extend(
             [
                 {"role": 'system', "content": sys_prompt},
-                {"role": 'user', "content": self.task_prompt(task)}
+                {"role": 'user', "content": self.task_prompt(task, requirement)}
             ]
         )
 
@@ -114,13 +83,13 @@ class CodeGenerator:
 
         return code
 
-    def invoke(self, task_num):
+    def invoke(self, task_num, requirement):
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
                 # TODO: add supports for other kind of tasks.
                 if task.kind == 'code_generation':
-                    result = self.gen_code(task)
+                    result = self.gen_code(task, requirement)
                     if result is None:
                         self.console.log("[red]Task failed. Aborting the chain.")
                         return

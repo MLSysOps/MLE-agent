@@ -5,7 +5,7 @@ import questionary
 
 import agent
 from agent.server import start_server
-from agent.function import Chat, PlanAgent
+from agent.function import Chat, LeaderAgent
 from agent.model import OpenAIModel, OllamaModel
 from agent.utils import *
 from agent.types import Project
@@ -126,7 +126,7 @@ def start():
         console.log("Could not find the project in the database. Aborted.")
         return
 
-    chain = PlanAgent(project, load_model())
+    chain = LeaderAgent(project, load_model())
     chain.start()
 
 
