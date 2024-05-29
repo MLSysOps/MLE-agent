@@ -6,7 +6,7 @@ from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
 
 from agent.utils import *
-from agent.utils.prompt import pmpt_chain_filename
+from agent.types import Plan, Project
 from .generator import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
 from .code_generator import CodeGenerator

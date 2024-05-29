@@ -34,22 +34,6 @@ def preprocess_json_string(json_string):
     return json_string
 
 
-def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
-    """
-    Loads YAML data from a file and converts it into a Pydantic model.
-
-    Args:
-    file_path (str): Path to the YAML file.
-    model (Type[T]): The Pydantic model class to which the data should be converted.
-
-    Returns:
-    T: An instance of the specified Pydantic model class.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-        return model(**data)
-
-
 def list_all_files(path):
     """
     Lists all files and directories under the given path if it is a directory.
@@ -129,6 +113,14 @@ def update_project_state(project: Project):
         project_db.update(project.dict(), query.name == project.name)
     else:
         project_db.insert(project.dict())
+
+
+def list_projects():
+    """
+    List all the projects.
+    :return: the list of projects.
+    """
+    return [Project(**item) for item in project_db.all()]
 
 
 def extract_and_save_file(input_text):

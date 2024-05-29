@@ -213,6 +213,31 @@ def server(port, address):
     start_server(address, port)
 
 
+# a CLI command to set project
+@cli.command()
+def set_project():
+    """
+    set_project: set the current project to work on.
+    :return: None
+    """
+    projects = list_projects()
+    project_names = [project.name for project in projects]
+    target_name = questionary.select(
+        "Select the project to work on:",
+        choices=project_names
+    ).ask()
+
+    if target_name:
+        target_project = read_project_state(target_name)
+        configuration.write_section(
+            CONFIG_SEC_PROJECT, {
+                'path': target_project.path,
+                'name': target_project.name
+            }
+        )
+        console.log(f"Project set to: {target_name}")
+
+
 @cli.command()
 def status():
     """
@@ -226,9 +251,9 @@ def status():
     project_name = configuration.read()['project']['name']
     project = read_project_state(project_name)
 
-    console.log("> [green]Current project:[/green]", project.plan.project_name)
+    console.log("> [green]Current project:[/green]", project.name)
     console.log("> [green]Project path:[/green]", project.path)
-    console.log("> [green]Project entry file:[/green]", project.plan.entry_file)
+    console.log("> [green]Project entry file:[/green]", project.entry_file)
     console.log("> [green]Project language:[/green]", project.lang)
     console.line()
     # display the current task name
