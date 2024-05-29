@@ -7,9 +7,9 @@ from agent.integration import read_csv_file
 
 from agent.utils import *
 from agent.types import Plan, Project
-from .plan_generator import plan_generator, req_based_generator
+from .plan_agent import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
-from .code_generator import CodeGenerator
+from .code_gen_agent import CodeGenerator
 from .reflect_agent import ReflectAgent
 
 config = Config()
