@@ -34,12 +34,13 @@ class CodeGenerator(BaseAgent):
         Code: {{code}}
         """
 
-    def task_prompt(self, task: Task) -> str:
+    def task_prompt(self, task: Task, requirement) -> str:
 
         # TODO: need to find a better way to read user's requirement
+        # TODO: 3 requirements are ugly
 
         return f"""
-        User Requirement: {self.requirement}
+        User Requirement: {requirement}
         Primary Language: {self.project.lang}
         Current Task: {task.name}
         Task Description: {task.description}
@@ -47,12 +48,16 @@ class CodeGenerator(BaseAgent):
         Make sure to incorporate some MLOps code using some MLOps tools for better ML management and reproducibility
         """
 
-    def gen_code(self, task: Task):
+    def gen_code(self, task: Task, requirement):
         """
         Generate the content of the current task.
         :param task: the task to work on
 
         :return: the content of the task.
+
+        Parameters
+        ----------
+        requirement
         """
         entry_file = self.project.entry_file
         sys_prompt = self.system_pmpt_code_gen_new()
@@ -70,7 +75,7 @@ class CodeGenerator(BaseAgent):
         self.chat_history.extend(
             [
                 {"role": 'system', "content": sys_prompt},
-                {"role": 'user', "content": self.task_prompt(task)}
+                {"role": 'user', "content": self.task_prompt(task, requirement)}
             ]
         )
 
@@ -78,13 +83,13 @@ class CodeGenerator(BaseAgent):
 
         return code
 
-    def invoke(self, task_num):
+    def invoke(self, task_num, requirement):
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
                 # TODO: add supports for other kind of tasks.
                 if task.kind == 'code_generation':
-                    result = self.gen_code(task)
+                    result = self.gen_code(task, requirement)
                     if result is None:
                         self.console.log("[red]Task failed. Aborting the chain.")
                         return
