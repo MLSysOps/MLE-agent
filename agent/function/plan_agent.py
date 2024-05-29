@@ -50,7 +50,7 @@ class PlanAgent:
         self.requirement = user_requirement
         self.chat_history.extend(
             [
-                {"role": 'system', "content": pmpt_chain_filename()},
+                {"role": 'system', "content": pmpt_chain_filename(self.project.lang)},
                 {"role": 'user', "content": self.requirement}
             ]
         )

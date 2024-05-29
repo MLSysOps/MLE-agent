@@ -36,9 +36,9 @@ def pmpt_chat_init(
         """
 
 
-def pmpt_chain_filename() -> str:
+def pmpt_chain_filename(lang: str) -> str:
     return f"""
-    You are a Machine Learning Engineer working on a project that primarily uses Python.
+    You are a Machine Learning Engineer working on a project that primarily uses {lang}.
     Your task is to generate a file name based on the given user requirements.
     Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
     
@@ -154,7 +154,7 @@ def pmpt_plan(task_list):
             {{"name": "Public Datasets Collection", "resources": ["HuggingFace Datasets"]}},
             {{"name": "Data Loading", "resources": ["pandas"]}},
             {{"name": "Data Pre-processing", "resources": ["scikit-learn preprocessing"]}},
-            {{"name": "Model Training", "resources": ["huggingface transformers", "wandbs"]}},
+            {{"name": "Model Training", "resources": ["huggingface transformers", "wandb"]}},
             {{"name": "Model Evaluation", "resources": ["torchmetrics"]}},
         ]
     }}
