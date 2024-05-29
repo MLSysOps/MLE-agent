@@ -4,10 +4,10 @@ openai
 pyyaml
 uvicorn
 fastapi
+lancedb
 questionary
 prompt_toolkit
 pandas~=2.2.2
-chromadb~=0.4.24
 psutil~=5.9.8
 instructor~=0.6.8
 pydantic~=2.6.4

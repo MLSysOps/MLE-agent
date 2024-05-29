@@ -12,6 +12,7 @@ from agent.utils.prompt import pmpt_chat_init
 
 console = Console()
 
+
 def build_config(general: bool = False):
     """
     build_config: build the configuration for MLE-agent.
@@ -240,7 +241,7 @@ def set_project(path):
 @click.option('--address', '-a', default='0.0.0.0', help="The address to run the server.")
 def server(port, address):
     """
-    server: launch the MLE-Agent RESTful API server.
+    server: launch the MLE-Agent RESTFul API server.
     :param port: the target port.
     :param address: the target address.
     :return: None
