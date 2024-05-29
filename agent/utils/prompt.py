@@ -1,14 +1,14 @@
 from agent.hub import load_yml
-from agent.types import Plan
+from agent.types import Project
 from .system import read_file_to_string
 
 
 def pmpt_chat_init(
         lang: str,
-        plan: Plan
+        project: Project
 ) -> str:
-    current_task = plan.tasks[plan.current_task - 1]
-    target_source_code = read_file_to_string(plan.entry_file)
+    current_task = project.plan.tasks[project.plan.current_task - 1]
+    target_source_code = read_file_to_string(project.entry_file)
     if target_source_code is None:
         return f"""
         You are an Machine learning engineer, and you are currently working on an ML project using {lang}
@@ -17,7 +17,7 @@ def pmpt_chat_init(
         USEFUL INFORMATION:
         
         - Project Language: {lang}
-        - Your project plan: {plan.dict()}
+        - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
         
         """
@@ -29,18 +29,16 @@ def pmpt_chat_init(
         USEFUL INFORMATION:
         
         - Project Language: {lang}
-        - Your project plan: {plan.dict()}
+        - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
-        - The source code you have written for the whole project: {read_file_to_string(plan.entry_file)}
+        - The source code you have written for the whole project: {read_file_to_string(project.entry_file)}
         
         """
 
 
-
-
-def pmpt_chain_filename(lang: str) -> str:
+def pmpt_chain_filename() -> str:
     return f"""
-    You are a Machine Learning Engineer working on a project that primarily uses {lang}.
+    You are a Machine Learning Engineer working on a project that primarily uses Python.
     Your task is to generate a file name based on the given user requirements.
     Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
     

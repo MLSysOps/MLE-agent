@@ -8,9 +8,10 @@ from agent.server import start_server
 from agent.function import Chat, PlanAgent
 from agent.model import OpenAIModel, OllamaModel
 from agent.utils import *
-from agent.utils.prompt import pmpt_chat_init
+from agent.types import Project
 
 console = Console()
+configuration = Config()
 
 
 def build_config(general: bool = False):
@@ -20,7 +21,6 @@ def build_config(general: bool = False):
         general: a boolean indicating whether to build the general configuration only.
     :return:
     """
-    configuration = Config()
     platform = questionary.select(
         "Which language model platform do you want to use?",
         choices=[LLM_TYPE_OPENAI, LLM_TYPE_OLLAMA]
@@ -73,7 +73,6 @@ def load_model():
     """
     load_model: load the model based on the configuration.
     """
-    configuration = Config()
     config_dict = configuration.read()
     plat = config_dict['general']['platform']
 
@@ -113,8 +112,6 @@ def start():
     """
     start: start the chat with LLM.
     """
-    # check the system configuration
-    configuration = Config()
     if configuration.read() is None:
         build_config()
 
@@ -124,14 +121,12 @@ def start():
                     " or set the project using 'mle set_project <project path>'.")
         return
 
-    project_plan_file = os.path.join(configuration.read()['project']['path'], CONFIG_PROJECT_FILE)
-
-    # check if the project plan file exists
-    if not os.path.exists(project_plan_file):
-        console.log(f"The {CONFIG_PROJECT_FILE} does not exist in the workspace. Aborted.")
+    project = read_project_state(configuration.read()['project']['name'])
+    if project is None:
+        console.log("Could not find the project in the database. Aborted.")
         return
 
-    chain = PlanAgent(load_plan(str(project_plan_file)), load_model())
+    chain = PlanAgent(project, load_model())
     chain.start()
 
 
@@ -141,7 +136,6 @@ def chat():
     chat: start an interactive chat with LLM to work on your ML project.
     """
     # check the system configuration
-    configuration = Config()
     if configuration.read() is None:
         build_config()
 
@@ -156,23 +150,24 @@ def chat():
         console.log("Please create a new project first using 'mle new' command.")
         return
 
-    project_path = configuration.read()['project']['path']
-    project_plan = read_project_plan(str(os.path.join(project_path, CONFIG_PROJECT_FILE)))
-    console.log("> [green]Current project:[/green]", project_path)
+    project_name = configuration.read()['project']['name']
+    project = read_project_state(project_name)
 
-    selected_language = project_plan.lang
+    console.log("> [green]Current project:[/green]", project.path)
+
+    selected_language = project.lang
     console.log("> [green]Project language:[/green]", selected_language)
 
-    current_task = project_plan.tasks[project_plan.current_task - 1]
+    current_task = project.plan.tasks[project.plan.current_task - 1]
     console.log("> [green]Current task:[/green]", current_task.name)
-    console.log("> [green]Task progress:[/green]", f"{project_plan.current_task}/{len(project_plan.tasks)}")
+    console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
     console.log("> [green]Task description:[/green]", current_task.description)
 
     # start the interactive chat
     console.line()
     chat_app = Chat(model)
     # set the initial system prompt
-    chat_app.add(role='system', content=pmpt_chat_init(selected_language, project_plan))
+    chat_app.add(role='system', content=pmpt_chat_init(selected_language, project))
     chat_app.start()
 
 
@@ -186,54 +181,23 @@ def new(name):
         console.log("Please provide a valid project name. Aborted.")
         return
 
-    configuration = Config()
     description = questionary.text("What is the description of this project? (Optional)").ask()
-    debug_env = questionary.select(
-        "Where do you want to launch the project?",
-        choices=["cloud", "local", "not running"]
-    ).ask()
-
     project_path = create_directory(name)
-    update_project_plan(
-        project_path,
-        {
-            'project_name': name,
-            'current_task': 0,
-            'description': description,
-            'llm': configuration.read()['general']['platform'],
-            'project': project_path,
-            'lang': configuration.read()['general']['code_language'],
-            'debug_env': debug_env
-        }
-    )
+    update_project_state(Project(
+        name=name,
+        path=project_path,
+        description=description,
+        lang=configuration.read()['general']['code_language'],
+        llm=configuration.read()['general']['platform'],
+    ))
 
     # write the project configuration
     configuration.write_section(
         CONFIG_SEC_PROJECT, {
-            'path': project_path
+            'path': project_path,
+            'name': name
         }
     )
-
-
-@cli.command()
-@click.argument('path', nargs=-1, type=click.Path(exists=True))
-def set_project(path):
-    """
-    project: set the current project.
-    :return:
-    """
-    configuration = Config()
-    project_path = " ".join(path)
-    project_config_path = os.path.join(project_path, CONFIG_PROJECT_FILE)
-    if not os.path.exists(project_config_path):
-        console.log("The project path is not valid. Please check if `project.yml` exists and try again.")
-        return
-
-    configuration.write_section(CONFIG_SEC_PROJECT, {
-        'path': project_path
-    })
-
-    console.log(f"> Project set to {project_path}")
 
 
 @cli.command()
@@ -254,24 +218,23 @@ def status():
     """
     status: display the current status of the project.
     """
-    configuration = Config()
     if configuration.read().get('project') is None:
         console.log("You have not set up a project yet.")
         console.log("Please create a new project first using 'mle new' command.")
         return
 
-    project_path = configuration.read()['project']['path']
-    project_plan = read_project_plan(str(os.path.join(project_path, CONFIG_PROJECT_FILE)))
+    project_name = configuration.read()['project']['name']
+    project = read_project_state(project_name)
 
-    console.log("> [green]Current project:[/green]", project_plan.project_name)
-    console.log("> [green]Project path:[/green]", project_path)
-    console.log("> [green]Project entry file:[/green]", project_plan.entry_file)
-    console.log("> [green]Project language:[/green]", project_plan.lang)
+    console.log("> [green]Current project:[/green]", project.plan.project_name)
+    console.log("> [green]Project path:[/green]", project.path)
+    console.log("> [green]Project entry file:[/green]", project.plan.entry_file)
+    console.log("> [green]Project language:[/green]", project.lang)
     console.line()
     # display the current task name
-    current_task = project_plan.tasks[project_plan.current_task - 1]
+    current_task = project.plan.tasks[project.plan.current_task - 1]
     console.log("> [green]Current task:[/green]", current_task.name)
-    console.log("> [green]Task progress:[/green]", f"{project_plan.current_task}/{len(project_plan.tasks)}")
+    console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
     console.log("> [green]Task description:[/green]", current_task.description)
 
     if current_task.resources:
@@ -290,4 +253,4 @@ def status():
         console.line()
         console.log("> [green]Debugging:[/green]")
         console.log(f"- Maximum debug attempts: {current_task.debug}")
-        console.log(f"- Debugging environment: {project_plan.debug_env}")
+        console.log(f"- Debugging environment: {project.debug_env}")

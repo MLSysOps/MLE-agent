@@ -10,7 +10,7 @@ CONFIG_TASK_HISTORY_FILE = 'task.history'
 
 # Database
 DB_NAME = 'database'
-TABLE_PROJECTS = 'projects.table'
+TABLE_PROJECTS = 'projects.json'
 
 # LLMs
 LLM_TYPE_OPENAI = 'openai'

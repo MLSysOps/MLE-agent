@@ -1,10 +1,10 @@
 rich
 click
 openai
+tinydb
 pyyaml
 uvicorn
 fastapi
-lancedb
 questionary
 prompt_toolkit
 pandas~=2.2.2
