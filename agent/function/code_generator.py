@@ -1,6 +1,3 @@
-from rich.console import Console
-
-from agent.types import Plan
 from agent.utils import read_file_to_string
 from agent.types import Task
 from .base_agent import BaseAgent

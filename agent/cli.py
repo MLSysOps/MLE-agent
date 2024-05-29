@@ -192,7 +192,7 @@ def new(name):
     description = questionary.text("What is the description of this project? (Optional)").ask()
     debug_env = questionary.select(
         "Where do you want to launch the project?",
-        choices=["cloud", "local", "not running"]
+        choices=["cloud", "local", "just_generate_code"]
     ).ask()
 
     project_path = create_directory(name)

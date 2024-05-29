@@ -9,6 +9,8 @@ from rich.panel import Panel
 from agent.utils import extract_code, update_project_plan, Config
 
 config = Config()
+
+
 class BaseAgent(ABC):
     def __init__(self, agent, plan: Plan, requirement: str):
         self.agent = agent

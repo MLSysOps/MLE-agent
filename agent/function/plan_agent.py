@@ -10,6 +10,7 @@ from agent.utils.prompt import pmpt_chain_filename
 from .generator import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
 from .code_generator import CodeGenerator
+from .reflect_agent import ReflectAgent
 
 config = Config()
 
@@ -194,6 +195,12 @@ class PlanAgent:
                 self.console.log("[bold red]Step 5: Code generation[bold red]")
                 code_generation_agent = CodeGenerator(self.agent, self.plan, self.requirement)
                 code_generation_agent.invoke(task_num)
+
+                # code reflection
+                if self.plan.debug_env != 'just_generate_code':
+                    self.console.log("[bold red]Step 6: Code execution and reflection[bold red]")
+                    code_reflection_agent = ReflectAgent(self.agent, self.plan, self.requirement)
+                    code_reflection_agent.invoke()
 
                 is_running = False
         except KeyboardInterrupt:
