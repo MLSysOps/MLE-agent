@@ -123,6 +123,7 @@ class PlanAgent:
                     if self.project.plan.data_kind == 'csv_data':
                         csv_data_sample = read_csv_file(self.project.plan.dataset)
                         self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                        self.requirement += f"\n\nDataset: {self.project.plan.dataset}"
                         self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
                         update_project_state(self.project)
 

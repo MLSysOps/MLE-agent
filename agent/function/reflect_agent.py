@@ -1,3 +1,6 @@
+import os
+import sys
+
 from agent.utils import read_file_to_string
 from .base_agent import BaseAgent
 import subprocess
@@ -25,22 +28,35 @@ class ReflectAgent(BaseAgent):
         Code: {{code}}
         """
 
-    def run_command_error_tolerant(self, command):
+    def run_command_error_tolerant(self, command, working_dir):
         """
-        Run a command in the shell, print the output and error logs, and return the results.
+        Run a command in the shell, print the output and error logs in real time, and return the results.
         :param command: Command to run.
+        :param working_dir: Directory to execute the command.
         :return: A tuple containing the output, error, and exit status.
         """
+        os.chdir(working_dir)  # Change to the appropriate directory
+        output_log = ""
+        error_log = ""
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            output, error = process.communicate()
-            exit_code = process.wait()
-
             print(f"Running command: {command}")
-            print(f"Output:\n{output}")
-            print(f"Error:\n{error}")
 
-            return output, error, exit_code
+            # Stream and accumulate stdout and stderr
+            while True:
+                output_line = process.stdout.readline()
+                if output_line:
+                    print(output_line, end='')
+                    output_log += output_line
+                error_line = process.stderr.readline()
+                if error_line:
+                    print(f"Error: {error_line}", end='', file=sys.stderr)
+                    error_log += error_line
+                if output_line == '' and error_line == '' and process.poll() is not None:
+                    break
+
+            exit_code = process.wait()
+            return output_log, error_log, exit_code
         except Exception as e:
             print(f"Exception occurred while running command: {command}")
             print(str(e))
@@ -50,9 +66,12 @@ class ReflectAgent(BaseAgent):
         debug_success = False
 
         entry_file = self.project.entry_file
-        command = f"python {entry_file}"
-        with self.console.status(f"Running the code script with command: {command}"):
-            run_log, error_log, exit_code = self.run_command_error_tolerant(command)
+        working_dir = os.path.dirname(entry_file)
+        file_name = os.path.basename(entry_file)
+        command = f"python {file_name}"
+
+        with self.console.status(f"Running the code script with command: {command} under {working_dir}"):
+            run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
 
         if exit_code != 0:
             for attempt in range(max_attempts):
@@ -63,7 +82,7 @@ class ReflectAgent(BaseAgent):
                 user_prompt = f"""
                 Task Requirements: {requirement}
                 Existing Code: {existing_code}
-                Error Log: {run_log}
+                Error Log: {run_log} {error_log}
                 """
 
                 self.chat_history.extend(
@@ -76,7 +95,7 @@ class ReflectAgent(BaseAgent):
                 code = self.handle_streaming()
 
                 with self.console.status(f"Running the code script..."):
-                    run_log, error_log, exit_code = self.run_command_error_tolerant(command)
+                    run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
 
                 if exit_code == 0:
                     debug_success = True
