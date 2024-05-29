@@ -4,14 +4,16 @@ import subprocess
 from typing import Type, TypeVar
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from tinydb import TinyDB, Query
+from pydantic import BaseModel
 from rich.console import Console
 
-from agent.types import Plan
-from agent.types.const import CONFIG_PROJECT_FILE
 from agent.utils import Config
+from agent.types import Project
+from agent.types.const import TABLE_PROJECTS
 
 T = TypeVar('T', bound=BaseModel)
+project_db = TinyDB(os.path.join(Config().home, TABLE_PROJECTS))
 
 
 def preprocess_json_string(json_string):
@@ -30,42 +32,6 @@ def preprocess_json_string(json_string):
     json_string = re.sub(r'"\s*\]', r'"]', json_string)
 
     return json_string
-
-
-def load_plan(file_name: str) -> Plan:
-    """
-    Load a step from a .yaml file.
-    :param file_name: the name of the configuration file.
-    :return:
-    """
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    yml_path = os.path.join(dir_path, file_name)
-
-    with open(yml_path, 'r') as file:
-        data = yaml.safe_load(file)
-    try:
-        config = Plan(**data)
-        return config
-    except ValidationError as e:
-        print(f"Error in loading the plan file: {e}")
-        raise
-
-
-def load_yml_to_pydantic_model(file_path: str, model: Type[T]) -> T:
-    """
-    Loads YAML data from a file and converts it into a Pydantic model.
-
-    Args:
-    file_path (str): Path to the YAML file.
-    model (Type[T]): The Pydantic model class to which the data should be converted.
-
-    Returns:
-    T: An instance of the specified Pydantic model class.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-        return model(**data)
 
 
 def list_all_files(path):
@@ -122,49 +88,39 @@ def get_directory_name(path):
         return None
 
 
-def read_project_plan(config_path: str = None):
+def read_project_state(project_name: str):
     """
-    Read the project plan.
-    :return: the project plan object.
+    Read the project state.
+    :param project_name: the project name.
+    :return: the project object.
     """
-    console = Console()
-    if not config_path:
-        config_path = os.path.join(os.getcwd(), CONFIG_PROJECT_FILE)
+    query = Query()
+    project = project_db.get(query.name == project_name)
+    if project:
+        return Project(**project)
 
-    if not os.path.exists(config_path):
-        console.log(f"[red]The file {config_path} does not exist.")
-        return None
-
-    try:
-        with open(config_path, 'r') as file:
-            data = yaml.safe_load(file)
-            return Plan(**data)
-    except FileNotFoundError:
-        console.log(f"[red]The file {config_path} does not exist.")
-        return None
-    except yaml.YAMLError as error:
-        console.log(f"[red]Error parsing YAML file: {error}")
-        return None
-    except Exception as error:
-        console.log(f"[red]An error occurred: {error}")
-        return None
+    return None
 
 
-def update_project_plan(project_path: str, content_dict: dict = None):
+def update_project_state(project: Project):
     """
-    Update the project plan.
-    :param project_path: the path of the project.
-    :param content_dict: the content dictionary to update.
+    Update the project state.
+    :param project: the project object.
+    :return: the project object.
     """
-    console = Console()
-    file_path = os.path.join(project_path, CONFIG_PROJECT_FILE)
+    query = Query()
+    if project_db.contains(query.name == project.name):
+        project_db.update(project.dict(), query.name == project.name)
+    else:
+        project_db.insert(project.dict())
 
-    try:
-        with open(file_path, 'w') as file:
-            yaml.dump(content_dict, file)
-        # console.log(f"[green]Project state updated successfully.")
-    except IOError as error:
-        console.log(f"[red]Updating the project state file '{file_path}' failed due to: {error}")
+
+def list_projects():
+    """
+    List all the projects.
+    :return: the list of projects.
+    """
+    return [Project(**item) for item in project_db.all()]
 
 
 def extract_and_save_file(input_text):
@@ -233,17 +189,6 @@ def extract_code(text: str):
         return None
 
 
-def load_yaml_file(file_path: str):
-    """
-    Load a YAML file and return the data.
-    :param file_path: the path of the YAML file.
-    :return: the data in the YAML file.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-    return data
-
-
 def read_file_to_string(file_path: str):
     """
     Reads the contents of a file and returns it as a string.
@@ -259,6 +204,7 @@ def read_file_to_string(file_path: str):
             return file.read()
     except FileNotFoundError:
         return None
+
 
 def run_command(commands):
     """
