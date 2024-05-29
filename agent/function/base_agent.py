@@ -1,33 +1,25 @@
 from abc import ABC
-from agent.types import Plan
+from agent.types import Project
 from rich.console import Console
 
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 
-from agent.utils import extract_code, update_project_plan, Config
+from agent.utils import extract_code, Config
 
 config = Config()
 
 
 class BaseAgent(ABC):
-    def __init__(self, agent, plan: Plan, requirement: str):
+    def __init__(self, agent, project: Project):
         self.agent = agent
-        self.plan = plan
-        self.requirement = requirement
+        self.project = project
+        self.requirement = self.project.requirement
 
         self.chat_history = []
         self.console = Console()
         self.project_home = config.read().get('project')['path']
-
-    def update_project_state(self):
-        """
-        Update the project state.
-        :return: None
-        """
-        update_project_plan(self.project_home, self.plan.dict(exclude_none=True))
-        return self.plan
 
     def handle_streaming(self):
         """
@@ -46,7 +38,7 @@ class BaseAgent(ABC):
 
             code = extract_code(text)
             if code:
-                with open(self.plan.entry_file, 'w') as file:
+                with open(self.project.entry_file, 'w') as file:
                     file.write(code)
-                self.console.log(f"Code generated to: {self.plan.entry_file}")
+                self.console.log(f"Code generated to: {self.project.entry_file}")
         return text
