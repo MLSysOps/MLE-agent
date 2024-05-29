@@ -22,7 +22,7 @@ class CodeGenerator:
 
     def system_pmpt_code_gen_new(self) -> str:
         return f"""
-        You are a Machine Learning engineer working on an ML project using Python as the primary language.
+        You are a Machine Learning engineer working on an ML project using {self.project.lang} as the primary language.
         The user requires a new code script for the current task. Please read users requirement and task description
         very carefully and generate a new code script that meets them step by step.
         Please make sure only output code with appropriate comments and documentation.
@@ -34,7 +34,7 @@ class CodeGenerator:
 
     def system_pmpt_code_gen_existing(self, code: str) -> str:
         return f"""
-        You are a Machine Learning engineer working on an ML project using Python as the primary language.
+        You are a Machine Learning engineer working on an ML project using {self.project.lang} as the primary language.
         The user requires modifications to the existing code to meet the task requirements and finish the project.
         Please use the following information to modify or add new changes to the code to finish the task and project.
         Please think this as a requirement, task and code review and make necessary changes to the code.
