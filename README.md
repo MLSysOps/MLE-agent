@@ -1,5 +1,5 @@
 <div align="center">
- <img alt="ollama" height="200px" src="assets/keia_llama.webp">
+ <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 </div>
 
 # Keia (MLE-agent)
