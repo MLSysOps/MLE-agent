@@ -11,9 +11,6 @@ from agent.utils import *
 from agent.utils.prompt import pmpt_chat_init
 
 console = Console()
-# avoid the tokenizers parallelism issue
-os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-
 
 def build_config(general: bool = False):
     """
