@@ -2,7 +2,6 @@ rich
 click
 openai
 tinydb
-pyyaml
 uvicorn
 fastapi
 questionary

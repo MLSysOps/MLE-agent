@@ -5,12 +5,12 @@ from typing import Type, TypeVar
 
 import yaml
 from tinydb import TinyDB, Query
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from rich.console import Console
 
-from agent.types import Plan, Project
-from agent.types.const import CONFIG_PROJECT_FILE, TABLE_PROJECTS
 from agent.utils import Config
+from agent.types import Project
+from agent.types.const import TABLE_PROJECTS
 
 T = TypeVar('T', bound=BaseModel)
 project_db = TinyDB(os.path.join(Config().home, TABLE_PROJECTS))
@@ -195,17 +195,6 @@ def extract_code(text: str):
         return match.group(1)
     else:
         return None
-
-
-def load_yaml_file(file_path: str):
-    """
-    Load a YAML file and return the data.
-    :param file_path: the path of the YAML file.
-    :return: the data in the YAML file.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-    return data
 
 
 def read_file_to_string(file_path: str):
