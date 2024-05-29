@@ -10,6 +10,7 @@ from agent.types import Plan, Project
 from .generator import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
 from .code_generator import CodeGenerator
+from .reflect_agent import ReflectAgent
 
 config = Config()
 
@@ -122,6 +123,7 @@ class PlanAgent:
                     if self.project.plan.data_kind == 'csv_data':
                         csv_data_sample = read_csv_file(self.project.plan.dataset)
                         self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                        self.requirement += f"\n\nDataset: {self.project.plan.dataset}"
                         self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
                         update_project_state(self.project)
 
@@ -179,18 +181,25 @@ class PlanAgent:
 
                 task_num = len(self.project.plan.tasks)
                 # check if all tasks are completed.
-                if self.project.plan.current_task == task_num:
-                    self.console.log(":tada: Looks like all tasks are completed.")
-                    return
-
-                # install the dependencies for this plan.
-                setup_agent = SetupAgent(self.agent, self.project.plan)
-                setup_agent.invoke()
+                # if self.project.plan.current_task == task_num:
+                #     self.console.log(":tada: Looks like all tasks are completed.")
+                #     return
 
                 # code generation
                 self.console.log("[bold red]Step 5: Code generation[bold red]")
                 code_generation_agent = CodeGenerator(self.agent, self.project)
-                code_generation_agent.invoke(task_num)
+                code_generation_agent.invoke(task_num, self.requirement)
+
+                # install the dependencies for this plan and code.
+                existing_code = read_file_to_string(self.project.entry_file)
+                setup_agent = SetupAgent(self.agent)
+                setup_agent.invoke(existing_code)
+
+                # code reflection
+                if self.project.debug_env != 'just_generate_code':
+                    self.console.log("[bold red]Step 6: Code execution and reflection[bold red]")
+                    code_reflection_agent = ReflectAgent(self.agent, self.project)
+                    code_reflection_agent.invoke(self.requirement)
 
                 is_running = False
         except KeyboardInterrupt:

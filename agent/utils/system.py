@@ -1,9 +1,8 @@
 import os
 import re
 import subprocess
-from typing import Type, TypeVar
+from typing import TypeVar
 
-import yaml
 from tinydb import TinyDB, Query
 from pydantic import BaseModel
 from rich.console import Console
@@ -229,7 +228,6 @@ def run_command(commands):
             results.append((output, exit_code))
         except Exception as e:
             results.append((str(e), -1))
-
 
 def list_dir_structure(start_path):
     """

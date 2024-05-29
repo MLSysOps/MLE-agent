@@ -62,7 +62,6 @@
     - name: "Seaborn"
       uri: "https://seaborn.pydata.org/tutorial.html"
 - name: "Model Training"
-  #  debug: 3
   kind: "code_generation"
   prompt: "This task is responsible for training the model to solve the problem. 
   You will select the best training techniques to apply to the data given user's requirement."
