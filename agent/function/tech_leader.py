@@ -7,7 +7,7 @@ from agent.integration import read_csv_file
 
 from agent.utils import *
 from agent.types import Plan, Project
-from .generator import plan_generator, req_based_generator
+from .plan_generator import plan_generator, req_based_generator
 from .setup_agent import SetupAgent
 from .code_generator import CodeGenerator
 from .reflect_agent import ReflectAgent
@@ -15,10 +15,10 @@ from .reflect_agent import ReflectAgent
 config = Config()
 
 
-class PlanAgent:
+class LeaderAgent:
     def __init__(self, project: Project, llm_agent):
         """
-        PlanAgent: the interactive chain of the current ML task.
+        LeaderAgent: the interactive chain of the current ML task.
         :param project: the current working project.
         :param llm_agent: the language model agent.
         """
