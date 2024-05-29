@@ -1,35 +1,58 @@
-from agent.utils import run_command, read_file_to_string
+from agent.utils import read_file_to_string
 from .base_agent import BaseAgent
+import subprocess
 
 
 class ReflectAgent(BaseAgent):
 
     def code_debug(self) -> str:
         return f"""
-        You are a Machine Learning engineer tasked with debugging a script. Below are the user's requirement, existing
-        code and the error logs. Your goal is to modify the code so that it meets the task requirements and
+        You are a Machine Learning engineer tasked with debugging a script. Below are the user's requirements,
+        existing code, and error logs. Your goal is to modify the code so that it meets the task requirements and
         runs successfully.
 
-        Task Requirements:
+        Task Requirement:
+        {{requirement}}
+
         Existing Code:
-        Error Log:
+        {{existing_code}}
+
+        Run Log:
+        {{run_log}}
 
         The output format should be:
 
         Code: {{code}}
         """
 
-    def invoke(self, requirement, max_attempts: int = 3):
-        # TODO: allow generating the command to run the code script.
-        # TODO: allow handling the issues that are not comes from the code script.
-        # TODO: allow handling the program timeout.
+    def run_command_error_tolerant(self, command):
+        """
+        Run a command in the shell, print the output and error logs, and return the results.
+        :param command: Command to run.
+        :return: A tuple containing the output, error, and exit status.
+        """
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            output, error = process.communicate()
+            exit_code = process.wait()
 
+            print(f"Running command: {command}")
+            print(f"Output:\n{output}")
+            print(f"Error:\n{error}")
+
+            return output, error, exit_code
+        except Exception as e:
+            print(f"Exception occurred while running command: {command}")
+            print(str(e))
+            return "", str(e), -1
+
+    def invoke(self, requirement, max_attempts: int = 3):
         debug_success = False
 
-        entry_file = self.project.plan.entry_file
+        entry_file = self.project.entry_file
         command = f"python {entry_file}"
         with self.console.status(f"Running the code script with command: {command}"):
-            run_log, exit_code = run_command([command])
+            run_log, error_log, exit_code = self.run_command_error_tolerant(command)
 
         if exit_code != 0:
             for attempt in range(max_attempts):
@@ -38,8 +61,8 @@ class ReflectAgent(BaseAgent):
                 existing_code = read_file_to_string(entry_file)
 
                 user_prompt = f"""
-                Task Requirements: {requirement} \n
-                Existing Code: {existing_code} \n
+                Task Requirements: {requirement}
+                Existing Code: {existing_code}
                 Error Log: {run_log}
                 """
 
@@ -53,7 +76,7 @@ class ReflectAgent(BaseAgent):
                 code = self.handle_streaming()
 
                 with self.console.status(f"Running the code script..."):
-                    run_log, exit_code = run_command([command])
+                    run_log, error_log, exit_code = self.run_command_error_tolerant(command)
 
                 if exit_code == 0:
                     debug_success = True
@@ -66,4 +89,3 @@ class ReflectAgent(BaseAgent):
         else:
             self.console.log("The code script has been run successfully.")
             return None
-

@@ -180,9 +180,9 @@ class PlanAgent:
 
                 task_num = len(self.project.plan.tasks)
                 # check if all tasks are completed.
-                if self.project.plan.current_task == task_num:
-                    self.console.log(":tada: Looks like all tasks are completed.")
-                    return
+                # if self.project.plan.current_task == task_num:
+                #     self.console.log(":tada: Looks like all tasks are completed.")
+                #     return
 
                 # install the dependencies for this plan.
                 setup_agent = SetupAgent(self.agent, self.project.plan)

@@ -229,7 +229,6 @@ def run_command(commands):
         except Exception as e:
             results.append((str(e), -1))
 
-
 def list_dir_structure(start_path):
     """
     List all files and directories under the given path.
