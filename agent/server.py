@@ -1,9 +1,10 @@
 """
 The RESTful server of MLE-Agent
 """
+import time
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -64,25 +65,27 @@ def run_project():
     return {"status": "Running"}
 
 
-@app.post("/chat/")
-async def chat(request: Request):
+@app.get("/chat/")
+async def chat(project: str, message: str):
     """
     Call the Chat's api function and return the streaming response. The input is an object with the project.
     """
-    data = await request.json()
-    project = read_project_state(data.get("project"))
-    user_pmpt = data.get("message")
+    project_state = read_project_state(project)
+    user_pmpt = message
 
     chat_app = Chat(load_model())
-    chat_app.add(role='system', content=pmpt_chat_init(project))
-    local_files_info = list_all_files(project.path)
+    chat_app.add(role='system', content=pmpt_chat_init(project_state))
+    local_files_info = list_all_files(project_state.path)
     chat_app.add("user", f"""The files under the project directory is: {local_files_info}""")
 
-    def generate_response(prompt):
+    async def generate_response(prompt):
+        previous_text = ''
         for text in chat_app.handle_response(prompt):
-            yield text
+            new_text = text[len(previous_text):]
+            previous_text = text
+            yield new_text
 
-    return StreamingResponse(generate_response(user_pmpt), media_type="text/plain")
+    return StreamingResponse(generate_response(user_pmpt), media_type="text/event-stream")
 
 
 def start_server(address: str = "0.0.0.0", port: int = 8080):
