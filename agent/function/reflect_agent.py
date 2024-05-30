@@ -13,7 +13,7 @@ class ReflectAgent(BaseAgent):
     def code_debug(self) -> str:
         return f"""
         You are a Machine Learning engineer tasked with debugging a script. Below are the user's requirements,
-        existing code, and error logs. 
+        existing code, and error logs.
         
         You will also be provided with some search results about the error message to help you debug the code.
         
