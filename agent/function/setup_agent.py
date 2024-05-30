@@ -52,7 +52,6 @@ class SetupAgent:
             {"role": 'system', "content": self.pmpt_code_dependency()},
             {"role": 'user', "content": code}
         ]
-        print(self.agent.query(chat_history))
         return json.loads(preprocess_json_string(self.agent.query(chat_history)))
 
     def invoke(self, code):

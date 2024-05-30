@@ -22,7 +22,6 @@ class SearchAgent:
         search_engine['name'] = self.engine_name
 
         self.search_engine = SearchEngine.validate(search_engine)
-        print(self.search_engine)
 
     def search_with_google(self, query: str):
         """
