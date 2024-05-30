@@ -2,10 +2,11 @@ import os
 import subprocess
 import sys
 
-from agent.utils import read_file_to_string
+from agent.utils import read_file_to_string, Config
 from .base_agent import BaseAgent
 from .search_agent import SearchAgent
 
+config = Config()
 
 class ReflectAgent(BaseAgent):
 
@@ -82,7 +83,9 @@ class ReflectAgent(BaseAgent):
             run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
 
         if exit_code != 0:
-            search_agent = SearchAgent()
+            enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
+            search_agent = SearchAgent(enable_web_search)
+
             for attempt in range(max_attempts):
                 self.console.log("Debugging the code script...")
 

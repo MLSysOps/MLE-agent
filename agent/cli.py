@@ -60,10 +60,13 @@ def build_config(general: bool = False):
 
     search_engine = questionary.select(
         "Which search engine do you want to use?",
-        choices=[SEARCH_ENGINE_GOOGLE, SEARCH_ENGINE_SEARCHAPI, SEARCH_ENGINE_BING]
+        choices=[SEARCH_ENGINE_GOOGLE, SEARCH_ENGINE_SEARCHAPI, SEARCH_ENGINE_BING, "no_web_search"]
     ).ask()
 
-    if search_engine == SEARCH_ENGINE_GOOGLE:
+    if search_engine == "no_web_search":
+        search_engine_config = {}
+        console.log("No web search engine is set.")
+    elif search_engine == SEARCH_ENGINE_GOOGLE:
         search_key = questionary.text("What is your Google search engine key?").ask()
         search_engine_id = questionary.text("What is your Google search engine ID?").ask()
         if not search_key or not search_engine_id:

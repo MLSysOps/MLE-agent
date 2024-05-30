@@ -9,19 +9,21 @@ config = Config()
 
 
 class SearchAgent:
-    def __init__(self):
+    def __init__(self, enable_web_search: bool = False):
+        self.enable_web_search = enable_web_search
         self.console = Console()
-        config_dict = config.read()
-        self.engine_name = config_dict['general']['search_engine']
 
-        if not self.engine_name:
-            self.console.log("Search engine is not set.")
-            raise NotImplementedError("Search engine is not set.")
+        if not self.enable_web_search:
+            self.console.log("Web search is disabled.")
+            return
 
-        search_engine = config.read().get(self.engine_name)
-        search_engine['name'] = self.engine_name
+        else:
+            config_dict = config.read()
+            self.engine_name = config_dict['general']['search_engine']
+            search_engine = config.read().get(self.engine_name)
+            search_engine['name'] = self.engine_name
 
-        self.search_engine = SearchEngine.validate(search_engine)
+            self.search_engine = SearchEngine.validate(search_engine)
 
     def search_with_google(self, query: str):
         """
@@ -52,6 +54,9 @@ class SearchAgent:
         """
         Invoke the search agent.
         """
+        if not self.enable_web_search:
+            return ["no web search results for this query."]
+
         if self.engine_name == "google":
             return self.search_with_google(query)
         else:
