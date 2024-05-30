@@ -1,9 +1,8 @@
 import json
-import questionary
 
+import questionary
 from rich.console import Console
 
-from agent.types import Plan
 from agent.utils import preprocess_json_string
 from agent.utils.system import run_command
 

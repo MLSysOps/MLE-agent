@@ -1,9 +1,9 @@
 import os
+import subprocess
 import sys
 
 from agent.utils import read_file_to_string
 from .base_agent import BaseAgent
-import subprocess
 
 
 class ReflectAgent(BaseAgent):

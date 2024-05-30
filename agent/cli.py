@@ -81,9 +81,11 @@ def build_config(general: bool = False):
         sys.exit(0)
 
     code_language = CODE_LANGUAGE
+
     general_config = {
         'platform': platform,
-        'code_language': code_language
+        'code_language': code_language,
+        'search_engine': search_engine,
     }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
@@ -211,7 +213,7 @@ def new(name):
         path=project_path,
         description=description,
         lang=configuration.read()['general']['code_language'],
-        llm=configuration.read()['general']['platform'],
+        llm=configuration.read()['general']['platform']
     ))
 
     # write the project configuration

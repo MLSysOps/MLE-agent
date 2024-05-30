@@ -1,11 +1,11 @@
 from abc import ABC
-from agent.types import Project
-from rich.console import Console
 
+from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from agent.types import Project
 from agent.utils import extract_code, Config
 
 config = Config()

@@ -4,13 +4,12 @@ from prompt_toolkit.history import FileHistory
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-
-from agent.utils import *
 from agent.types import Plan, Project
-from .plan_agent import plan_generator, req_based_generator
-from .setup_agent import SetupAgent
+from agent.utils import *
 from .code_gen_agent import CodeGenerator
+from .plan_agent import plan_generator, req_based_generator
 from .reflect_agent import ReflectAgent
+from .setup_agent import SetupAgent
 
 config = Config()
 

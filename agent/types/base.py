@@ -8,6 +8,15 @@ class DebugEnv(str, Enum):
     cloud = "cloud"
 
 
+class SearchEngine(BaseModel):
+    name: str
+    endpoint: str
+    key: str
+    cx: Optional[str] = None
+    refer_count: int = 8
+    timeout: int = 5
+
+
 class Resource(BaseModel):
     name: str
     uri: Optional[str] = None
