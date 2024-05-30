@@ -58,15 +58,43 @@ def build_config(general: bool = False):
         console.log("The platform is not supported. Aborted.")
         sys.exit(0)
 
+    search_engine = questionary.select(
+        "Which search engine do you want to use?",
+        choices=[SEARCH_ENGINE_GOOGLE, SEARCH_ENGINE_SEARCHAPI, SEARCH_ENGINE_BING, "no_web_search"]
+    ).ask()
+
+    if search_engine == "no_web_search":
+        search_engine_config = {}
+        console.log("No web search engine is set.")
+    elif search_engine == SEARCH_ENGINE_GOOGLE:
+        search_key = questionary.text("What is your Google search engine key?").ask()
+        search_engine_id = questionary.text("What is your Google search engine ID?").ask()
+        if not search_key or not search_engine_id:
+            sys.exit(0)
+
+        search_engine_config = {
+            "key": search_key,
+            "endpoint": "https://customsearch.googleapis.com/customsearch/v1",
+            "cx": search_engine_id,
+            "refer_count": 8,
+            "timeout": 5
+        }
+    else:
+        console.log(f"The {search_engine} search is not supported. Aborted.")
+        sys.exit(0)
+
     code_language = CODE_LANGUAGE
+
     general_config = {
         'platform': platform,
-        'code_language': code_language
+        'code_language': code_language,
+        'search_engine': search_engine,
     }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
     if not general:
         configuration.write_section(platform, platform_config)
+        configuration.write_section(search_engine, search_engine_config)
 
 
 def load_model():
@@ -188,7 +216,7 @@ def new(name):
         path=project_path,
         description=description,
         lang=configuration.read()['general']['code_language'],
-        llm=configuration.read()['general']['platform'],
+        llm=configuration.read()['general']['platform']
     ))
 
     # write the project configuration
