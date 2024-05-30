@@ -47,18 +47,12 @@ class Chat:
         """
         text = ''
         self.chat_history.append({"role": "user", "content": prompt})
-        response = self.agent.query(self.chat_history, stream=True)
+        response = self.agent.query(self.chat_history)
 
-        for token in response:
-            content = token.choices[0].delta.content
+        for content in response:
             if content:
-                text = text + content
+                text += content
                 yield text
-
-            stop_reason = token.choices[0].finish_reason
-            if stop_reason == "stop":
-                # TODO: take actions on stop (e.g., generated code file)
-                pass
 
         self.chat_history.append({"role": "assistant", "content": text})
 
@@ -94,3 +88,11 @@ class Chat:
                 self.handle_streaming(user_pmpt)
             except (KeyboardInterrupt, EOFError):
                 exit()
+
+    def api(self, prompt):
+        """
+        Handle the chat request from the API.
+        :param prompt: the user prompt.
+        :return: the streaming response.
+        """
+        return self.handle_response(prompt)
