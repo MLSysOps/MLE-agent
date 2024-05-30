@@ -88,11 +88,3 @@ class Chat:
                 self.handle_streaming(user_pmpt)
             except (KeyboardInterrupt, EOFError):
                 exit()
-
-    def api(self, prompt):
-        """
-        Handle the chat request from the API.
-        :param prompt: the user prompt.
-        :return: the streaming response.
-        """
-        return self.handle_response(prompt)

@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from agent.utils import Config
 from agent.function import Chat
-from agent.types import ChatRequest
 from agent.utils.prompt import pmpt_chat_init
 from agent.utils import load_model, read_project_state, list_all_files
 
@@ -80,7 +79,7 @@ async def chat(request: Request):
     chat_app.add("user", f"""The files under the project directory is: {local_files_info}""")
 
     def generate_response(prompt):
-        for text in chat_app.api(prompt):
+        for text in chat_app.handle_response(prompt):
             yield text
 
     return StreamingResponse(generate_response(user_pmpt), media_type="text/plain")
