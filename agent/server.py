@@ -1,15 +1,14 @@
 """
-The RESTful server of MLE-Agent
+The RESTFul server of MLE-Agent
 """
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from agent.utils import Config
+from agent.utils import *
 from agent.function import Chat
-from agent.utils.prompt import pmpt_chat_init
-from agent.utils import load_model, read_project_state, list_all_files
+from agent.types import Project
 
 app = FastAPI()
 origins = ["*"]
@@ -30,27 +29,28 @@ def read_root():
     return {"message": "Welcome to MLE-Agent!"}
 
 
-@app.post("/config/")
-def config():
-    """
-    Configure the MLE-Agent.
-    :return: the configuration data.
-    """
-    return {"status": "Configured"}
+@app.post("/projects/", response_model=Project)
+def create_project(project: Project):
+    create_project(project)
+    return project
 
 
-@app.post("/project/")
-def create_project():
+@app.get("/project/")
+def list_project():
     """
-    Create a new project.
-    :return: the data of the new project.
+    List all the projects.
+    :return: the list of projects.
     """
-    return {"status": "Project created"}
+    return {'projects': [p.dict() for p in list_projects()]}
 
 
-@app.get("/project/{project_id}")
-def get_project(project_id: int):
-    return {"project_id": project_id}
+@app.get("/project/{project_name}", response_model=Project)
+def get_project(project_name: str):
+    result = read_project_state(project_name)
+    if result:
+        return result
+    else:
+        raise HTTPException(status_code=404, detail="Project not found")
 
 
 # run
@@ -76,9 +76,9 @@ def chat(project: str, message: str):
     local_files_info = list_all_files(project_state.path)
     chat_app.add("user", f"""The files under the project directory is: {local_files_info}""")
 
-    def generate_response(prompt):
+    def generate_response(p):
         previous_text = ''
-        for text in chat_app.handle_response(prompt):
+        for text in chat_app.handle_response(p):
             new_text = text[len(previous_text):]
             previous_text = text
             yield new_text

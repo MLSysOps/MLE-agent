@@ -187,21 +187,14 @@ def new(name):
         return
 
     description = questionary.text("What is the description of this project? (Optional)").ask()
-    project_path = create_directory(name)
-    update_project_state(Project(
-        name=name,
-        path=project_path,
-        description=description,
-        lang=configuration.read()['general']['code_language'],
-        llm=configuration.read()['general']['platform']
-    ))
-
-    # write the project configuration
-    configuration.write_section(
-        CONFIG_SEC_PROJECT, {
-            'path': project_path,
-            'name': name
-        }
+    create_project(
+        Project(
+            name=name,
+            description=description,
+            lang=configuration.read()['general']['code_language'],
+            llm=configuration.read()['general']['platform']
+        ),
+        set_current=True
     )
 
 
@@ -261,26 +254,28 @@ def status():
     console.log("> [green]Project entry file:[/green]", project.entry_file)
     console.log("> [green]Project language:[/green]", project.lang)
     console.line()
-    # display the current task name
-    current_task = project.plan.tasks[project.plan.current_task - 1]
-    console.log("> [green]Current task:[/green]", current_task.name)
-    console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
-    console.log("> [green]Task description:[/green]", current_task.description)
 
-    if current_task.resources:
-        console.line()
-        console.log("> [green]Resources:[/green]")
-        for resource in current_task.resources:
-            console.log(f"- {resource.name}: {resource.uri}")
+    if project.plan:
+        # display the current task name
+        current_task = project.plan.tasks[project.plan.current_task - 1]
+        console.log("> [green]Current task:[/green]", current_task.name)
+        console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
+        console.log("> [green]Task description:[/green]", current_task.description)
 
-    if current_task.functions:
-        console.line()
-        console.log("> [green]Functions:[/green]")
-        for function in current_task.functions:
-            console.log(f"- {function.name}: {function.description}")
+        if current_task.resources:
+            console.line()
+            console.log("> [green]Resources:[/green]")
+            for resource in current_task.resources:
+                console.log(f"- {resource.name}: {resource.uri}")
 
-    if current_task.debug:
-        console.line()
-        console.log("> [green]Debugging:[/green]")
-        console.log(f"- Maximum debug attempts: {current_task.debug}")
-        console.log(f"- Debugging environment: {project.debug_env}")
+        if current_task.functions:
+            console.line()
+            console.log("> [green]Functions:[/green]")
+            for function in current_task.functions:
+                console.log(f"- {function.name}: {function.description}")
+
+        if current_task.debug:
+            console.line()
+            console.log("> [green]Debugging:[/green]")
+            console.log(f"- Maximum debug attempts: {current_task.debug}")
+            console.log(f"- Debugging environment: {project.debug_env}")

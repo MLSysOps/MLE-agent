@@ -1,14 +1,15 @@
 import os
 import re
 import subprocess
+from pathlib import Path
 from typing import TypeVar
 
 from tinydb import TinyDB, Query
 from pydantic import BaseModel
 from rich.console import Console
 
-from agent.utils import Config
 from agent.types import Project
+from agent.utils import Config, CONFIG_SEC_PROJECT
 from agent.model import OpenAIModel, OllamaModel
 from agent.types.const import TABLE_PROJECTS, LLM_TYPE_OPENAI, CONFIG_SEC_API_KEY, LLM_TYPE_OLLAMA
 
@@ -134,6 +135,30 @@ def update_project_state(project: Project):
         project_db.update(project.dict(), query.name == project.name)
     else:
         project_db.insert(project.dict())
+
+
+def create_project(project: Project, set_current=False):
+    """
+    Create a new project.
+    :param project: the project object.
+    :param set_current: the flag to set the current project.
+    :return: the data of the new project.
+    """
+    cwd = os.getcwd()
+    project_path = os.path.join(cwd, project.name)
+    Path(project_path).mkdir(parents=True, exist_ok=True)
+
+    project.path = project_path
+    update_project_state(project)
+
+    if set_current:
+        Config().write_section(
+            CONFIG_SEC_PROJECT, {
+                'path': project_path,
+                'name': project.name
+            }
+        )
+    return project
 
 
 def list_projects():
