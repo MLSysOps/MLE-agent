@@ -1,8 +1,6 @@
 """
 The RESTful server of MLE-Agent
 """
-import time
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
