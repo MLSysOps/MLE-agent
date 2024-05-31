@@ -44,14 +44,13 @@ class CodeGenerator(BaseAgent):
         Primary Language: {self.project.lang}
         Current Task: {task.name}
         Task Description: {task.description}
-
-        Make sure to incorporate some MLOps code using some MLOps tools for better ML management and reproducibility
         """
 
     def gen_code(self, task: Task, requirement):
         """
         Generate the content of the current task.
         :param task: the task to work on
+        :param requirement: the user's requirement
 
         :return: the content of the task.
 

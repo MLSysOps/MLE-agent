@@ -49,7 +49,7 @@ class Plan(BaseModel):
 
 class Project(BaseModel):
     name: str
-    path: str
+    path: Optional[str] = None
     lang: str
     llm: str
     plan: Optional[Plan] = None
