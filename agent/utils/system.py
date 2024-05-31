@@ -9,10 +9,32 @@ from rich.console import Console
 
 from agent.utils import Config
 from agent.types import Project
-from agent.types.const import TABLE_PROJECTS
+from agent.model import OpenAIModel, OllamaModel
+from agent.types.const import TABLE_PROJECTS, LLM_TYPE_OPENAI, CONFIG_SEC_API_KEY, LLM_TYPE_OLLAMA
 
 T = TypeVar('T', bound=BaseModel)
 project_db = TinyDB(os.path.join(Config().home, TABLE_PROJECTS))
+
+
+def load_model():
+    """
+    load_model: load the model based on the configuration.
+    """
+    config = Config()
+    config_dict = config.read()
+    plat = config_dict['general']['platform']
+
+    model = None
+    if plat == LLM_TYPE_OPENAI:
+        model = OpenAIModel(
+            api_key=config_dict[LLM_TYPE_OPENAI][CONFIG_SEC_API_KEY],
+            model=config_dict[LLM_TYPE_OPENAI].get('model'),
+            temperature=float(config_dict[LLM_TYPE_OPENAI]['temperature'])
+        )
+    if plat == LLM_TYPE_OLLAMA:
+        model = OllamaModel(model=config_dict[LLM_TYPE_OLLAMA].get('model'))
+
+    return model
 
 
 def preprocess_json_string(json_string):
@@ -228,6 +250,7 @@ def run_command(commands):
             results.append((output, exit_code))
         except Exception as e:
             results.append((str(e), -1))
+
 
 def list_dir_structure(start_path):
     """

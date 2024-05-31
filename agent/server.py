@@ -1,14 +1,21 @@
 """
 The RESTful server of MLE-Agent
 """
-
 import uvicorn
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+from agent.utils import Config
+from agent.function import Chat
+from agent.utils.prompt import pmpt_chat_init
+from agent.utils import load_model, read_project_state, list_all_files
 
 app = FastAPI()
 origins = ["*"]
+config = Config()
 
+# handle the CROSS origin requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -56,7 +63,30 @@ def run_project():
     return {"status": "Running"}
 
 
-def start_server(address: str = '0.0.0.0', port: int = 8080):
+@app.get("/chat/")
+def chat(project: str, message: str):
+    """
+    Call the Chat's api function and return the streaming response. The input is an object with the project.
+    """
+    project_state = read_project_state(project)
+    user_pmpt = message
+
+    chat_app = Chat(load_model())
+    chat_app.add(role='system', content=pmpt_chat_init(project_state))
+    local_files_info = list_all_files(project_state.path)
+    chat_app.add("user", f"""The files under the project directory is: {local_files_info}""")
+
+    def generate_response(prompt):
+        previous_text = ''
+        for text in chat_app.handle_response(prompt):
+            new_text = text[len(previous_text):]
+            previous_text = text
+            yield new_text
+
+    return StreamingResponse(generate_response(user_pmpt), media_type="text/event-stream")
+
+
+def start_server(address: str = "0.0.0.0", port: int = 8080):
     """
     Start the server.
     :param address: the server address.

@@ -3,32 +3,29 @@ from agent.types import Project
 from .system import read_file_to_string
 
 
-def pmpt_chat_init(
-        lang: str,
-        project: Project
-) -> str:
+def pmpt_chat_init(project: Project) -> str:
     current_task = project.plan.tasks[project.plan.current_task - 1]
     target_source_code = read_file_to_string(project.entry_file)
     if target_source_code is None:
         return f"""
-        You are an Machine learning engineer, and you are currently working on an ML project using {lang}
+        You are an Machine learning engineer, and you are currently working on an ML project using {project.lang}
          as the primary language. And now you should answer the user's questions based on the following information.
         
         USEFUL INFORMATION:
         
-        - Project Language: {lang}
+        - Project Language: {project.lang}
         - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
         
         """
     else:
         return f"""
-        You are an Machine learning engineer, and you are currently working on an ML project using {lang}
+        You are an Machine learning engineer, and you are currently working on an ML project using {project.lang}
          as the primary language. And now you should answer the user's questions based on the following information.
         
         USEFUL INFORMATION:
         
-        - Project Language: {lang}
+        - Project Language: {project.lang}
         - Your project plan: {project.plan.dict()}
         - The current task you are working on: {current_task.dict()}
         - The source code you have written for the whole project: {read_file_to_string(project.entry_file)}

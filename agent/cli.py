@@ -6,7 +6,6 @@ import questionary
 import agent
 from agent.server import start_server
 from agent.function import Chat, LeaderAgent
-from agent.model import OpenAIModel, OllamaModel
 from agent.utils import *
 from agent.types import Project
 
@@ -97,26 +96,6 @@ def build_config(general: bool = False):
         configuration.write_section(search_engine, search_engine_config)
 
 
-def load_model():
-    """
-    load_model: load the model based on the configuration.
-    """
-    config_dict = configuration.read()
-    plat = config_dict['general']['platform']
-
-    model = None
-    if plat == LLM_TYPE_OPENAI:
-        model = OpenAIModel(
-            api_key=config_dict[LLM_TYPE_OPENAI][CONFIG_SEC_API_KEY],
-            model=config_dict[LLM_TYPE_OPENAI].get('model'),
-            temperature=float(config_dict[LLM_TYPE_OPENAI]['temperature'])
-        )
-    if plat == LLM_TYPE_OLLAMA:
-        model = OllamaModel(model=config_dict[LLM_TYPE_OLLAMA].get('model'))
-
-    return model
-
-
 @click.group()
 @click.version_option(version=agent.__version__)
 def cli():
@@ -182,9 +161,7 @@ def chat():
     project = read_project_state(project_name)
 
     console.log("> [green]Current project:[/green]", project.path)
-
-    selected_language = project.lang
-    console.log("> [green]Project language:[/green]", selected_language)
+    console.log("> [green]Project language:[/green]", project.lang)
 
     current_task = project.plan.tasks[project.plan.current_task - 1]
     console.log("> [green]Current task:[/green]", current_task.name)
@@ -195,7 +172,7 @@ def chat():
     console.line()
     chat_app = Chat(model)
     # set the initial system prompt
-    chat_app.add(role='system', content=pmpt_chat_init(selected_language, project))
+    chat_app.add(role='system', content=pmpt_chat_init(project))
     chat_app.start()
 
 
