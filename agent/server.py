@@ -64,11 +64,10 @@ def run_project():
 
 
 @app.get("/chat/")
-async def chat(project: str, message: str):
+def chat(project: str, message: str):
     """
     Call the Chat's api function and return the streaming response. The input is an object with the project.
     """
-    import time
     project_state = read_project_state(project)
     user_pmpt = message
 
@@ -77,12 +76,11 @@ async def chat(project: str, message: str):
     local_files_info = list_all_files(project_state.path)
     chat_app.add("user", f"""The files under the project directory is: {local_files_info}""")
 
-    async def generate_response(prompt):
+    def generate_response(prompt):
         previous_text = ''
         for text in chat_app.handle_response(prompt):
             new_text = text[len(previous_text):]
             previous_text = text
-            time.sleep(0.01)
             yield new_text
 
     return StreamingResponse(generate_response(user_pmpt), media_type="text/event-stream")
