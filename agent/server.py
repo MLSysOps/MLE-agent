@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from agent.utils import *
 from agent.function import Chat
-from agent.types import Project
+from agent.types import Project, ConfigUpdateRequest
 
 app = FastAPI()
 origins = ["*"]
@@ -27,6 +27,15 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Welcome to MLE-Agent!"}
+
+
+@app.put("/config/update")
+def update_config(request: ConfigUpdateRequest):
+    try:
+        config.write_section(request.section_name, request.config_dict, request.overwrite)
+        return {"message": "Configuration updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/projects/", response_model=Project)
