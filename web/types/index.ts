@@ -1,15 +1,7 @@
-export enum OpenAIModel {
-  DAVINCI_TURBO = "gpt-3.5-turbo"
-}
-
-export interface Message {
-  role: Role;
-  content: string;
-}
-
-export interface ChatMessage {
-  message: String;
+export interface ProjectMessage {
+  content: String;
   project: String;
+  role: Role;
 }
 
 export type Role = "assistant" | "user";

@@ -68,6 +68,7 @@ async def chat(project: str, message: str):
     """
     Call the Chat's api function and return the streaming response. The input is an object with the project.
     """
+    import time
     project_state = read_project_state(project)
     user_pmpt = message
 
@@ -81,6 +82,7 @@ async def chat(project: str, message: str):
         for text in chat_app.handle_response(prompt):
             new_text = text[len(previous_text):]
             previous_text = text
+            time.sleep(0.01)
             yield new_text
 
     return StreamingResponse(generate_response(user_pmpt), media_type="text/event-stream")

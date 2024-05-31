@@ -1,78 +1,80 @@
 import { Chat } from "@/components/Chat/Chat";
 import { Footer } from "@/components/Layout/Footer";
 import { Navbar } from "@/components/Layout/Navbar";
-import { Message } from "@/types";
+import { ProjectMessage } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ProjectMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom of chat
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSend = async (message: Message) => {
+  // Handle sending a message
+  const handleSend = async (message: ProjectMessage) => {
     const updatedMessages = [...messages, message];
-
+  
     setMessages(updatedMessages);
     setLoading(true);
-
-    const response = await fetch("/api/chat", {
-      method: "POST",
+  
+    const response = await fetch(`http://localhost:8000/chat?project=${encodeURIComponent(message.project)}&message=${encodeURIComponent(message.content)}`, {
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        messages: updatedMessages
-      })
+      method: "GET",
     });
-
+  
     if (!response.ok) {
       setLoading(false);
       throw new Error(response.statusText);
     }
-
+  
     const data = response.body;
-
+  
     if (!data) {
+      setLoading(false);
       return;
     }
-
-    setLoading(false);
-
+  
     const reader = data.getReader();
     const decoder = new TextDecoder();
     let done = false;
     let isFirst = true;
-
+  
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
-      const chunkValue = decoder.decode(value);
-
+      const chunkValue = decoder.decode(value, { stream: true });
+  
+      setLoading(false);
       if (isFirst) {
         isFirst = false;
         setMessages((messages) => [
           ...messages,
           {
             role: "assistant",
-            content: chunkValue
-          }
+            content: chunkValue,
+            project: message.project,
+          },
         ]);
       } else {
         setMessages((messages) => {
           const lastMessage = messages[messages.length - 1];
           const updatedMessage = {
             ...lastMessage,
-            content: lastMessage.content + chunkValue
+            content: lastMessage.content + chunkValue,
           };
           return [...messages.slice(0, -1), updatedMessage];
         });
       }
+  
+      // Scroll to bottom after each chunk is added
+      scrollToBottom();
     }
   };
 
@@ -80,7 +82,8 @@ export default function Home() {
     setMessages([
       {
         role: "assistant",
-        content: `Hi there! I'm MLE-Agent. How can I help you?`
+        content: `Hi there! I'm MLE-Agent. How can I help you?`,
+        project: "test2"
       }
     ]);
   };
@@ -93,7 +96,8 @@ export default function Home() {
     setMessages([
       {
         role: "assistant",
-        content: `Hi there! I'm MLE-Agent. How can I help you?`
+        content: `Hi there! I'm MLE-Agent. How can I help you?`,
+        project: "test2"
       }
     ]);
   }, []);
