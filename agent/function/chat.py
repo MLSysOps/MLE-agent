@@ -1,16 +1,15 @@
 import os
 
-from rich.live import Live
-from rich.panel import Panel
-from rich.console import Console
-from rich.markdown import Markdown
-
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
+from rich.console import Console
+from rich.live import Live
+from rich.markdown import Markdown
+from rich.panel import Panel
 
+from agent.types.const import CONFIG_CHAT_HISTORY_FILE
 from agent.utils import Config
 from agent.utils import list_all_files
-from agent.types.const import CONFIG_CHAT_HISTORY_FILE
 
 config = Config()
 

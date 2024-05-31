@@ -1,9 +1,8 @@
 import json
-import questionary
 
+import questionary
 from rich.console import Console
 
-from agent.types import Plan
 from agent.utils import preprocess_json_string
 from agent.utils.system import run_command
 
@@ -53,7 +52,6 @@ class SetupAgent:
             {"role": 'system', "content": self.pmpt_code_dependency()},
             {"role": 'user', "content": code}
         ]
-        print(self.agent.query(chat_history))
         return json.loads(preprocess_json_string(self.agent.query(chat_history)))
 
     def invoke(self, code):

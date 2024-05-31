@@ -16,6 +16,11 @@ TABLE_PROJECTS = 'projects.json'
 LLM_TYPE_OPENAI = 'openai'
 LLM_TYPE_OLLAMA = 'ollama'
 
+# Search Engine
+SEARCH_ENGINE_GOOGLE = 'google'
+SEARCH_ENGINE_SEARCHAPI = 'searchapi'
+SEARCH_ENGINE_BING = 'bing'
+
 # Integrations
 INTEGRATIOIN_AWS_S3 = 'aws_s3'
 INTEGRATIOIN_HUGGINGFACE = 'huggingface'

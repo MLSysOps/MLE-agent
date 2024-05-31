@@ -1,27 +1,36 @@
 import os
+import subprocess
 import sys
 
-from agent.utils import read_file_to_string
+from agent.utils import read_file_to_string, Config
 from .base_agent import BaseAgent
-import subprocess
+from .search_agent import SearchAgent
 
+config = Config()
 
 class ReflectAgent(BaseAgent):
 
     def code_debug(self) -> str:
         return f"""
         You are a Machine Learning engineer tasked with debugging a script. Below are the user's requirements,
-        existing code, and error logs. Your goal is to modify the code so that it meets the task requirements and
-        runs successfully.
-
+        existing code, and error logs.
+        
+        You will also be provided with some search results about the error message to help you debug the code.
+        
+        Your goal is to modify the code so that it meets the task requirements and runs successfully.
+        
         Task Requirement:
         {{requirement}}
 
         Existing Code:
         {{existing_code}}
 
-        Run Log:
+        Log:
         {{run_log}}
+        {{error_log}}
+        
+        Web Search:
+        {{search_results}}
 
         The output format should be:
 
@@ -74,15 +83,20 @@ class ReflectAgent(BaseAgent):
             run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
 
         if exit_code != 0:
+            enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
+            search_agent = SearchAgent(enable_web_search)
+
             for attempt in range(max_attempts):
                 self.console.log("Debugging the code script...")
 
                 existing_code = read_file_to_string(entry_file)
+                search_results = search_agent.invoke(error_log)
 
                 user_prompt = f"""
                 Task Requirements: {requirement}
                 Existing Code: {existing_code}
-                Error Log: {run_log} {error_log}
+                Log: {run_log} {error_log}
+                Web Search: {search_results}
                 """
 
                 self.chat_history.extend(
