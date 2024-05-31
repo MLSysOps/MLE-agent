@@ -5,6 +5,8 @@ import { ChatLoader } from "./ChatLoader";
 import { ChatMessage } from "./ChatMessage";
 import { ResetChat } from "./ResetChat";
 
+import { Card } from "antd";
+
 interface Props {
 	messages: ProjectMessage[];
 	loading: boolean;
@@ -14,7 +16,7 @@ interface Props {
 
 export const Chat: FC<Props> = ({ messages, loading, onSend, onReset }) => {
 	return (
-		<>
+		<Card bordered={false} style={{ flexGrow: 6, flexBasis: 0 }}>
 			<div className="flex flex-row justify-between items-center mb-4 sm:mb-8">
 				<ResetChat onReset={onReset} />
 			</div>
@@ -36,6 +38,6 @@ export const Chat: FC<Props> = ({ messages, loading, onSend, onReset }) => {
 					<ChatInput onSend={onSend} />
 				</div>
 			</div>
-		</>
+		</Card>
 	);
 };
