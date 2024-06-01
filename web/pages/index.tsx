@@ -1,12 +1,12 @@
 import { Chat } from "@/components/Agent/Chat";
-import { ProjectMessage } from "@/types";
+import { Message } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 
 import { Card } from "antd";
 
 export default function Home() {
-	const [messages, setMessages] = useState<ProjectMessage[]>([]);
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -16,78 +16,78 @@ export default function Home() {
 	};
 
 	// Handle sending a message
-	const handleSend = async (message: ProjectMessage) => {
+	const handleSend = async (message: Message) => {
 		const updatedMessages = [...messages, message];
 
 		setMessages(updatedMessages);
 		setLoading(true);
 
-		const response = await fetch(
-			`http://localhost:8000/chat?project=${encodeURIComponent(
-				message.project.toString()
-			)}&message=${encodeURIComponent(message.content.toString())}`,
-			{
-				headers: {
-					"Content-Type": "application/json",
-				},
-				method: "GET",
-			}
-		);
+		// const response = await fetch(
+		// 	`http://localhost:8000/chat?project=${encodeURIComponent(
+		// 		message.project.toString()
+		// 	)}&message=${encodeURIComponent(message.content.toString())}`,
+		// 	{
+		// 		headers: {
+		// 			"Content-Type": "application/json",
+		// 		},
+		// 		method: "GET",
+		// 	}
+		// );
 
-		if (!response.ok) {
-			setLoading(false);
-			throw new Error(response.statusText);
-		}
+		// if (!response.ok) {
+		// 	setLoading(false);
+		// 	throw new Error(response.statusText);
+		// }
 
-		const data = response.body;
+		// const data = response.body;
 
-		if (!data) {
-			setLoading(false);
-			return;
-		}
+		// if (!data) {
+		// 	setLoading(false);
+		// 	return;
+		// }
 
-		const reader = data.getReader();
-		const decoder = new TextDecoder();
-		let done = false;
-		let isFirst = true;
+		// const reader = data.getReader();
+		// const decoder = new TextDecoder();
+		// let done = false;
+		// let isFirst = true;
 
-		while (!done) {
-			const { value, done: doneReading } = await reader.read();
-			done = doneReading;
-			const chunkValue = decoder.decode(value, { stream: true });
+		// while (!done) {
+		// 	const { value, done: doneReading } = await reader.read();
+		// 	done = doneReading;
+		// 	const chunkValue = decoder.decode(value, { stream: true });
 
-			setLoading(false);
-			if (isFirst) {
-				isFirst = false;
-				setMessages((messages) => [
-					...messages,
-					{
-						role: "system",
-						content: chunkValue,
-						project: message.project,
-					},
-				]);
-			} else {
-				setMessages((messages) => {
-					const lastMessage = messages[messages.length - 1];
-					const updatedMessage = {
-						...lastMessage,
-						content: lastMessage.content + chunkValue,
-					};
-					return [...messages.slice(0, -1), updatedMessage];
-				});
-			}
+		// 	setLoading(false);
+		// 	if (isFirst) {
+		// 		isFirst = false;
+		// 		setMessages((messages) => [
+		// 			...messages,
+		// 			{
+		// 				role: "system",
+		// 				content: chunkValue,
+		// 				project: message.project,
+		// 			},
+		// 		]);
+		// 	} else {
+		// 		setMessages((messages) => {
+		// 			const lastMessage = messages[messages.length - 1];
+		// 			const updatedMessage = {
+		// 				...lastMessage,
+		// 				content: lastMessage.content + chunkValue,
+		// 			};
+		// 			return [...messages.slice(0, -1), updatedMessage];
+		// 		});
+		// }
 
-			// Scroll to bottom after each chunk is added
-			scrollToBottom();
-		}
+		// Scroll to bottom after each chunk is added
+		// 	scrollToBottom();
+		// }
 	};
 
 	const handleReset = () => {
 		setMessages([
 			{
 				role: "system",
-				content: `Hi there! I'm MLE-Agent. What is your project requirements today?`,
+				msgType: "requirement",
 				project: "test2",
 			},
 		]);
@@ -101,7 +101,12 @@ export default function Home() {
 		setMessages([
 			{
 				role: "system",
-				content: `Hi there! I'm MLE-Agent. What is your project requirements today?`,
+				msgType: "requirement",
+				project: "test2",
+			},
+			{
+				role: "user",
+				msgType: "requirement",
 				project: "test2",
 			},
 		]);

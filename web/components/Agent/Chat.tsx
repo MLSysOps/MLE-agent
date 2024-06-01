@@ -1,16 +1,15 @@
-import { ProjectMessage } from "@/types";
+import { Message } from "@/types";
 import { FC } from "react";
-import { RequirementInput } from "../Chat/RequirementInput";
 import { ChatLoader } from "./ChatLoader";
-import { ChatMessage } from "../Chat/ChatMessage";
+import { ChatMessage } from "@components/Chat/ChatMessage";
 import { ResetChat } from "./ResetChat";
 
 import { Card } from "antd";
 
 interface Props {
-	messages: ProjectMessage[];
+	messages: Message[];
 	loading: boolean;
-	onSend: (message: ProjectMessage) => void;
+	onSend: (message: Message) => void;
 	onReset: () => void;
 }
 
@@ -33,10 +32,6 @@ export const Chat: FC<Props> = ({ messages, loading, onSend, onReset }) => {
 						<ChatLoader />
 					</div>
 				)}
-
-				<div className="mt-4 sm:mt-8 bottom-[56px] left-0 w-full">
-					<RequirementInput onSubmit={onSend} />
-				</div>
 			</div>
 		</Card>
 	);

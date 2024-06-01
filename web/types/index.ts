@@ -1,10 +1,26 @@
+
 export interface ProjectMessage {
-  content: String;
-  project: String;
-  role: Role;
+    content: String;
+    project: String;
+    role: Role;
+}
+
+export interface Message {
+    project: String;
+    msgType: MessageType;
+    role: Role;
+}
+
+export interface CodeMessage extends Message {
+    code: string;
+}
+
+export interface RequirementMessage extends Message {
+    requirement: string;
 }
 
 export type Role = "system" | "user";
+export type MessageType = "requirement" | "plan" | "code" | "select";
 
 enum DebugEnv {
     Local = "local",
