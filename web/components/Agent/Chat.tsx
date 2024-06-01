@@ -1,8 +1,8 @@
 import { ProjectMessage } from "@/types";
 import { FC } from "react";
-import { ChatInput } from "./ChatInput";
+import { RequirementInput } from "../Chat/RequirementInput";
 import { ChatLoader } from "./ChatLoader";
-import { ChatMessage } from "./ChatMessage";
+import { ChatMessage } from "../Chat/ChatMessage";
 import { ResetChat } from "./ResetChat";
 
 import { Card } from "antd";
@@ -35,7 +35,7 @@ export const Chat: FC<Props> = ({ messages, loading, onSend, onReset }) => {
 				)}
 
 				<div className="mt-4 sm:mt-8 bottom-[56px] left-0 w-full">
-					<ChatInput onSend={onSend} />
+					<RequirementInput onSubmit={onSend} />
 				</div>
 			</div>
 		</Card>

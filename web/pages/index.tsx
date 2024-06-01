@@ -1,4 +1,4 @@
-import { Chat } from "@/components/Chat/Chat";
+import { Chat } from "@/components/Agent/Chat";
 import { ProjectMessage } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
@@ -62,7 +62,7 @@ export default function Home() {
 				setMessages((messages) => [
 					...messages,
 					{
-						role: "assistant",
+						role: "system",
 						content: chunkValue,
 						project: message.project,
 					},
@@ -86,8 +86,8 @@ export default function Home() {
 	const handleReset = () => {
 		setMessages([
 			{
-				role: "assistant",
-				content: `Hi there! I'm MLE-Agent. How can I help you?`,
+				role: "system",
+				content: `Hi there! I'm MLE-Agent. What is your project requirements today?`,
 				project: "test2",
 			},
 		]);
@@ -100,8 +100,8 @@ export default function Home() {
 	useEffect(() => {
 		setMessages([
 			{
-				role: "assistant",
-				content: `Hi there! I'm MLE-Agent. How can I help you?`,
+				role: "system",
+				content: `Hi there! I'm MLE-Agent. What is your project requirements today?`,
 				project: "test2",
 			},
 		]);
@@ -135,7 +135,7 @@ export default function Home() {
 				/>
 				<Card
 					bordered={false}
-					style={{ flexGrow: 5, flexBasis: 0, height: "100%", marginLeft: 10 }}
+					style={{ flexGrow: 5, flexBasis: 0, marginLeft: 10 }}
 				></Card>
 
 				<div ref={messagesEndRef} />
