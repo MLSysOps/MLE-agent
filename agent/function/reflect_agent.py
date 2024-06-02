@@ -48,7 +48,7 @@ class ReflectAgent(BaseAgent):
         Your goal is to modify the code so that it meets the task requirements and runs successfully.
         You should modify the existing code based on the user's requirements, logs, and web search results.
 
-        The output format should be:
+        The output format should only with the updated code:
 
         Code: {{code}}
         """
