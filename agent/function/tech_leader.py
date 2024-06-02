@@ -7,7 +7,7 @@ from agent.integration import read_csv_file
 from agent.types import Plan, Project
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
-from .plan_agent import plan_generator, req_based_generator
+from .plan_agent import plan_generator, req_based_generator, gen_file_name
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
 
@@ -42,38 +42,6 @@ class LeaderAgent:
         if self.project.plan is None:
             self.project.plan = Plan(current_task=0)
 
-    def gen_file_name(self, user_requirement: str):
-        """
-        Generate a file name.
-        :return: the file name.
-        """
-        self.requirement = user_requirement
-        self.chat_history.extend(
-            [
-                {"role": 'system', "content": pmpt_chain_filename(self.project.lang)},
-                {"role": 'user', "content": self.requirement}
-            ]
-        )
-
-        with self.console.status("Preparing entry file name..."):
-            target_name = extract_file_name(self.agent.query(self.chat_history))
-            self.entry_file = str(os.path.join(self.project.path, target_name))
-
-        self.console.log(f"The entry file is: {self.entry_file}")
-        confirm = questionary.confirm("Do you want to use the file?").ask()
-
-        if not confirm:
-            new_name = questionary.text("Please provide a new file name:", default=self.entry_file).ask()
-            if new_name:
-                self.entry_file = new_name
-                self.console.log(f"The entry file is: {self.entry_file}")
-
-        # clear the chat history
-        self.project.entry_file = self.entry_file
-        self.chat_history = []
-
-        return self.entry_file
-
     def start(self):
         """
         Execute the chain.
@@ -94,10 +62,8 @@ class LeaderAgent:
 
                 # Generate entry file name based on requirement
                 if self.entry_file is None:
-                    self.entry_file = self.gen_file_name(self.requirement)
-                    if self.entry_file is None:
-                        raise SystemExit("The file name is not generated.")
-                    update_project_state(self.project)
+                    self.entry_file = gen_file_name(self.project, self.agent)
+                self.console.log(f"The entry file is: {self.entry_file}")
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:

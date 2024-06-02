@@ -33,20 +33,6 @@ def pmpt_chat_init(project: Project) -> str:
         """
 
 
-def pmpt_chain_filename(lang: str) -> str:
-    return f"""
-    You are a Machine Learning Engineer working on a project that primarily uses {lang}.
-    Your task is to generate a file name based on the given user requirements.
-    Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
-    
-    You must provide a name to avoid NoneType error.
-    
-    The output format should be:
-
-    File Name: {{name}}
-    """
-
-
 def pmpt_dataset_select():
     return f"""
     You are an ML project expert provides consultation to the user based on the user's requirements.
