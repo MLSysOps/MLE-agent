@@ -6,6 +6,7 @@ from typing import List, Optional
 class DebugEnv(str, Enum):
     local = "local"
     cloud = "cloud"
+    not_running = "not_running"
 
 
 class SearchEngine(BaseModel):

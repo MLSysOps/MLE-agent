@@ -14,11 +14,13 @@ class SetupAgent:
 
     def __init__(self, llm_agent):
         self.agent = llm_agent
-
         self.console = Console()
 
-    def pmpt_code_dependency(self) -> str:
-        return """
+    def dependency_generator(self, code):
+        """
+        Generate the dependencies for the project plan.
+        """
+        pmpt_code_dependency = """
         As an ML project expert, your task is to analyze the user-provided code and detect the necessary dependencies
         required for the project. Based on this analysis, you will generate a list of shell commands that the user can
         execute to install these dependencies.
@@ -44,12 +46,8 @@ class SetupAgent:
         }
         """
 
-    def dependency_generator(self, code):
-        """
-        Generate the dependencies for the project plan.
-        """
         chat_history = [
-            {"role": 'system', "content": self.pmpt_code_dependency()},
+            {"role": 'system', "content": pmpt_code_dependency},
             {"role": 'user', "content": code}
         ]
         return json.loads(preprocess_json_string(self.agent.query(chat_history)))
@@ -68,4 +66,4 @@ class SetupAgent:
         if confirm_install:
             run_command(install_commands)
         else:
-            self.console.log("Skipped the dependencies installation.")
+            self.console.log("Skipped the dependencies installation. You may need to install them manually.")

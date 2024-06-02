@@ -4,7 +4,7 @@ from prompt_toolkit.history import FileHistory
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-from agent.types import Plan, Project
+from agent.types import Plan, Project, DebugEnv
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
 from .plan_agent import plan_generator, req_based_generator
@@ -193,7 +193,7 @@ class LeaderAgent:
                 self.console.log("[bold red]Step 6: Setup dependencies [bold red]")
                 self.project.debug_env = questionary.select(
                     "Select the debug environment:",
-                    choices=['just_generate_code', 'local', 'cloud']
+                    choices=[DebugEnv.not_running.value, DebugEnv.local.value, DebugEnv.not_running.cloud.value]
                 ).ask()
                 update_project_state(self.project)
                 existing_code = read_file_to_string(self.project.entry_file)
@@ -201,12 +201,12 @@ class LeaderAgent:
                 setup_agent.invoke(existing_code)
 
                 # code reflection
-                if self.project.debug_env != 'just_generate_code':
-                    self.console.log("[bold red]Step 7: Code execution and reflection[bold red]")
+                self.console.log("[bold red]Step 7: Code execution and reflection[bold red]")
+                if self.project.debug_env is DebugEnv.not_running:
+                    self.console.log("The code execution and reflection are skipped.")
+                else:
                     code_reflection_agent = ReflectAgent(self.agent, self.project)
                     code_reflection_agent.invoke(self.requirement)
-                else:
-                    self.console.log("The code execution and reflection are skipped.")
 
                 is_running = False
         except KeyboardInterrupt:
