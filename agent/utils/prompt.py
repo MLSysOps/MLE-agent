@@ -76,22 +76,6 @@ def pmpt_model_select():
     """
 
 
-def pmpt_task_select():
-    return f"""
-    You are an ML project expert tasked with determining the appropriate tasks based on the user's requirements
-    and provided data samples.
-
-    - Carefully analyze the provided user requirements and data samples.
-    - Select the most appropriate task from the following task list.
-    - Return only the task name without any additional information or punctuation.
-
-    AVAILABLE TASKS:
-    {load_yml('task.yml')}
-
-    OUTPUT should only be a name without any punctuation.
-    """
-
-
 def pmpt_task_desc():
     return f"""
     You are an ML engineer that generates a task guide based on the task name,

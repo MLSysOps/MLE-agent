@@ -9,7 +9,7 @@ from agent.integration import read_csv_file
 from agent.types import Plan, Project
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
-from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect
+from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
 
@@ -86,9 +86,7 @@ class LeaderAgent:
                         if os.path.exists(self.project.plan.dataset) is False:
                             public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
                                                                       self.agent)
-                            print(public_dataset_list)
                             public_dataset_list = ast.literal_eval(public_dataset_list)
-                            print(public_dataset_list)
                             self.project.plan.dataset = questionary.select(
                                 "Please select the dataset:",
                                 choices=public_dataset_list
@@ -107,7 +105,12 @@ class LeaderAgent:
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.project.plan.ml_task_type is None:
-                    ml_task_type = analyze_requirement(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_list = ast.literal_eval(ml_task_list)
+                    ml_task_type = questionary.select(
+                        "Please select the ML task type:",
+                        choices=ml_task_list
+                    ).ask()
                     self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
                     confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
                     if confirm_ml_task_type:
