@@ -1,3 +1,5 @@
+import ast
+
 import questionary
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
@@ -7,7 +9,8 @@ from agent.integration import read_csv_file
 from agent.types import Plan, Project
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
-from .plan_agent import plan_generator, req_based_generator
+from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select, \
+    pmpt_model_select
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
 
@@ -42,38 +45,6 @@ class LeaderAgent:
         if self.project.plan is None:
             self.project.plan = Plan(current_task=0)
 
-    def gen_file_name(self, user_requirement: str):
-        """
-        Generate a file name.
-        :return: the file name.
-        """
-        self.requirement = user_requirement
-        self.chat_history.extend(
-            [
-                {"role": 'system', "content": pmpt_chain_filename(self.project.lang)},
-                {"role": 'user', "content": self.requirement}
-            ]
-        )
-
-        with self.console.status("Preparing entry file name..."):
-            target_name = extract_file_name(self.agent.query(self.chat_history))
-            self.entry_file = str(os.path.join(self.project.path, target_name))
-
-        self.console.log(f"The entry file is: {self.entry_file}")
-        confirm = questionary.confirm("Do you want to use the file?").ask()
-
-        if not confirm:
-            new_name = questionary.text("Please provide a new file name:", default=self.entry_file).ask()
-            if new_name:
-                self.entry_file = new_name
-                self.console.log(f"The entry file is: {self.entry_file}")
-
-        # clear the chat history
-        self.project.entry_file = self.entry_file
-        self.chat_history = []
-
-        return self.entry_file
-
     def start(self):
         """
         Execute the chain.
@@ -94,26 +65,33 @@ class LeaderAgent:
 
                 # Generate entry file name based on requirement
                 if self.entry_file is None:
-                    self.entry_file = self.gen_file_name(self.requirement)
-                    if self.entry_file is None:
-                        raise SystemExit("The file name is not generated.")
-                    update_project_state(self.project)
+                    self.entry_file = gen_file_name(self.project, self.agent)
+                self.console.log(f"The entry file is: {self.entry_file}")
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:
-                    self.project.plan.data_kind = req_based_generator(
-                        self.requirement, pmpt_dataset_detect(),
-                        self.agent
-                    )
+                    self.project.plan.data_kind = analyze_requirement(self.requirement, pmpt_dataset_detect(),
+                                                                      self.agent)
                     if self.project.plan.data_kind == 'no_data_information_provided':
-                        self.project.plan.dataset = req_based_generator(
-                            self.requirement, pmpt_dataset_select(),
-                            self.agent
-                        )
+                        public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
+                                                                  self.agent)
+                        public_dataset_list = ast.literal_eval(public_dataset_list)
+                        self.project.plan.dataset = questionary.select(
+                            "Please select the dataset:",
+                            choices=public_dataset_list
+                        ).ask()
+
                     elif self.project.plan.data_kind == 'csv_data':
                         self.project.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+                        # TODO: clean the code
                         if os.path.exists(self.project.plan.dataset) is False:
-                            raise SystemExit("The dataset path is not valid.")
+                            public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
+                                                                      self.agent)
+                            public_dataset_list = ast.literal_eval(public_dataset_list)
+                            self.project.plan.dataset = questionary.select(
+                                "Please select the dataset:",
+                                choices=public_dataset_list
+                            ).ask()
 
                 if self.project.plan.dataset is None:
                     raise SystemExit("There is no dataset information. Aborted.")
@@ -128,7 +106,12 @@ class LeaderAgent:
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.project.plan.ml_task_type is None:
-                    ml_task_type = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_list = ast.literal_eval(ml_task_list)
+                    ml_task_type = questionary.select(
+                        "Please select the ML task type:",
+                        choices=ml_task_list
+                    ).ask()
                     self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
                     confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
                     if confirm_ml_task_type:
@@ -141,7 +124,12 @@ class LeaderAgent:
                 self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
                     # TODO: search the best model from kaggle, huggingface, etc
-                    ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_list = ast.literal_eval(ml_model_list)
+                    ml_model_arch = questionary.select(
+                        "Please select the ML model architecture:",
+                        choices=ml_model_list
+                    ).ask()
                     self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
                     confirm_ml_model_arch = questionary.confirm("Are you sure to use this ml arch?").ask()
                     if confirm_ml_model_arch:
@@ -190,7 +178,7 @@ class LeaderAgent:
                 code_generation_agent.invoke(task_num, self.requirement)
 
                 # install the dependencies for this plan and code.
-                self.console.log("[bold red]Step 6: Setup dependencies [bold red]")
+                self.console.log("[bold red]Step 6: Setup dependencies and enviroment [bold red]")
                 self.project.debug_env = questionary.select(
                     "Select the debug environment:",
                     choices=['just_generate_code', 'local', 'cloud']

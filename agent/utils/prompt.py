@@ -33,76 +33,32 @@ def pmpt_chat_init(project: Project) -> str:
         """
 
 
-def pmpt_chain_filename(lang: str) -> str:
+def pmpt_public_dataset_guess():
     return f"""
-    You are a Machine Learning Engineer working on a project that primarily uses {lang}.
-    Your task is to generate a file name based on the given user requirements.
-    Ensure that the file suffix (e.g., .py for Python) is correct for the specified language.
-    
-    You must provide a name to avoid NoneType error.
-    
-    The output format should be:
+    As an ML project expert, you provide consultation to users based on their specific requirements for datasets.
 
-    File Name: {{name}}
-    """
+    Task:
+    - Select three datasets that best meet the user's project requirements.
+    - For each dataset, provide a one-sentence summary that explains why the dataset is appropriate for the project.
 
+    Instructions:
+    - Return the names of the datasets, each followed by a brief summary, formatted as entries in a list.
+    - Each entry in the list should be a string containing the dataset name followed directly by a comma and the summary.
 
-def pmpt_dataset_select():
-    return f"""
-    You are an ML project expert provides consultation to the user based on the user's requirements.
+    Output Format:
+    Your response should be formatted as a list of strings. Each string should follow this format:
+    "Dataset_Name, Summary of why the dataset is suitable.",
 
-    - You should choose a dataset that can meet the user's requirements.
-    - You only return the dataset name.
-    - Noted: it is the name of the dataset, not the platform hosts the dataset.
+    Example Output:
+    [
+        "TrafficVolumeDataset, Contains hourly traffic volume for various highways, ideal for predictive traffic
+        modeling.",
+        "RetailSalesForecasting, Provides daily sales data across several retail chains, suitable for demand
+        forecasting.",
+        "SentimentAnalysisTweets, Comprised of labeled tweets for sentiment analysis, perfect for training NLP models.",
+    ]
 
-    OUTPUT should only a name without any punctuation.
-
-    """
-
-
-def pmpt_dataset_detect():
-    return f"""
-    You are an ML project expert that detects the dataset based on the user's requirements.
-
-    - You should detect the data source based on the user's requirements.
-    - Noted: If the requirement doesn't contain the data source information, select 'no_data_information_provided'
-    
-    AVAILABLE OPTIONS:
-    
-    {load_yml('data.yml')}
-
-    OUTPUT should only a name from the list without any punctuation.
-
-    """
-
-
-def pmpt_model_select():
-    return f"""
-    You are an ML project expert tasked with providing consultation to the user based on the user's requirements,
-    provided data samples, and selected ML tasks.
-
-    - Carefully analyze the provided user requirements, data samples, and ML tasks.
-    - Choose the AI model architecture that can best achieve the user's requirements.
-    - Only return the architecture name.
-    - Note: it is the model architecture name, not the deep learning framework that builds the model.
-
-    OUTPUT should only be a name without any punctuation.
-    """
-
-
-def pmpt_task_select():
-    return f"""
-    You are an ML project expert tasked with determining the appropriate tasks based on the user's requirements
-    and provided data samples.
-
-    - Carefully analyze the provided user requirements and data samples.
-    - Select the most appropriate task from the following task list.
-    - Return only the task name without any additional information or punctuation.
-
-    AVAILABLE TASKS:
-    {load_yml('task.yml')}
-
-    OUTPUT should only be a name without any punctuation.
+    Ensure your response strictly adheres to this format for clarity and consistency.
     """
 
 
