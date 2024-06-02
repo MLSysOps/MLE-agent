@@ -169,7 +169,7 @@ class LeaderAgent:
                 code_generation_agent.invoke(task_num, self.requirement)
 
                 # install the dependencies for this plan and code.
-                self.console.log("[bold red]Step 6: Setup dependencies [bold red]")
+                self.console.log("[bold red]Step 6: Setup dependencies and enviroment [bold red]")
                 self.project.debug_env = questionary.select(
                     "Select the debug environment:",
                     choices=['just_generate_code', 'local', 'cloud']
