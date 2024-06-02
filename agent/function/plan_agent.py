@@ -5,7 +5,6 @@ import questionary
 from rich.console import Console
 
 from agent.hub import load_yml
-from agent.types import Project
 from agent.utils import update_project_state
 from agent.utils.prompt import pmpt_task_desc, pmpt_plan
 
@@ -64,7 +63,26 @@ def gen_file_name(project, llm_agent):
     return entry_file
 
 
-def req_based_generator(requirement: str, sys_prompt: str, llm_agent):
+def pmpt_dataset_detect():
+    # Load and format the dataset names for display
+    data_options = load_yml('data.yml')
+
+    return f"""
+    You are an machine learning engineer tasked with detecting the appropriate dataset based on user requirements.
+
+    Instructions:
+    - Detect the data source based on the user's specific requirements.
+    - If the requirement does not specify a data source, use the default response: 'no_data_information_provided'.
+
+    Available Data Sources:
+    {data_options}
+
+    Output:
+    - Provide only the name of the dataset from the list, without any punctuation or additional formatting.
+    """
+
+
+def analyze_requirement(requirement: str, sys_prompt: str, llm_agent):
     """
     Generate the project plan based on the user's requirements.
     :param requirement: the user's requirements.

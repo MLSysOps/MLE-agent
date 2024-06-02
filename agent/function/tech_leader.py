@@ -1,3 +1,5 @@
+import ast
+
 import questionary
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
@@ -7,7 +9,7 @@ from agent.integration import read_csv_file
 from agent.types import Plan, Project
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
-from .plan_agent import plan_generator, req_based_generator, gen_file_name
+from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
 
@@ -67,19 +69,30 @@ class LeaderAgent:
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:
-                    self.project.plan.data_kind = req_based_generator(
-                        self.requirement, pmpt_dataset_detect(),
-                        self.agent
-                    )
+                    self.project.plan.data_kind = analyze_requirement(self.requirement, pmpt_dataset_detect(),
+                                                                      self.agent)
                     if self.project.plan.data_kind == 'no_data_information_provided':
-                        self.project.plan.dataset = req_based_generator(
-                            self.requirement, pmpt_dataset_select(),
-                            self.agent
-                        )
+                        public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
+                                                                  self.agent)
+                        public_dataset_list = ast.literal_eval(public_dataset_list)
+                        self.project.plan.dataset = questionary.select(
+                            "Please select the dataset:",
+                            choices=public_dataset_list
+                        ).ask()
+
                     elif self.project.plan.data_kind == 'csv_data':
                         self.project.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
+                        # TODO: clean the code
                         if os.path.exists(self.project.plan.dataset) is False:
-                            raise SystemExit("The dataset path is not valid.")
+                            public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
+                                                                      self.agent)
+                            print(public_dataset_list)
+                            public_dataset_list = ast.literal_eval(public_dataset_list)
+                            print(public_dataset_list)
+                            self.project.plan.dataset = questionary.select(
+                                "Please select the dataset:",
+                                choices=public_dataset_list
+                            ).ask()
 
                 if self.project.plan.dataset is None:
                     raise SystemExit("There is no dataset information. Aborted.")
@@ -94,7 +107,7 @@ class LeaderAgent:
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.project.plan.ml_task_type is None:
-                    ml_task_type = req_based_generator(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_type = analyze_requirement(self.requirement, pmpt_task_select(), self.agent)
                     self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
                     confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
                     if confirm_ml_task_type:
@@ -107,7 +120,7 @@ class LeaderAgent:
                 self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
                     # TODO: search the best model from kaggle, huggingface, etc
-                    ml_model_arch = req_based_generator(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_arch = analyze_requirement(self.requirement, pmpt_model_select(), self.agent)
                     self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
                     confirm_ml_model_arch = questionary.confirm("Are you sure to use this ml arch?").ask()
                     if confirm_ml_model_arch:

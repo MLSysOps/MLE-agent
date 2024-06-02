@@ -33,32 +33,32 @@ def pmpt_chat_init(project: Project) -> str:
         """
 
 
-def pmpt_dataset_select():
+def pmpt_public_dataset_guess():
     return f"""
-    You are an ML project expert provides consultation to the user based on the user's requirements.
+    As an ML project expert, you provide consultation to users based on their specific requirements for datasets.
 
-    - You should choose a dataset that can meet the user's requirements.
-    - You only return the dataset name.
-    - Noted: it is the name of the dataset, not the platform hosts the dataset.
+    Task:
+    - Select three datasets that best meet the user's project requirements.
+    - For each dataset, provide a one-sentence summary that explains why the dataset is appropriate for the project.
 
-    OUTPUT should only a name without any punctuation.
+    Instructions:
+    - Return the names of the datasets, each followed by a brief summary, formatted as entries in a list.
+    - Each entry in the list should be a string containing the dataset name followed directly by a comma and the summary.
 
-    """
+    Output Format:
+    Your response should be formatted as a list of strings. Each string should follow this format:
+    "Dataset_Name, Summary of why the dataset is suitable.",
 
+    Example Output:
+    [
+        "TrafficVolumeDataset, Contains hourly traffic volume for various highways, ideal for predictive traffic
+        modeling.",
+        "RetailSalesForecasting, Provides daily sales data across several retail chains, suitable for demand
+        forecasting.",
+        "SentimentAnalysisTweets, Comprised of labeled tweets for sentiment analysis, perfect for training NLP models.",
+    ]
 
-def pmpt_dataset_detect():
-    return f"""
-    You are an ML project expert that detects the dataset based on the user's requirements.
-
-    - You should detect the data source based on the user's requirements.
-    - Noted: If the requirement doesn't contain the data source information, select 'no_data_information_provided'
-    
-    AVAILABLE OPTIONS:
-    
-    {load_yml('data.yml')}
-
-    OUTPUT should only a name from the list without any punctuation.
-
+    Ensure your response strictly adheres to this format for clarity and consistency.
     """
 
 
