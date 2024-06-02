@@ -19,7 +19,10 @@ class SearchAgent:
 
         else:
             config_dict = config.read()
-            self.engine_name = config_dict['general']['search_engine']
+            self.engine_name = config_dict['general'].get('search_engine')
+            if not self.engine_name:
+                self.console.log("No search engine is set.")
+                return
             search_engine = config.read().get(self.engine_name)
             search_engine['name'] = self.engine_name
 
