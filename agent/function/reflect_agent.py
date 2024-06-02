@@ -2,15 +2,14 @@ import os
 import subprocess
 import sys
 
-from agent.utils import read_file_to_string, Config
-from .base_agent import BaseAgent
+from .base import BaseAgent
 from .search_agent import SearchAgent
+from agent.utils import read_file_to_string, Config
 
 config = Config()
 
 
 class ReflectAgent(BaseAgent):
-
     def run_command_error_tolerant(self, command):
         """
         Run a command in the shell, print the output and error logs in real time, and return the results.
@@ -42,7 +41,6 @@ class ReflectAgent(BaseAgent):
             return "", str(e), -1
 
     def invoke(self, requirement, max_attempts: int = 3):
-
         pmpt_code_debug = f"""
         You are a Machine Learning engineer tasked with debugging a script.
         Your goal is to modify the code so that it meets the task requirements and runs successfully.

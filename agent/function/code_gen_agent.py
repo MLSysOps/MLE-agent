@@ -1,9 +1,9 @@
+from .base import BaseAgent
 from agent.types import Task
 from agent.utils import read_file_to_string, update_project_state
-from .base_agent import BaseAgent
 
 
-class CodeGenerator(BaseAgent):
+class CodeAgent(BaseAgent):
 
     def system_pmpt_code_gen_new(self) -> str:
         return f"""
@@ -53,10 +53,6 @@ class CodeGenerator(BaseAgent):
         :param requirement: the user's requirement
 
         :return: the content of the task.
-
-        Parameters
-        ----------
-        requirement
         """
         entry_file = self.project.entry_file
         sys_prompt = self.system_pmpt_code_gen_new()
@@ -79,7 +75,6 @@ class CodeGenerator(BaseAgent):
         )
 
         code = self.handle_streaming()
-
         return code
 
     def invoke(self, task_num, requirement):

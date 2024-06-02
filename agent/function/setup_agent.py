@@ -1,20 +1,16 @@
 import json
-
 import questionary
-from rich.console import Console
 
-from agent.utils import preprocess_json_string
-from agent.utils.system import run_command
+from .base import BaseAgent
+from agent.types import DebugEnv
+from agent.utils import run_command, preprocess_json_string, update_project_state, read_file_to_string
+from agent.hub import load_yml
 
 
-class SetupAgent:
+class SetupAgent(BaseAgent):
     """
     The SetupAgent class.
     """
-
-    def __init__(self, llm_agent):
-        self.agent = llm_agent
-        self.console = Console()
 
     def dependency_generator(self, code):
         """
@@ -50,15 +46,16 @@ class SetupAgent:
             {"role": 'system', "content": pmpt_code_dependency},
             {"role": 'user', "content": code}
         ]
-        return json.loads(preprocess_json_string(self.agent.query(chat_history)))
+        return json.loads(preprocess_json_string(self.model.query(chat_history)))
 
-    def invoke(self, code):
+    def invoke(self):
         """
         Invoke the agent.
         """
+        source_code = read_file_to_string(self.project.entry_file)
         with self.console.status("Guessing and preparing the dependencies for the project plan..."):
-            install_commands = self.dependency_generator(code).get('commands')
-            dependencies = self.dependency_generator(code).get('dependencies')
+            install_commands = self.dependency_generator(source_code).get('commands')
+            dependencies = self.dependency_generator(source_code).get('dependencies')
             self.console.log(f"[cyan]Will install the following dependencies:[/cyan] {dependencies}")
 
         # confirm the installation.
@@ -67,3 +64,17 @@ class SetupAgent:
             run_command(install_commands)
         else:
             self.console.log("Skipped the dependencies installation. You may need to install them manually.")
+
+        # configurate the debug environment.
+        self.project.debug_env = questionary.select(
+            "Select the debug environment:",
+            choices=[DebugEnv.not_running.value, DebugEnv.local.value, DebugEnv.cloud.value]
+        ).ask()
+        update_project_state(self.project)
+
+        # Ask which cloud service to use
+        if self.project.debug_env == DebugEnv.cloud.value:
+            self.project.cloud_service = questionary.select(
+                "Select the cloud service:",
+                choices=["AWS", "GCP", "Azure"]
+            ).ask()

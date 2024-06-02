@@ -4,9 +4,9 @@ from prompt_toolkit.history import FileHistory
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-from agent.types import Plan, Project, DebugEnv
+from agent.types import Plan, DebugEnv
 from agent.utils import *
-from .code_gen_agent import CodeGenerator
+from .code_gen_agent import CodeAgent
 from .plan_agent import plan_generator, req_based_generator
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
@@ -186,23 +186,17 @@ class LeaderAgent:
 
                 # code generation
                 self.console.log("[bold red]Step 5: Code generation[bold red]")
-                code_generation_agent = CodeGenerator(self.agent, self.project)
+                code_generation_agent = CodeAgent(self.agent, self.project)
                 code_generation_agent.invoke(task_num, self.requirement)
 
                 # install the dependencies for this plan and code.
-                self.console.log("[bold red]Step 6: Setup dependencies [bold red]")
-                self.project.debug_env = questionary.select(
-                    "Select the debug environment:",
-                    choices=[DebugEnv.not_running.value, DebugEnv.local.value, DebugEnv.not_running.cloud.value]
-                ).ask()
-                update_project_state(self.project)
-                existing_code = read_file_to_string(self.project.entry_file)
-                setup_agent = SetupAgent(self.agent)
-                setup_agent.invoke(existing_code)
+                self.console.log("[bold red]Step 6: Setup running environments [bold red]")
+                setup_agent = SetupAgent(self.agent, self.project)
+                setup_agent.invoke()
 
                 # code reflection
                 self.console.log("[bold red]Step 7: Code execution and reflection[bold red]")
-                if self.project.debug_env is DebugEnv.not_running:
+                if self.project.debug_env is DebugEnv.not_running.value:
                     self.console.log("The code execution and reflection are skipped.")
                 else:
                     code_reflection_agent = ReflectAgent(self.agent, self.project)
