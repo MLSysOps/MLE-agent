@@ -9,7 +9,8 @@ from agent.integration import read_csv_file
 from agent.types import Plan, Project
 from agent.utils import *
 from .code_gen_agent import CodeGenerator
-from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select
+from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select, \
+    pmpt_model_select
 from .reflect_agent import ReflectAgent
 from .setup_agent import SetupAgent
 
@@ -123,7 +124,12 @@ class LeaderAgent:
                 self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
                     # TODO: search the best model from kaggle, huggingface, etc
-                    ml_model_arch = analyze_requirement(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_list = ast.literal_eval(ml_model_list)
+                    ml_model_arch = questionary.select(
+                        "Please select the ML model architecture:",
+                        choices=ml_model_list
+                    ).ask()
                     self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
                     confirm_ml_model_arch = questionary.confirm("Are you sure to use this ml arch?").ask()
                     if confirm_ml_model_arch:

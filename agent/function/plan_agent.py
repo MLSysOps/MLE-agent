@@ -105,6 +105,33 @@ def pmpt_task_select():
     """
 
 
+def pmpt_model_select():
+    return f"""
+    As an ML project expert, you are tasked with recommending three different AI model architectures based on the
+    user's requirements, provided data samples, and selected ML tasks. Each recommended model should align with one
+    of the specific criteria: best overall performance, balanced performance, and fastest computation.
+
+    Instructions:
+    - Analyze the provided user requirements, data samples, and ML tasks.
+    - Select three models:
+        1. The best performing model in terms of accuracy.
+        2. A model with balanced performance considering both accuracy and computational efficiency.
+        3. The fastest model in terms of computational speed.
+    - For each model, provide a brief one-sentence summary that includes its suitability for the targeted task, its
+    accuracy, and its speed.
+
+    Output Format:
+    Please return a list of three strings, where each string includes the model's name followed by its summary.
+    Ensure the description highlights how the model meets one of the selection criteria (best, balanced, fastest).
+    Example format:
+    ["ModelName1, Best for task X with high accuracy of Y%, suitable for complex data analysis.",
+     "ModelName2, Balanced model, offers moderate accuracy with better speed, good for real-time applications.",
+     "ModelName3, Fastest model with lower accuracy, best for quick processing where speed is prioritized over precision."]
+
+    Note: Ensure that the architecture names with summary are returned without any additional punctuation.
+    """
+
+
 def analyze_requirement(requirement: str, sys_prompt: str, llm_agent):
     """
     Generate the project plan based on the user's requirements.

@@ -62,20 +62,6 @@ def pmpt_public_dataset_guess():
     """
 
 
-def pmpt_model_select():
-    return f"""
-    You are an ML project expert tasked with providing consultation to the user based on the user's requirements,
-    provided data samples, and selected ML tasks.
-
-    - Carefully analyze the provided user requirements, data samples, and ML tasks.
-    - Choose the AI model architecture that can best achieve the user's requirements.
-    - Only return the architecture name.
-    - Note: it is the model architecture name, not the deep learning framework that builds the model.
-
-    OUTPUT should only be a name without any punctuation.
-    """
-
-
 def pmpt_task_desc():
     return f"""
     You are an ML engineer that generates a task guide based on the task name,
