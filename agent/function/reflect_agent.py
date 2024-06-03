@@ -113,7 +113,7 @@ class ReflectAgent(BaseAgent):
                 run_log, error_log, exit_code = self.run_local()
         return run_log, exit_code
 
-    def invoke(self, dependency_list, max_attempts: int = 3, cloud_type: str = None):
+    def invoke(self, dependency_list=None, max_attempts: int = 3, cloud_type: str = None):
         """
         Run and debug the code script.
 
@@ -133,7 +133,7 @@ class ReflectAgent(BaseAgent):
         """
         debug_success = False
         entry_file = self.project.entry_file
-        run_log, exit_code = self.run(cloud_type)
+        run_log, exit_code = self.run(cloud_type, dependency_list)
 
         if exit_code != 0:
             enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
@@ -159,7 +159,7 @@ class ReflectAgent(BaseAgent):
                 )
 
                 self.handle_streaming()
-                run_log, exit_code = self.run(cloud_type)
+                run_log, exit_code = self.run(cloud_type, dependency_list)
 
                 if exit_code == 0:
                     debug_success = True
