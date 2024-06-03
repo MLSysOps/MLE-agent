@@ -5,6 +5,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
 ![GitHub contributors from allcontributors.org](https://img.shields.io/github/all-contributors/MLSysOps/MLE-agent)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/MLSysOps/MLE-agent/total)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 
 
