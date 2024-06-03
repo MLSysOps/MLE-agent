@@ -2,6 +2,12 @@
  <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 </div>
 
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
+![GitHub contributors from allcontributors.org](https://img.shields.io/github/all-contributors/MLSysOps/MLE-agent)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/MLSysOps/MLE-agent/total)
+![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
+
+
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 
 # Keia (MLE-agent)
