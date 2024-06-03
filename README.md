@@ -2,6 +2,8 @@
  <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 </div>
 
+<a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
+
 # Keia (MLE-agent)
 
 :love_letter: Fathers' love for Keia :love_letter:
