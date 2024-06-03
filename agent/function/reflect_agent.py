@@ -16,16 +16,15 @@ class ReflectAgent(BaseAgent):
         """
         Generate the running command for the current project.
         :return: the running command.
-        TODO
         """
         return f"python {os.path.basename(self.project.entry_file)}"
 
-    def run_command_error_tolerant(self, command):
+    def run_local(self):
         """
         Run a command in the shell, print the output and error logs in real time, and return the results.
-        :param command: Command to run.
         :return: A tuple containing the output, error, and exit status.
         """
+        command = self.gen_running_cmd()
         os.chdir(self.project.path)
         output_log = ""
         error_log = ""
@@ -50,63 +49,7 @@ class ReflectAgent(BaseAgent):
             print(f"Exception occurred while running command: {command}\n Error: {str(e)}")
             return "", str(e), -1
 
-    def local(self, max_attempts: int = 3):
-        pmpt_code_debug = f"""
-        You are a Machine Learning engineer tasked with debugging a script.
-        Your goal is to modify the code so that it meets the task requirements and runs successfully.
-        You should modify the existing code based on the user's requirements, logs, and web search results.
-
-        The output format should only with the updated code:
-
-        Code: {{code}}
-        """
-
-        debug_success = False
-        entry_file = self.project.entry_file
-        command = f"python {os.path.basename(entry_file)}"
-        with self.console.status(f"Running the code script with command: {command}."):
-            run_log, error_log, exit_code = self.run_command_error_tolerant(command)
-
-        if exit_code != 0:
-            enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
-            search_agent = SearchAgent(enable_web_search)
-
-            for attempt in range(max_attempts):
-                self.console.log("Debugging the code script...")
-                existing_code = read_file_to_string(entry_file)
-                search_results = search_agent.invoke(error_log)
-
-                user_prompt = f"""
-                Task Requirements: {self.project.requirement}\n
-                Existing Code: {existing_code}\n
-                Error Log: {error_log}\n
-                Web Search: {search_results}
-                """
-
-                self.chat_history.extend(
-                    [
-                        {"role": 'system', "content": pmpt_code_debug},
-                        {"role": 'user', "content": user_prompt}
-                    ]
-                )
-
-                self.handle_streaming()
-                with self.console.status(f"Running the code script..."):
-                    run_log, error_log, exit_code = self.run_command_error_tolerant(command)
-
-                if exit_code == 0:
-                    debug_success = True
-                    self.console.log("Debugging successful, the code script has been saved.")
-                    break
-
-            if not debug_success:
-                self.console.log(f"Debugging failed after {max_attempts} attempts.")
-                return None
-        else:
-            self.console.log("The code script has been run successfully.")
-            return None
-
-    def cloud(self, cloud_type: str, dependency_list: list = None):
+    def run_cloud(self, cloud_type: str, dependency_list: list = None):
         """
         Debug the code script on the cloud service.
         :param cloud_type: the type of cloud service to use.
@@ -153,4 +96,79 @@ class ReflectAgent(BaseAgent):
             self.console.log(f"Cloud type '{cloud_type}' is not supported.")
             return
 
-        sky.launch(task, cluster_name=self.project.name)
+        code, _ = sky.launch(task, cluster_name=self.project.name)
+        return None, code
+
+    def run(self, cloud_type: str = None, dependency_list: list = None):
+        """
+        Run the code script.
+
+        :param cloud_type: the type of cloud service to use, if None, run locally.
+        :param dependency_list: the list of dependencies to install.
+        """
+        if cloud_type:
+            run_log, exit_code = self.run_cloud(cloud_type, dependency_list)
+        else:
+            with self.console.status(f"Running the code script..."):
+                run_log, error_log, exit_code = self.run_local()
+        return run_log, exit_code
+
+    def invoke(self, dependency_list, max_attempts: int = 3, cloud_type: str = None):
+        """
+        Run and debug the code script.
+
+        :param cloud_type: the type of cloud service to use, if None, run locally.
+        :param dependency_list: the list of dependencies to install.
+        :param max_attempts: the max number of attempts to debug the code.
+        :return:
+        """
+        pmpt_code_debug = f"""
+        You are a Machine Learning engineer tasked with debugging a script.
+        Your goal is to modify the code so that it meets the task requirements and runs successfully.
+        You should modify the existing code based on the user's requirements, logs, and web search results.
+
+        The output format should only with the updated code:
+
+        Code: {{code}}
+        """
+        debug_success = False
+        entry_file = self.project.entry_file
+        run_log, exit_code = self.run(cloud_type)
+
+        if exit_code != 0:
+            enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
+            search_agent = SearchAgent(enable_web_search)
+
+            for attempt in range(max_attempts):
+                self.console.log("Debugging the code script...")
+                existing_code = read_file_to_string(entry_file)
+                search_results = search_agent.invoke(run_log)
+
+                user_prompt = f"""
+                Task Requirements: {self.project.requirement}\n
+                Existing Code: {existing_code}\n
+                Log: {run_log}\n
+                Web Search: {search_results}
+                """
+
+                self.chat_history.extend(
+                    [
+                        {"role": 'system', "content": pmpt_code_debug},
+                        {"role": 'user', "content": user_prompt}
+                    ]
+                )
+
+                self.handle_streaming()
+                run_log, exit_code = self.run(cloud_type)
+
+                if exit_code == 0:
+                    debug_success = True
+                    self.console.log("Debugging successful, the code script has been saved.")
+                    break
+
+            if not debug_success:
+                self.console.log(f"Debugging failed after {max_attempts} attempts.")
+                return
+        else:
+            self.console.log("The code script has been run successfully.")
+            return

@@ -53,19 +53,6 @@ class LaunchAgent(BaseAgent):
         """
         Invoke the agent.
         """
-        source_code = read_file_to_string(self.project.entry_file)
-        with self.console.status("Guessing and preparing the dependencies for the project plan..."):
-            install_commands = self.dependency_generator(source_code).get('commands')
-            dependencies = self.dependency_generator(source_code).get('dependencies')
-            self.console.log(f"[cyan]Will install the following dependencies:[/cyan] {dependencies}")
-
-        # confirm the installation.
-        confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()
-        if confirm_install:
-            run_commands(install_commands)
-        else:
-            self.console.log("Skipped the dependencies installation. You may need to install them manually.")
-
         # configurate the debug environment.
         self.project.debug_env = questionary.select(
             "Select the debug environment:",
@@ -73,11 +60,31 @@ class LaunchAgent(BaseAgent):
         ).ask()
         update_project_state(self.project)
 
-        reflect_agent = ReflectAgent(self.model, self.project)
+        # read the source code and prepare the dependencies.
+        source_code = read_file_to_string(self.project.entry_file)
+        with self.console.status("Guessing and preparing the dependencies for the project plan..."):
+            install_commands = self.dependency_generator(source_code).get('commands')
+            dependencies = self.dependency_generator(source_code).get('dependencies')
+            self.console.log(f"[cyan]Will install the following dependencies:[/cyan] {dependencies}")
+
+        # confirm the installation for local debug environment.
+        confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()
         if self.project.debug_env == DebugEnv.local.value:
-            reflect_agent.local()
+            if confirm_install:
+                run_commands(install_commands)
+            else:
+                self.console.log("Skipped the dependencies installation. You may need to install them manually.")
         elif self.project.debug_env == DebugEnv.cloud.value:
+            if not confirm_install:
+                dependencies = []
+                self.console.log("Skipped the dependencies installation on the cloud.")
+
+        cloud_type = None
+        reflect_agent = ReflectAgent(self.model, self.project)
+        if self.project.debug_env == DebugEnv.cloud.value:
             cloud_type = questionary.select("Select the cloud service:", choices=load_yml('cloud.yml')).ask()
-            reflect_agent.cloud(cloud_type)
-        else:
+
+        if self.project.debug_env == DebugEnv.not_running.value:
             self.console.log("The code execution and reflection are skipped.")
+        else:
+            reflect_agent.invoke(cloud_type=cloud_type, dependency_list=dependencies)
