@@ -105,6 +105,59 @@ def cli():
     pass
 
 
+@cli.group()
+def project():
+    """
+    project: group of commands related to project management.
+    """
+    pass
+
+
+@project.command()
+@click.argument('name')
+def delete(name):
+    """
+    delete: delete a machine learning project with the given NAME.
+    """
+    delete_project(name)
+
+
+@project.command()
+def switch():
+    """
+    switch: set the current project to work on.
+    """
+    projects = list_projects()
+    project_names = [p.name for p in projects]
+    target_name = questionary.select(
+        "Select the project to work on:",
+        choices=project_names
+    ).ask()
+
+    if target_name:
+        target_project = read_project_state(target_name)
+        configuration.write_section(
+            CONFIG_SEC_PROJECT, {
+                'path': target_project.path,
+                'name': target_project.name
+            }
+        )
+        console.log(f"Project set to: {target_name}")
+
+
+@project.command()
+def ls():
+    """
+    ls: list all existing machine learning projects.
+    """
+    projects = list_projects()
+    for p in projects:
+        if p.description:
+            print(f"- {p.name}: {p.description}")
+        else:
+            print(f"- {p.name}")
+
+
 @cli.command()
 @click.option('--general', '-g', is_flag=True, help="Set up the general configuration for MLE Agent.")
 def config(general):
@@ -128,13 +181,16 @@ def start():
                     " or set the project using 'mle set_project <project path>'.")
         return
 
-    project = read_project_state(configuration.read()['project']['name'])
-    if project is None:
+    p = read_project_state(configuration.read()['project']['name'])
+    if p is None:
         console.log("Could not find the project in the database. Aborted.")
         return
 
-    chain = LeaderAgent(project, load_model())
-    chain.start()
+    if os.path.exists(p.path):
+        chain = LeaderAgent(p, load_model())
+        chain.start()
+    else:
+        console.log(f"Project path'{p.path}' does not exist. Aborted.")
 
 
 @cli.command()
@@ -158,21 +214,22 @@ def chat():
         return
 
     project_name = configuration.read()['project']['name']
-    project = read_project_state(project_name)
+    target_project = read_project_state(project_name)
 
-    console.log("> [green]Current project:[/green]", project.path)
-    console.log("> [green]Project language:[/green]", project.lang)
+    console.log("> [green]Current project:[/green]", target_project.path)
+    console.log("> [green]Project language:[/green]", target_project.lang)
 
-    current_task = project.plan.tasks[project.plan.current_task - 1]
+    current_task = target_project.plan.tasks[target_project.plan.current_task - 1]
     console.log("> [green]Current task:[/green]", current_task.name)
-    console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
+    console.log("> [green]Task progress:[/green]",
+                f"{target_project.plan.current_task}/{len(target_project.plan.tasks)}")
     console.log("> [green]Task description:[/green]", current_task.description)
 
     # start the interactive chat
     console.line()
     chat_app = Chat(model)
     # set the initial system prompt
-    chat_app.add(role='system', content=pmpt_chat_init(project))
+    chat_app.add(role='system', content=pmpt_chat_init(target_project))
     chat_app.start()
 
 
@@ -211,31 +268,6 @@ def server(port, address):
     start_server(address, port)
 
 
-# a CLI command to set project
-@cli.command()
-def set_project():
-    """
-    set_project: set the current project to work on.
-    :return: None
-    """
-    projects = list_projects()
-    project_names = [project.name for project in projects]
-    target_name = questionary.select(
-        "Select the project to work on:",
-        choices=project_names
-    ).ask()
-
-    if target_name:
-        target_project = read_project_state(target_name)
-        configuration.write_section(
-            CONFIG_SEC_PROJECT, {
-                'path': target_project.path,
-                'name': target_project.name
-            }
-        )
-        console.log(f"Project set to: {target_name}")
-
-
 @cli.command()
 def status():
     """
@@ -246,20 +278,28 @@ def status():
         console.log("Please create a new project first using 'mle new' command.")
         return
 
-    project_name = configuration.read()['project']['name']
-    project = read_project_state(project_name)
+    project_name = configuration.read()['project'].get('name')
+    if not project_name:
+        console.log(
+            "Currently no working project. "
+            "Please use `mle project switch` to set a project or use `mle new` to create a new project."
+        )
+        return
 
-    console.log("> [green]Current project:[/green]", project.name)
-    console.log("> [green]Project path:[/green]", project.path)
-    console.log("> [green]Project entry file:[/green]", project.entry_file)
-    console.log("> [green]Project language:[/green]", project.lang)
+    target_project = read_project_state(project_name)
+
+    console.log("> [green]Current project:[/green]", target_project.name)
+    console.log("> [green]Project path:[/green]", target_project.path)
+    console.log("> [green]Project entry file:[/green]", target_project.entry_file)
+    console.log("> [green]Project language:[/green]", target_project.lang)
     console.line()
 
-    if project.plan:
+    if target_project.plan:
         # display the current task name
-        current_task = project.plan.tasks[project.plan.current_task - 1]
+        current_task = target_project.plan.tasks[target_project.plan.current_task - 1]
         console.log("> [green]Current task:[/green]", current_task.name)
-        console.log("> [green]Task progress:[/green]", f"{project.plan.current_task}/{len(project.plan.tasks)}")
+        console.log("> [green]Task progress:[/green]",
+                    f"{target_project.plan.current_task}/{len(target_project.plan.tasks)}")
         console.log("> [green]Task description:[/green]", current_task.description)
 
         if current_task.resources:
@@ -278,4 +318,4 @@ def status():
             console.line()
             console.log("> [green]Debugging:[/green]")
             console.log(f"- Maximum debug attempts: {current_task.debug}")
-            console.log(f"- Debugging environment: {project.debug_env}")
+            console.log(f"- Debugging environment: {target_project.debug_env}")
