@@ -1,7 +1,7 @@
 <div align="center">
-<img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 <h1 align="center">Keia: A Pair Agent for Machine Learning Engineer</h1>
 <p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
+<img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
 ![GitHub contributors from allcontributors.org](https://img.shields.io/github/all-contributors/MLSysOps/MLE-agent)
@@ -15,38 +15,55 @@
 </div>
 
 
-
+## Overview
+_The project is under active development. The API may change frequently._
 
 Keia is an MLE agent that helps you to plan, execute, and optimize your AI projects.
 
-## Installation
 
+## Milestones
+
+:rocket: June 1st, 2024: Release the **Baseline Mode** (v0.1.0)
+
+## Get started
+
+### Installation
+
+install from pypi
 ```bash
+pip install mle-agent
+```
+
+install from source
+```bash
+git clone
 pip install -e .
 ```
 
-## Usage
+### Configuration
 
-You need to set an OpenAI API key before running the agent. You can use the CLI to set the key:
-
+You need to set up an LLM before using the agent.
 ```bash
 mle config
 ```
 
-If you want to use aws to launch mle jobs, we recommend you also set up your aws and [[skypilot]](https://skypilot.readthedocs.io/en/latest/getting-started/installation.html) by
+### Usage (Baseline Mode)
 
-```bash
-pip install "skypilot-nightly[aws]"
-aws configure
-sky check aws
-```
-
-### Quick start
-
+Create a new project and start the agent.
 ```bash
 mle new test-project
+```
 
+Start a project
+```bash
 mle start
+```
+
+Other operations.
+```bash
+mle project ls # show all the available projects
+mle project delete <project name> # delete a given project
+mle project switch # switch the current working project
 ```
 
 
