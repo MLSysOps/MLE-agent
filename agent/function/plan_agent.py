@@ -56,8 +56,6 @@ def gen_file_name(project, llm_agent):
     entry_file = questionary.select("Please select the file name:", choices=file_path_candidates).ask()
     # Update the project entry file and clear the chat history
     project.entry_file = entry_file
-    chat_history = []
-
     update_project_state(project)
 
     return entry_file

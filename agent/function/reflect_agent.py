@@ -37,11 +37,10 @@ class ReflectAgent(BaseAgent):
             exit_code = process.wait()
             return output_log, error_log, exit_code
         except Exception as e:
-            print(f"Exception occurred while running command: {command}")
-            print(str(e))
+            print(f"Exception occurred while running command: {command}\n Error: {str(e)}")
             return "", str(e), -1
 
-    def invoke(self, requirement, max_attempts: int = 3):
+    def local(self, max_attempts: int = 3):
         pmpt_code_debug = f"""
         You are a Machine Learning engineer tasked with debugging a script.
         Your goal is to modify the code so that it meets the task requirements and runs successfully.
@@ -68,7 +67,7 @@ class ReflectAgent(BaseAgent):
                 search_results = search_agent.invoke(error_log)
 
                 user_prompt = f"""
-                Task Requirements: {requirement}\n
+                Task Requirements: {self.project.requirement}\n
                 Existing Code: {existing_code}\n
                 Error Log: {error_log}\n
                 Web Search: {search_results}
@@ -96,3 +95,6 @@ class ReflectAgent(BaseAgent):
         else:
             self.console.log("The code script has been run successfully.")
             return None
+
+    def cloud(self, cloud_type: str):
+        pass

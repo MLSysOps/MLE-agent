@@ -3,5 +3,5 @@ from .chat import Chat
 from .code_gen_agent import CodeAgent
 from .reflect_agent import ReflectAgent
 from .search_agent import SearchAgent
-from .setup_agent import SetupAgent
+from .launch_agent import LaunchAgent
 from .tech_leader import LeaderAgent

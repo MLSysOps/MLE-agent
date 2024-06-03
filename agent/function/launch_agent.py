@@ -2,14 +2,15 @@ import json
 import questionary
 
 from .base import BaseAgent
-from agent.types import DebugEnv
-from agent.utils import run_commands, preprocess_json_string, update_project_state, read_file_to_string
 from agent.hub import load_yml
+from agent.types import DebugEnv
+from agent.function import ReflectAgent
+from agent.utils import run_commands, preprocess_json_string, update_project_state, read_file_to_string
 
 
-class SetupAgent(BaseAgent):
+class LaunchAgent(BaseAgent):
     """
-    The SetupAgent class.
+    The LaunchAgent class.
     """
 
     def dependency_generator(self, code):
@@ -72,9 +73,11 @@ class SetupAgent(BaseAgent):
         ).ask()
         update_project_state(self.project)
 
-        # Ask which cloud service to use
-        if self.project.debug_env == DebugEnv.cloud.value:
-            self.project.cloud_service = questionary.select(
-                "Select the cloud service:",
-                choices=["AWS", "GCP", "Azure"]
-            ).ask()
+        reflect_agent = ReflectAgent(self.model, self.project)
+        if self.project.debug_env == DebugEnv.local.value:
+            reflect_agent.local()
+        elif self.project.debug_env == DebugEnv.cloud.value:
+            cloud_type = questionary.select("Select the cloud service:", choices=load_yml('cloud.yml')).ask()
+            reflect_agent.cloud(cloud_type)
+        else:
+            self.console.log("The code execution and reflection are skipped.")
