@@ -12,8 +12,8 @@ config = Config()
 
 
 class BaseAgent(ABC):
-    def __init__(self, agent, project: Project):
-        self.agent = agent
+    def __init__(self, model, project: Project):
+        self.model = model
         self.project = project
         self.requirement = self.project.requirement
 
@@ -28,7 +28,7 @@ class BaseAgent(ABC):
         """
         text = ""
         with Live(console=self.console) as live:
-            for token in self.agent.query(self.chat_history):
+            for token in self.model.query(self.chat_history):
                 if token:
                     text = text + token
                     live.update(

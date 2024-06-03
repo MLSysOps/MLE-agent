@@ -65,8 +65,3 @@ class SearchAgent:
         else:
             self.console.log(f"Search engine {self.engine_name} is not supported.")
             raise HTTPException(400, "Search engine not supported.")
-
-
-if __name__ == "__main__":
-    search_agent = SearchAgent()
-    print(search_agent.invoke("mle-agent"))

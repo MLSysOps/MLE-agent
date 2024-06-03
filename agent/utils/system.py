@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import TypeVar
@@ -98,6 +99,20 @@ def create_directory(dir_name: str):
     return path
 
 
+def delete_directory(path):
+    """
+    delete_directory: delete a directory and all its contents.
+
+    Args:
+        path: The path to the directory to be deleted.
+    """
+    if os.path.exists(path):
+        shutil.rmtree(path)
+        return True
+    else:
+        return False
+
+
 def get_directory_name(path):
     """
     Get the directory name if the path is a directory.
@@ -135,6 +150,31 @@ def update_project_state(project: Project):
         project_db.update(project.dict(), query.name == project.name)
     else:
         project_db.insert(project.dict())
+
+
+def delete_project(project_name: str):
+    """
+    Delete a project from the database.
+    :param project_name: the name of the project to delete.
+    :return: None
+    """
+    console = Console()
+    p = read_project_state(project_name)
+    if p is None:
+        console.log(f"Project '{project_name}' not found.")
+        return
+    else:
+        # delete the database record
+        query = Query()
+        project_db.remove(query.name == project_name)
+        # delete the workspace
+        delete_directory(p.path)
+        # modify the configuration file
+        config = Config()
+        if config.read().get('project') and config.read()['project']['name'] == project_name:
+            config.write_section(CONFIG_SEC_PROJECT, {})
+
+        console.log(f"Project '{project_name}' deleted successfully.")
 
 
 def create_project(project: Project, set_current=False):
@@ -252,7 +292,7 @@ def read_file_to_string(file_path: str):
         return None
 
 
-def run_command(commands):
+def run_commands(commands):
     """
     Run multiple commands in the shell and return the outputs, errors, and exit statuses.
     :param commands: the list of input commands to run.

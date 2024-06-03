@@ -6,26 +6,25 @@ from prompt_toolkit.history import FileHistory
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
-from agent.types import Plan, Project
+from agent.types import Plan
 from agent.utils import *
-from .code_gen_agent import CodeGenerator
+from .code_gen_agent import CodeAgent
 from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select, \
     pmpt_model_select
-from .reflect_agent import ReflectAgent
-from .setup_agent import SetupAgent
+from .launch_agent import LaunchAgent
 
 config = Config()
 
 
 class LeaderAgent:
-    def __init__(self, project: Project, llm_agent):
+    def __init__(self, project: Project, model):
         """
         LeaderAgent: the interactive chain of the current ML task.
         :param project: the current working project.
-        :param llm_agent: the language model agent.
+        :param model: the language model.
         """
         self.project = project
-        self.agent = llm_agent
+        self.model = model
         self.chat_history = []
         self.console = Console()
         # if the project is not set up, then raise an error.
@@ -65,16 +64,16 @@ class LeaderAgent:
 
                 # Generate entry file name based on requirement
                 if self.entry_file is None:
-                    self.entry_file = gen_file_name(self.project, self.agent)
+                    self.entry_file = gen_file_name(self.project, self.model)
                 self.console.log(f"The entry file is: {self.entry_file}")
 
                 self.console.log("[bold red]Step 2: Data quick review[bold red]")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:
                     self.project.plan.data_kind = analyze_requirement(self.requirement, pmpt_dataset_detect(),
-                                                                      self.agent)
+                                                                      self.model)
                     if self.project.plan.data_kind == 'no_data_information_provided':
                         public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
-                                                                  self.agent)
+                                                                  self.model)
                         public_dataset_list = ast.literal_eval(public_dataset_list)
                         self.project.plan.dataset = questionary.select(
                             "Please select the dataset:",
@@ -86,7 +85,7 @@ class LeaderAgent:
                         # TODO: clean the code
                         if os.path.exists(self.project.plan.dataset) is False:
                             public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
-                                                                      self.agent)
+                                                                      self.model)
                             public_dataset_list = ast.literal_eval(public_dataset_list)
                             self.project.plan.dataset = questionary.select(
                                 "Please select the dataset:",
@@ -106,7 +105,7 @@ class LeaderAgent:
 
                 self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
                 if self.project.plan.ml_task_type is None:
-                    ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.agent)
+                    ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.model)
                     ml_task_list = ast.literal_eval(ml_task_list)
                     ml_task_type = questionary.select(
                         "Please select the ML task type:",
@@ -124,7 +123,7 @@ class LeaderAgent:
                 self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
                     # TODO: search the best model from kaggle, huggingface, etc
-                    ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.agent)
+                    ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.model)
                     ml_model_list = ast.literal_eval(ml_model_list)
                     ml_model_arch = questionary.select(
                         "Please select the ML model architecture:",
@@ -149,7 +148,7 @@ class LeaderAgent:
                     with self.console.status("Planning the tasks for you..."):
                         task_dicts = plan_generator(
                             self.requirement,
-                            self.agent,
+                            self.model,
                         )
                         self.console.log(task_dicts)
                         self.project.plan.tasks = []
@@ -174,28 +173,13 @@ class LeaderAgent:
 
                 # code generation
                 self.console.log("[bold red]Step 5: Code generation[bold red]")
-                code_generation_agent = CodeGenerator(self.agent, self.project)
+                code_generation_agent = CodeAgent(self.model, self.project)
                 code_generation_agent.invoke(task_num, self.requirement)
 
                 # install the dependencies for this plan and code.
-                self.console.log("[bold red]Step 6: Setup dependencies and enviroment [bold red]")
-                self.project.debug_env = questionary.select(
-                    "Select the debug environment:",
-                    choices=['just_generate_code', 'local', 'cloud']
-                ).ask()
-                update_project_state(self.project)
-                existing_code = read_file_to_string(self.project.entry_file)
-                setup_agent = SetupAgent(self.agent)
-                setup_agent.invoke(existing_code)
-
-                # code reflection
-                if self.project.debug_env != 'just_generate_code':
-                    self.console.log("[bold red]Step 7: Code execution and reflection[bold red]")
-                    code_reflection_agent = ReflectAgent(self.agent, self.project)
-                    code_reflection_agent.invoke(self.requirement)
-                else:
-                    self.console.log("The code execution and reflection are skipped.")
-
+                self.console.log("[bold red]Step 6: Code execution and reflection [bold red]")
+                launch_agent = LaunchAgent(self.model, self.project)
+                launch_agent.invoke()
                 is_running = False
         except KeyboardInterrupt:
             self.console.log("MLE Plan Agent has been interrupted.")

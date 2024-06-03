@@ -2,64 +2,34 @@ import os
 import subprocess
 import sys
 
-from agent.utils import read_file_to_string, Config
-from .base_agent import BaseAgent
+from .base import BaseAgent
 from .search_agent import SearchAgent
+from agent.utils import Config, read_file_to_string
 
 config = Config()
 
+
 class ReflectAgent(BaseAgent):
-
-    def code_debug(self) -> str:
-        return f"""
-        You are a Machine Learning engineer tasked with debugging a script. Below are the user's requirements,
-        existing code, and error logs.
-        
-        You will also be provided with some search results about the error message to help you debug the code.
-        
-        Your goal is to modify the code so that it meets the task requirements and runs successfully.
-        
-        Task Requirement:
-        {{requirement}}
-
-        Existing Code:
-        {{existing_code}}
-
-        Log:
-        {{run_log}}
-        {{error_log}}
-        
-        Web Search:
-        {{search_results}}
-
-        The output format should be:
-
-        Code: {{code}}
-        """
-
-    def run_command_error_tolerant(self, command, working_dir):
+    def run_command_error_tolerant(self, command):
         """
         Run a command in the shell, print the output and error logs in real time, and return the results.
         :param command: Command to run.
-        :param working_dir: Directory to execute the command.
         :return: A tuple containing the output, error, and exit status.
         """
-        os.chdir(working_dir)  # Change to the appropriate directory
+        os.chdir(self.project.path)
         output_log = ""
         error_log = ""
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            print(f"Running command: {command}")
-
-            # Stream and accumulate stdout and stderr
             while True:
                 output_line = process.stdout.readline()
                 if output_line:
                     print(output_line, end='')
                     output_log += output_line
+
                 error_line = process.stderr.readline()
                 if error_line:
-                    print(f"Error: {error_line}", end='', file=sys.stderr)
+                    print(f"{error_line}", end='', file=sys.stderr)
                     error_log += error_line
                 if output_line == '' and error_line == '' and process.poll() is not None:
                     break
@@ -67,20 +37,25 @@ class ReflectAgent(BaseAgent):
             exit_code = process.wait()
             return output_log, error_log, exit_code
         except Exception as e:
-            print(f"Exception occurred while running command: {command}")
-            print(str(e))
+            print(f"Exception occurred while running command: {command}\n Error: {str(e)}")
             return "", str(e), -1
 
-    def invoke(self, requirement, max_attempts: int = 3):
+    def local(self, max_attempts: int = 3):
+        pmpt_code_debug = f"""
+        You are a Machine Learning engineer tasked with debugging a script.
+        Your goal is to modify the code so that it meets the task requirements and runs successfully.
+        You should modify the existing code based on the user's requirements, logs, and web search results.
+
+        The output format should only with the updated code:
+
+        Code: {{code}}
+        """
+
         debug_success = False
-
         entry_file = self.project.entry_file
-        working_dir = os.path.dirname(entry_file)
-        file_name = os.path.basename(entry_file)
-        command = f"python {file_name}"
-
-        with self.console.status(f"Running the code script with command: {command} under {working_dir}"):
-            run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
+        command = f"python {os.path.basename(entry_file)}"
+        with self.console.status(f"Running the code script with command: {command}."):
+            run_log, error_log, exit_code = self.run_command_error_tolerant(command)
 
         if exit_code != 0:
             enable_web_search = False if config.read().get('general').get('search_engine') == "no_web_search" else True
@@ -88,28 +63,26 @@ class ReflectAgent(BaseAgent):
 
             for attempt in range(max_attempts):
                 self.console.log("Debugging the code script...")
-
                 existing_code = read_file_to_string(entry_file)
                 search_results = search_agent.invoke(error_log)
 
                 user_prompt = f"""
-                Task Requirements: {requirement}
-                Existing Code: {existing_code}
-                Log: {run_log} {error_log}
+                Task Requirements: {self.project.requirement}\n
+                Existing Code: {existing_code}\n
+                Error Log: {error_log}\n
                 Web Search: {search_results}
                 """
 
                 self.chat_history.extend(
                     [
-                        {"role": 'system', "content": self.code_debug()},
+                        {"role": 'system', "content": pmpt_code_debug},
                         {"role": 'user', "content": user_prompt}
                     ]
                 )
 
-                code = self.handle_streaming()
-
+                self.handle_streaming()
                 with self.console.status(f"Running the code script..."):
-                    run_log, error_log, exit_code = self.run_command_error_tolerant(command, working_dir)
+                    run_log, error_log, exit_code = self.run_command_error_tolerant(command)
 
                 if exit_code == 0:
                     debug_success = True
@@ -122,3 +95,6 @@ class ReflectAgent(BaseAgent):
         else:
             self.console.log("The code script has been run successfully.")
             return None
+
+    def cloud(self, cloud_type: str):
+        pass
