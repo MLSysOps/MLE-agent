@@ -1,5 +1,5 @@
 <div align="center">
-<h1 align="center">Keia: A Pair Agent for Machine Learning Engineer</h1>
+<h1 align="center">Keia: A Pair Agent for Machine Learning Engineer / Researchers</h1>
 <p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
 <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 
@@ -18,7 +18,20 @@
 ## Overview
 _The project is under active development. The API may change frequently._
 
-Keia is an MLE agent that helps you to plan, execute, and optimize your AI projects.
+**Keia (MLE-Agent)** is designed to be a pair agent for machine learning engineers or researchers. It includes two modes: **Baseline Mode** and **Advanced Mode**. 
+
+### Baseline Mode
+- quickly build a baseline model for users' projects.
+- provide a simple and easy-to-use **CLI interface** for users to interact with the agent.
+- chat with users' machine learning projects and provide suggestions.
+
+### Advanced Mode (Coming Soon)
+- provide a more intuitive **Web interface** for users to interact with the agent.
+- customize the agent for their own needs.
+- utilize users' favorite MLOps tools.
+- suggest optimizations for users' machine learning projects.
+- etc
+
 
 
 ## Milestones
@@ -36,20 +49,20 @@ pip install mle-agent
 
 install from source
 ```bash
-git clone
+git clone git@github.com:MLSysOps/MLE-agent.git
 pip install -e .
 ```
 
 ### Configuration
 
-You need to set up an LLM before using the agent.
+You need to set up an LLM and choose tools before using the agent.
 ```bash
 mle config
 ```
 
 ### Usage (Baseline Mode)
 
-Create a new project and start the agent.
+Create a new project
 ```bash
 mle new test-project
 ```
