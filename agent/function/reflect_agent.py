@@ -143,5 +143,14 @@ class ReflectAgent(BaseAgent):
         )
 
         # set the cloud resource.
-        task.set_resources(sky.Resources(cloud=sky.AWS(), accelerators='V100:4'))
+        if cloud_type == 'aws':
+            task.set_resources(sky.Resources(cloud=sky.AWS()))
+        elif cloud_type == 'gcp':
+            task.set_resources(sky.Resources(cloud=sky.GCP()))
+        elif cloud_type == 'azure':
+            task.set_resources(sky.Resources(cloud=sky.Azure()))
+        else:
+            self.console.log(f"Cloud type '{cloud_type}' is not supported.")
+            return
+
         sky.launch(task, cluster_name=self.project.name)
