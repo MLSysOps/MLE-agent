@@ -20,9 +20,9 @@ _The project is under active development. The API may change frequently._
 
 **Keia (MLE-Agent)** is designed to be a pair agent for machine learning engineers or researchers. It includes two modes: **Baseline Mode** and **Advanced Mode**. 
 
-**Baseline Mode** is designed to quickly build a baseline model for users' projects.
+:coffee: **Baseline Mode** is designed to quickly build a baseline model for users' projects.
 
-**Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools and new methods, and suggest optimizations for users' machine learning projects.
+:fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools and new methods, and suggest optimizations for users' machine learning projects.
 
 
 
@@ -74,20 +74,44 @@ mle project switch # switch the current working project
 
 ## Roadmap
 
-### Baseline Mode
+The project is under active development. The following is a list of features that we plan to implement in the future.
+
+We welcome contributions from the community. If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+### Plan, Generate, Execute and Debug Training Code
 
 - [x] An easy-to-use CLI interface
 - [x] Create/Select/Delete a project
 - [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
 - [x] Generate a detailed coding plan
 - [x] Write baseline model code
-- [x] Execute the code on the local machine
-- [x] Execute the code on the cloud
+- [x] Execute the code on the local machine / cloud
 - [x] Debug the code and revise the code
 - [x] Googling the error message to debug the code
 
+### Better User Experience
 
-### Advanced Mode (Coming Soon)
+- [ ] web interface (coming soon)
+- [ ] discord bot
+
+### Integrate with AI/ML Tools
+
+- [ ] snowflake / databricks 
+- [ ] wandb / mlflow 
+- [x] skypilot
+- [ ] dbt / airflow
+
+### Integrate with research tools
+
+- [ ] huggingface
+- [ ] paper with code
+- [ ] arxiv
+
+
+
+
+
+
 
 
 
