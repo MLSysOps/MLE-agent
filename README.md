@@ -1,5 +1,5 @@
 <div align="center">
-<h1 align="center">Keia: A Pair Agent for Machine Learning Engineer / Researchers</h1>
+<h1 align="center">Keia: A Pair Agent for AI Engineer / Researchers</h1>
 <p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
 <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 
@@ -22,7 +22,7 @@ _The project is under active development. The API may change frequently._
 
 :coffee: **Baseline Mode** is designed to quickly build a baseline model for users' projects.
 
-:fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools and new methods, and suggest optimizations for users' machine learning projects.
+:fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
 
 
 
@@ -74,9 +74,7 @@ mle project switch # switch the current working project
 
 ## Roadmap
 
-The project is under active development. The following is a list of features that we plan to implement in the future.
-
-We welcome contributions from the community. If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+The following is a list of features that we plan to implement in the future. The list is not exhaustive, and we may add more features as we go along.
 
 ### Plan, Generate, Execute and Debug Training Code
 
@@ -107,12 +105,25 @@ We welcome contributions from the community. If you are interested in contributi
 - [ ] paper with code
 - [ ] arxiv
 
+## Contributing
 
+We welcome contributions from the community. We are looking for contributors to help us with the following tasks:
 
+- Benchmark and Evaluate the agent
+- Add more features to the agent
+- Improve the documentation
+- Write tests
 
+If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file..
 
+## Support and Community
 
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please feel free to ask in the Discord community.
+- [Twitter](https://twitter.com/MLE_Agent). Follow us on Twitter to get the latest updates.
 
+## Acknowledgements
+
+We would like to thank the following contributors for their help with the project:
 
 
 ## License
