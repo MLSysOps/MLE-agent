@@ -57,7 +57,7 @@ mle config
 
 Create a new project
 ```bash
-mle new test-project
+mle new <project name>
 ```
 
 Start a project
@@ -76,7 +76,7 @@ mle project switch # switch the current working project
 
 The following is a list of features that we plan to implement in the future. The list is not exhaustive, and we may add more features as we go along.
 
-### Plan, Generate, Execute and Debug Training Code
+### Plan, Generate, Execute and Debug Code
 
 - [x] An easy-to-use CLI interface
 - [x] Create/Select/Delete a project
@@ -86,8 +86,11 @@ The following is a list of features that we plan to implement in the future. The
 - [x] Execute the code on the local machine / cloud
 - [x] Debug the code and revise the code
 - [x] Googling the error message to debug the code
+- [ ] Data Augmentation
+- [ ] Hyperparameter tuning
+- [ ] Model evaluation
 
-### Better User Experience
+### Better user experience
 
 - [ ] web interface (coming soon)
 - [ ] discord bot
