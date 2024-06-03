@@ -1,52 +1,129 @@
 <div align="center">
- <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
-</div>
+<h1 align="center">Keia: A Pair Agent for AI Engineer / Researchers</h1>
+<p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
+<img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
 ![GitHub contributors from allcontributors.org](https://img.shields.io/github/all-contributors/MLSysOps/MLE-agent)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/MLSysOps/MLE-agent/total)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 
 
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 ![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/MLE_Agent?logoColor=black)
+</div>
 
 
-# Keia (MLE-agent)
+## Overview
+_The project is under active development. The API may change frequently._
 
-:love_letter: Fathers' love for Keia :love_letter:
+**Keia (MLE-Agent)** is designed to be a pair agent for machine learning engineers or researchers. It includes two modes: **Baseline Mode** and **Advanced Mode**. 
 
-Keia is an MLE agent that helps you to plan, execute, and optimize your AI projects.
+:coffee: **Baseline Mode** is designed to quickly build a baseline model for users' projects.
 
-## Installation
+:fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
 
+
+
+
+## Milestones
+
+:rocket: June 1st, 2024: Release the **Baseline Mode** (v0.1.0)
+
+## Get started
+
+### Installation
+
+install from pypi
 ```bash
+pip install mle-agent
+```
+
+install from source
+```bash
+git clone git@github.com:MLSysOps/MLE-agent.git
 pip install -e .
 ```
 
-## Usage
+### Configuration
 
-You need to set an OpenAI API key before running the agent. You can use the CLI to set the key:
-
+You need to set up an LLM and choose tools before using the agent.
 ```bash
 mle config
 ```
 
-If you want to use aws to launch mle jobs, we recommend you also set up your aws and [[skypilot]](https://skypilot.readthedocs.io/en/latest/getting-started/installation.html) by
+### Usage (Baseline Mode)
 
-```bash
-pip install "skypilot-nightly[aws]"
-aws configure
-sky check aws
-```
-
-### Quick start
-
+Create a new project
 ```bash
 mle new test-project
+```
 
+Start a project
+```bash
 mle start
 ```
+
+Other operations.
+```bash
+mle project ls # show all the available projects
+mle project delete <project name> # delete a given project
+mle project switch # switch the current working project
+```
+
+## Roadmap
+
+The following is a list of features that we plan to implement in the future. The list is not exhaustive, and we may add more features as we go along.
+
+### Plan, Generate, Execute and Debug Training Code
+
+- [x] An easy-to-use CLI interface
+- [x] Create/Select/Delete a project
+- [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
+- [x] Generate a detailed coding plan
+- [x] Write baseline model code
+- [x] Execute the code on the local machine / cloud
+- [x] Debug the code and revise the code
+- [x] Googling the error message to debug the code
+
+### Better User Experience
+
+- [ ] web interface (coming soon)
+- [ ] discord bot
+
+### Integrate with AI/ML Tools
+
+- [ ] snowflake / databricks 
+- [ ] wandb / mlflow 
+- [x] skypilot
+- [ ] dbt / airflow
+
+### Integrate with research tools
+
+- [ ] huggingface
+- [ ] paper with code
+- [ ] arxiv
+
+## Contributing
+
+We welcome contributions from the community. We are looking for contributors to help us with the following tasks:
+
+- Benchmark and Evaluate the agent
+- Add more features to the agent
+- Improve the documentation
+- Write tests
+
+If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file..
+
+## Support and Community
+
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please feel free to ask in the Discord community.
+- [Twitter](https://twitter.com/MLE_Agent). Follow us on Twitter to get the latest updates.
+
+## Acknowledgements
+
+We would like to thank the following contributors for their help with the project:
 
 
 ## License
