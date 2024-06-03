@@ -85,6 +85,40 @@ class ReflectAgent(BaseAgent):
             run=self.gen_running_cmd()
         )
 
+        def fetch_logs(job, status_only=False):
+            """
+            Check the status/logs of the job.
+            :param job: the ID of a job.
+            :param status_only: if True, return the status only.
+            :return: the status of the job.
+            """
+            status = subprocess.run(
+                f"sky logs --status {self.project.name} {job}",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            code = -1
+            status = status.stdout.split()[-1]
+            if status == 'SUCCEEDED':
+                code = 0
+                if status_only:
+                    return None, code
+            else:
+                if status_only:
+                    return None, code
+
+            logs = subprocess.run(
+                f"sky logs {self.project.name} {job}",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            return logs.stdout, code
+
         # set the cloud resource.
         if cloud_type == 'aws':
             task.set_resources(sky.Resources(cloud=sky.AWS()))
@@ -96,8 +130,8 @@ class ReflectAgent(BaseAgent):
             self.console.log(f"Cloud type '{cloud_type}' is not supported.")
             return
 
-        code, _ = sky.launch(task, cluster_name=self.project.name)
-        return None, code
+        job_id, _ = sky.launch(task, cluster_name=self.project.name)
+        return fetch_logs(job_id)
 
     def run(self, cloud_type: str = None, dependency_list: list = None):
         """
@@ -142,11 +176,12 @@ class ReflectAgent(BaseAgent):
             for attempt in range(max_attempts):
                 self.console.log("Debugging the code script...")
                 existing_code = read_file_to_string(entry_file)
+                # TODO: summary the search keywords from the logs.
                 search_results = search_agent.invoke(run_log)
 
                 user_prompt = f"""
                 Task Requirements: {self.project.requirement}\n
-                Existing Code: {existing_code}\n
+                Source Code: {existing_code}\n
                 Log: {run_log}\n
                 Web Search: {search_results}
                 """
@@ -160,6 +195,7 @@ class ReflectAgent(BaseAgent):
 
                 self.handle_streaming()
                 run_log, exit_code = self.run(cloud_type, dependency_list)
+                print("\n---->\n", run_log, exit_code)
 
                 if exit_code == 0:
                     debug_success = True
