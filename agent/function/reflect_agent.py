@@ -1,6 +1,7 @@
 import os
-import subprocess
 import sys
+import subprocess
+import importlib.util
 
 from .base import BaseAgent
 from .search_agent import SearchAgent
@@ -10,6 +11,15 @@ config = Config()
 
 
 class ReflectAgent(BaseAgent):
+
+    def gen_running_cmd(self):
+        """
+        Generate the running command for the current project.
+        :return: the running command.
+        TODO
+        """
+        return f"python {os.path.basename(self.project.entry_file)}"
+
     def run_command_error_tolerant(self, command):
         """
         Run a command in the shell, print the output and error logs in real time, and return the results.
@@ -96,5 +106,42 @@ class ReflectAgent(BaseAgent):
             self.console.log("The code script has been run successfully.")
             return None
 
-    def cloud(self, cloud_type: str):
-        pass
+    def cloud(self, cloud_type: str, dependency_list: list = None):
+        """
+        Debug the code script on the cloud service.
+        :param cloud_type: the type of cloud service to use.
+        :param dependency_list: the list of dependencies to install.
+        :return:
+        """
+
+        dependency = "sky"
+        spec = importlib.util.find_spec(dependency)
+        if spec is not None:
+            sky = importlib.import_module(dependency)
+        else:
+            raise ImportError(
+                "It seems you didn't install the 'skypilot' package."
+                f" Please install it using 'pip install skypilot-nightly[{cloud_type}]' command."
+            )
+
+        # check the workspace
+        if not os.path.exists(self.project.path) or not os.path.isdir(self.project.path):
+            self.console.log(f"The directory '{self.project.path}' does not exist or is not a directory.")
+            return
+
+        # generate the setup according to the dependency list.
+        setup = ''
+        if dependency_list:
+            setup = f"pip install {' '.join(dependency_list)}"
+
+        task_name = "task_" + os.path.basename(self.project.entry_file)
+        task = sky.Task(
+            name=task_name,
+            setup=setup,
+            workdir=self.project.path,
+            run=self.gen_running_cmd()
+        )
+
+        # set the cloud resource.
+        task.set_resources(sky.Resources(cloud=sky.AWS(), accelerators='V100:4'))
+        sky.launch(task, cluster_name=self.project.name)
