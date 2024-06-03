@@ -64,14 +64,13 @@ class ReflectAgent(BaseAgent):
 
             for attempt in range(max_attempts):
                 self.console.log("Debugging the code script...")
-
                 existing_code = read_file_to_string(entry_file)
                 search_results = search_agent.invoke(error_log)
 
                 user_prompt = f"""
-                Task Requirements: {requirement}
-                Existing Code: {existing_code}
-                Log: {run_log} {error_log}
+                Task Requirements: {requirement}\n
+                Existing Code: {existing_code}\n
+                Error Log: {error_log}\n
                 Web Search: {search_results}
                 """
 
