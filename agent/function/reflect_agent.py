@@ -4,7 +4,7 @@ import sys
 
 from .base import BaseAgent
 from .search_agent import SearchAgent
-from agent.utils import read_file_to_string, Config
+from agent.utils import Config, read_file_to_string
 
 config = Config()
 
@@ -26,9 +26,10 @@ class ReflectAgent(BaseAgent):
                 if output_line:
                     print(output_line, end='')
                     output_log += output_line
+
                 error_line = process.stderr.readline()
                 if error_line:
-                    print(f"Error: {error_line}", end='', file=sys.stderr)
+                    print(f"{error_line}", end='', file=sys.stderr)
                     error_log += error_line
                 if output_line == '' and error_line == '' and process.poll() is not None:
                     break

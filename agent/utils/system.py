@@ -252,7 +252,7 @@ def read_file_to_string(file_path: str):
         return None
 
 
-def run_command(commands):
+def run_commands(commands):
     """
     Run multiple commands in the shell and return the outputs, errors, and exit statuses.
     :param commands: the list of input commands to run.

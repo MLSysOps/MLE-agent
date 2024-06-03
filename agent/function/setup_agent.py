@@ -3,7 +3,7 @@ import questionary
 
 from .base import BaseAgent
 from agent.types import DebugEnv
-from agent.utils import run_command, preprocess_json_string, update_project_state, read_file_to_string
+from agent.utils import run_commands, preprocess_json_string, update_project_state, read_file_to_string
 from agent.hub import load_yml
 
 
@@ -61,7 +61,7 @@ class SetupAgent(BaseAgent):
         # confirm the installation.
         confirm_install = questionary.confirm("Are you sure to install the dependencies?").ask()
         if confirm_install:
-            run_command(install_commands)
+            run_commands(install_commands)
         else:
             self.console.log("Skipped the dependencies installation. You may need to install them manually.")
 
