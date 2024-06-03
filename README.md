@@ -20,17 +20,10 @@ _The project is under active development. The API may change frequently._
 
 **Keia (MLE-Agent)** is designed to be a pair agent for machine learning engineers or researchers. It includes two modes: **Baseline Mode** and **Advanced Mode**. 
 
-**Baseline Mode** is designed to
-- quickly build a baseline model for users' projects.
-- provide a simple and easy-to-use **CLI interface** for users to interact with the agent.
-- chat with users' machine learning projects and provide suggestions.
+**Baseline Mode** is designed to quickly build a baseline model for users' projects.
 
-**Advanced Mode (Coming Soon)** is designed to
-- provide a more intuitive **Web interface** for users to interact with the agent.
-- customize the agent for their own needs.
-- utilize users' favorite MLOps tools.
-- suggest optimizations for users' machine learning projects.
-- etc
+**Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools and new methods, and suggest optimizations for users' machine learning projects.
+
 
 
 
@@ -78,6 +71,24 @@ mle project ls # show all the available projects
 mle project delete <project name> # delete a given project
 mle project switch # switch the current working project
 ```
+
+## Roadmap
+
+### Baseline Mode
+
+- [x] An easy-to-use CLI interface
+- [x] Create/Select/Delete a project
+- [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
+- [x] Generate a detailed coding plan
+- [x] Write baseline model code
+- [x] Execute the code on the local machine
+- [x] Execute the code on the cloud
+- [x] Debug the code and revise the code
+- [x] Googling the error message to debug the code
+
+
+### Advanced Mode (Coming Soon)
+
 
 
 ## License
