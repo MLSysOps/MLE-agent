@@ -43,7 +43,7 @@ pip install mle-agent
 install from source
 ```bash
 git clone git@github.com:MLSysOps/MLE-agent.git
-pip install -e .
+pip install .
 ```
 
 ### Configuration
