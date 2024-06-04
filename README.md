@@ -117,7 +117,7 @@ We welcome contributions from the community. We are looking for contributors to 
 - Improve the documentation
 - Write tests
 
-If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file..
+If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ## Support and Community
 
