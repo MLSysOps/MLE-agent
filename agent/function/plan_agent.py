@@ -22,7 +22,7 @@ def pmpt_plan_filename(lang: str) -> str:
     Your task is to generate 5 file names based on the given user requirements.
     Ensure that the file suffix is correct for the specified language, which is '{file_extension}' for {lang}.
 
-    Please generate 5 potential file names to allow the user to choose.
+    Please generate 5 potential file names to allow the user to choose by following the example formats.
 
     Example output:
     ['train{file_extension}', 'data_loading{file_extension}', 'test_cases{file_extension}',
@@ -47,9 +47,11 @@ def gen_file_name(project, llm_agent):
             import ast
             try:
                 file_name_candidates = ast.literal_eval(file_name_candidates)
-            except ValueError as e:
+            except SyntaxError as e:
                 console.log(f"Error parsing filenames: {e}")
                 file_name_candidates = []  # Fallback to an empty list if parsing fails
+        else:
+            file_name_candidates = (file_name_candidates, )
 
         file_path_candidates = [os.path.join(project.path, filename.strip("'")) for filename in file_name_candidates]
 
