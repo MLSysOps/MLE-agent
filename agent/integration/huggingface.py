@@ -1,7 +1,3 @@
-import huggingface_hub as hf
-from huggingface_hub import HfApi, ModelFilter
-
-
 def download_readme(model_id):
     """
     Download the README of the specified model.
@@ -12,6 +8,7 @@ def download_readme(model_id):
     Returns:
     str: The README content of the specified model.
     """
+    import huggingface_hub as hf
     try:
         file_path = hf.hf_hub_download(model_id, 'README.md')
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -41,6 +38,8 @@ def get_top_downloaded_models(
     Returns:
     list: A list of the top-downloaded model ids.
     """
+
+    from huggingface_hub import HfApi, ModelFilter
     api = HfApi()
 
     try:

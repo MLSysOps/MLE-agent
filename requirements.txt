@@ -5,6 +5,7 @@ tinydb
 pyyaml
 uvicorn
 fastapi
+requests
 questionary
 prompt_toolkit
 pandas~=2.2.2

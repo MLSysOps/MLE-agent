@@ -42,7 +42,7 @@ setup(
         ]
     },
     package_data={
-        'steps': ['agent/templates/*.yml']
+        'steps': ['agent/hub/*.yml']
     },
     zip_safe=False,
     include_package_data=True,
