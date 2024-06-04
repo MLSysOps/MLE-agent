@@ -1,1 +1,1 @@
-include agent/templates/*.yml
+include agent/hub/*.yml

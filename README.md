@@ -3,16 +3,22 @@
 <p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
 <img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
 
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg) 
+![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg) 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
-![GitHub contributors from allcontributors.org](https://img.shields.io/github/all-contributors/MLSysOps/MLE-agent)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/MLSysOps/MLE-agent/total)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 
 
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 ![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/MLE_Agent?logoColor=black)
+
+
 </div>
+
+
+
+
 
 
 ## Overview
