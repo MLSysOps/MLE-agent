@@ -35,14 +35,14 @@ setup(
     download_url='https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip',
     keywords=['LLM', 'deep learning', 'MLOps', 'shell', 'neural networks'],
     packages=find_packages(),
+    package_data={
+        'data': ['agent/hub/cloud.yml', 'agent/hub/data.yml', 'agent/hub/plan.yml', 'agent/hub/task.yml']
+    },
     entry_points={
         "console_scripts": [
             "mle-agent=agent.cli:cli",
             "mle=agent.cli:cli",
         ]
-    },
-    package_data={
-        'steps': ['agent/hub/*.yml']
     },
     zip_safe=False,
     include_package_data=True,
