@@ -8,7 +8,7 @@ from agent.function import ReflectAgent
 from agent.utils import run_commands, preprocess_json_string, update_project_state, read_file_to_string
 
 
-class LaunchAgent(BaseAgent):
+class SetupAgent(BaseAgent):
     """
     The LaunchAgent class.
     """

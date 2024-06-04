@@ -195,7 +195,6 @@ class ReflectAgent(BaseAgent):
 
                 self.handle_streaming()
                 run_log, exit_code = self.run(cloud_type, dependency_list)
-                print("\n---->\n", run_log, exit_code)
 
                 if exit_code == 0:
                     debug_success = True

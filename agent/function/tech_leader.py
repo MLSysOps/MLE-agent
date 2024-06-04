@@ -11,7 +11,7 @@ from agent.utils import *
 from .code_gen_agent import CodeAgent
 from .plan_agent import plan_generator, analyze_requirement, gen_file_name, pmpt_dataset_detect, pmpt_task_select, \
     pmpt_model_select
-from .launch_agent import LaunchAgent
+from .launch_agent import SetupAgent
 
 config = Config()
 
@@ -178,7 +178,7 @@ class LeaderAgent:
 
                 # install the dependencies for this plan and code.
                 self.console.log("[bold red]Step 6: Code execution and reflection [bold red]")
-                launch_agent = LaunchAgent(self.model, self.project)
+                launch_agent = SetupAgent(self.model, self.project)
                 launch_agent.invoke()
                 is_running = False
         except KeyboardInterrupt:
