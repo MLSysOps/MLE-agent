@@ -36,7 +36,7 @@ setup(
     keywords=['LLM', 'deep learning', 'MLOps', 'shell', 'neural networks'],
     packages=find_packages(),
     package_data={
-        'data': ['agent/hub/cloud.yml', 'agent/hub/data.yml', 'agent/hub/plan.yml', 'agent/hub/task.yml']
+        'metadata': ['agent/hub/*.yml']
     },
     entry_points={
         "console_scripts": [
