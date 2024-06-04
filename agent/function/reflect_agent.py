@@ -202,8 +202,12 @@ class ReflectAgent(BaseAgent):
                     break
 
             if not debug_success:
+                if cloud_type:
+                    subprocess.run(f"sky down {self.project.name}", shell=True)
                 self.console.log(f"Debugging failed after {max_attempts} attempts.")
                 return
         else:
+            if cloud_type:
+                subprocess.run(f"sky down {self.project.name}", shell=True)
             self.console.log("The code script has been run successfully.")
             return
