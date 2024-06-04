@@ -150,7 +150,7 @@ class LeaderAgent:
                             self.requirement,
                             self.model,
                         )
-                        self.console.log(task_dicts)
+                        print(generate_plan_card_ascii_art(task_dicts)) # FIXME: use console
                         self.project.plan.tasks = []
                         for task_dict in task_dicts.get('tasks'):
                             task = match_plan(task_dict)
