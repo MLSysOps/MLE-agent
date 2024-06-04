@@ -19,16 +19,13 @@
 
 
 
-
-
 ## Overview
 _The project is under active development. The API may change frequently._
 
-**Keia (MLE-Agent)** is designed to be a pair agent for machine learning engineers or researchers. It includes two modes: **Baseline Mode** and **Advanced Mode**. 
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
 
-:coffee: **Baseline Mode** is designed to quickly build a baseline model for users' projects.
-
-:fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
+- :coffee: **Baseline Mode** is designed to quickly build a baseline model for your AI project.
+- :fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
 
 
 
@@ -46,12 +43,6 @@ install from pypi
 pip install mle-agent
 ```
 
-install from source
-```bash
-git clone git@github.com:MLSysOps/MLE-agent.git
-pip install .
-```
-
 ### Configuration
 
 You need to set up an LLM and choose tools before using the agent.
@@ -66,10 +57,14 @@ Create a new project
 mle new <project name>
 ```
 
+A workspace with `<project name>` will be created where you execute the `new` command.
+
 Start a project
 ```bash
 mle start
 ```
+
+You can start a project under any path, the code/data generated will be stored in the target workspace.
 
 Other operations.
 ```bash
