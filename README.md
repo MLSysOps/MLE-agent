@@ -125,10 +125,6 @@ If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRI
 - [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please feel free to ask in the Discord community.
 - [Twitter](https://twitter.com/MLE_Agent). Follow us on Twitter to get the latest updates.
 
-## Acknowledgements
-
-We would like to thank the following contributors for their help with the project:
-
 
 ## License
 
