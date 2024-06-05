@@ -1,4 +1,6 @@
 import os
+from rich import print
+from rich.console import Console
 from prettytable import PrettyTable
 from colorama import Fore, Style, init
 
@@ -125,3 +127,16 @@ def generate_plan_card_ascii(task_dicts):
     for i, plan in enumerate(task_dicts["tasks"]):
         strs += generate_one_plan_card_ascii(step=i, require_arrow=i != len(task_dicts["tasks"]) - 1, **plan)
     return strs
+
+
+def show_panel(text: str):
+    """
+    Display the text in a panel
+
+    Args:
+    text (str): The text to be displayed
+    """
+    console = Console()
+    console.rule()
+    print(f"[bold]{text}[bold]")
+    console.rule()

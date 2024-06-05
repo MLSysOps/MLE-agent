@@ -52,7 +52,7 @@ class LeaderAgent:
         try:
             is_running = True
             while is_running:
-                self.console.log("[bold red]Step 1: User requirements understanding[bold red]")
+                show_panel("STEP 1: User Requirements Understanding")
                 if self.project.requirement:
                     self.console.log(f"[cyan]User Requirement:[/cyan] {self.project.requirement}")
                 else:
@@ -67,13 +67,19 @@ class LeaderAgent:
                     self.entry_file = gen_file_name(self.project, self.model)
                 self.console.log(f"The entry file is: {self.entry_file}")
 
-                self.console.log("[bold red]Step 2: Data quick review[bold red]")
+                show_panel("STEP 2: Dataset Selection")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:
-                    self.project.plan.data_kind = analyze_requirement(self.requirement, pmpt_dataset_detect(),
-                                                                      self.model)
+                    self.project.plan.data_kind = analyze_requirement(
+                        self.requirement,
+                        pmpt_dataset_detect(),
+                        self.model
+                    )
                     if self.project.plan.data_kind == 'no_data_information_provided':
-                        public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
-                                                                  self.model)
+                        public_dataset_list = analyze_requirement(
+                            self.requirement,
+                            pmpt_public_dataset_guess(),
+                            self.model
+                        )
                         public_dataset_list = ast.literal_eval(public_dataset_list)
                         self.project.plan.dataset = questionary.select(
                             "Please select the dataset:",
@@ -82,10 +88,12 @@ class LeaderAgent:
 
                     elif self.project.plan.data_kind == 'csv_data':
                         self.project.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
-                        # TODO: clean the code
                         if os.path.exists(self.project.plan.dataset) is False:
-                            public_dataset_list = analyze_requirement(self.requirement, pmpt_public_dataset_guess(),
-                                                                      self.model)
+                            public_dataset_list = analyze_requirement(
+                                self.requirement,
+                                pmpt_public_dataset_guess(),
+                                self.model
+                            )
                             public_dataset_list = ast.literal_eval(public_dataset_list)
                             self.project.plan.dataset = questionary.select(
                                 "Please select the dataset:",
@@ -103,7 +111,7 @@ class LeaderAgent:
                         self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
                         update_project_state(self.project)
 
-                self.console.log("[bold red]Step 3: Task & Model selection[bold red]")
+                show_panel("STEP 3: Task & Model Selection")
                 if self.project.plan.ml_task_type is None:
                     ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.model)
                     ml_task_list = ast.literal_eval(ml_task_list)
@@ -122,7 +130,6 @@ class LeaderAgent:
 
                 self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
-                    # TODO: search the best model from kaggle, huggingface, etc
                     ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.model)
                     ml_model_list = ast.literal_eval(ml_model_list)
                     ml_model_arch = questionary.select(
@@ -139,8 +146,9 @@ class LeaderAgent:
                         return
 
                 self.requirement += f"\n\nModel architecture: {self.project.plan.ml_model_arch}"
+
+                show_panel("STEP 4: Planning")
                 if self.project.plan.tasks is None:
-                    self.console.log("[bold red]Step 4: Plan generation[bold red]")
                     self.console.log(
                         f"The project [cyan]{self.project.name}[/cyan] has no existing plans. Start planning..."
                     )
@@ -172,12 +180,12 @@ class LeaderAgent:
                 #     return
 
                 # code generation
-                self.console.log("[bold red]Step 5: Code generation[bold red]")
+                show_panel("STEP 5: Code Generation")
                 code_generation_agent = CodeAgent(self.model, self.project)
                 code_generation_agent.invoke(task_num, self.requirement)
 
                 # install the dependencies for this plan and code.
-                self.console.log("[bold red]Step 6: Code execution and reflection [bold red]")
+                show_panel("STEP 6: Execution and Refection")
                 launch_agent = SetupAgent(self.model, self.project)
                 launch_agent.invoke()
                 is_running = False
