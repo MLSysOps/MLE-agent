@@ -19,14 +19,14 @@ def get_terminal_size():
     return columns
 
 
-def split_text(text, max_width=80, max_lines=3):
+def split_text(text, max_width=80, max_lines=5):
     """
     Split text based on maximum width and maximum lines
 
     Args:
     text (str): The text to be split
     max_width (int, optional): Maximum width per line. Defaults to 80.
-    max_lines (int, optional): Maximum number of lines. Defaults to 3.
+    max_lines (int, optional): Maximum number of lines. Defaults to 5.
 
     Returns:
     list: List of split text
@@ -48,7 +48,7 @@ def split_text(text, max_width=80, max_lines=3):
     return lines
 
 
-def generate_one_plan_card_ascii_art(
+def generate_one_plan_card_ascii(
     step: int,
     name: str,
     resources: list[str],
@@ -70,6 +70,7 @@ def generate_one_plan_card_ascii_art(
     Returns:
         str: ASCII art string
     """
+    max_width = min(get_terminal_size() // 2 - 10, max_width)
     table = PrettyTable()
     table.title = (
         Fore.YELLOW
@@ -114,7 +115,7 @@ def generate_one_plan_card_ascii_art(
     return strs
 
 
-def generate_plan_card_ascii_art(task_dicts):
+def generate_plan_card_ascii(task_dicts):
     """
     Generate ASCII art for plan cards
 
@@ -126,7 +127,7 @@ def generate_plan_card_ascii_art(task_dicts):
     """
     strs = ""
     for i, plan in enumerate(task_dicts["tasks"]):
-        strs += generate_one_plan_card_ascii_art(
+        strs += generate_one_plan_card_ascii(
             step=i, require_arrow=i != len(task_dicts["tasks"]) - 1, **plan
         )
     return strs
