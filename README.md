@@ -22,7 +22,7 @@
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
 
-- :coffee: **Baseline Mode** is designed to quickly build a baseline model for your AI project.
+- :coffee: **Baseline Mode** is designed to quickly build a baseline model for your AI project according to your requirements.
 - :fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
 
 
