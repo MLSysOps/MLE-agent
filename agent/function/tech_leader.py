@@ -56,7 +56,7 @@ class LeaderAgent:
         :return:
         """
         if self.project.requirement:
-            self.console.log(f"[cyan]User Requirement:[/cyan] {self.project.requirement}")
+            self.console.print(f"[cyan]User Requirement:[/cyan] {self.project.requirement}")
         else:
             show_panel("STEP 0: User Requirements Understanding")
             self.requirement = questionary.text("Hi, what are your requirements?").ask()
@@ -69,7 +69,7 @@ class LeaderAgent:
         self.project.enhanced_requirement = self.requirement
         if self.entry_file is None:
             self.entry_file = gen_file_name(self.project, self.model)
-        self.console.log(f"The entry file is: {self.entry_file}")
+        self.console.print(f"[cyan]Entry File:[/cyan] {self.entry_file}")
         update_project_state(self.project)
 
     def dataset_selection(self):
@@ -114,10 +114,10 @@ class LeaderAgent:
         if self.project.plan.dataset is None:
             raise SystemExit("There is no dataset information. Aborted.")
         else:
-            self.console.log(f"[cyan]Data source:[/cyan] {self.project.plan.dataset}")
+            self.console.print(f"[cyan]Data Source:[/cyan] {self.project.plan.dataset}")
             if self.project.plan.data_kind == 'csv_data':
                 csv_data_sample = read_csv_file(self.project.plan.dataset)
-                self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                self.console.print(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
                 self.project.enhanced_requirement += f"\nDataset Sample: {csv_data_sample}"
 
             self.project.enhanced_requirement += f"\nDataset: {self.project.plan.dataset}"
@@ -147,7 +147,10 @@ class LeaderAgent:
             else:
                 self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
                 return
-        self.project.enhanced_requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
+
+            self.project.enhanced_requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
+        else:
+            self.console.print(f"[cyan]ML Task:[/cyan] {self.project.plan.ml_task_type}")
 
         # select the mode architecture
         if self.project.plan.ml_model_arch is None:
@@ -165,8 +168,11 @@ class LeaderAgent:
                 self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
                 return
 
+            self.project.enhanced_requirement += f"\nModel architecture: {self.project.plan.ml_model_arch}"
+        else:
+            self.console.print(f"[cyan]Model Architecture:[/cyan] {self.project.plan.ml_model_arch}")
+
         update_project_state(self.project)
-        self.project.enhanced_requirement += f"\nModel architecture: {self.project.plan.ml_model_arch}"
 
     def task_planning(self):
         """
@@ -199,6 +205,7 @@ class LeaderAgent:
             tasks = []
             for t in self.project.plan.tasks:
                 tasks.append({'name': t.name, 'resources': [r.name for r in t.resources], 'description': t.description})
+            self.console.print(f"[cyan]Tasks:[/cyan]")
             self.console.print(generate_plan_card_ascii({'tasks': tasks}), highlight=False)
 
     def code_generation(self):
