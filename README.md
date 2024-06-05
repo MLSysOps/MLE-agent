@@ -18,16 +18,12 @@
 
 
 
-
 ## Overview
-_**The project is under active development. The API may change frequently.**_
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
 
 - :coffee: **Baseline Mode** is designed to quickly build a baseline model for your AI project.
 - :fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
-
-
 
 
 ## Milestones
@@ -38,86 +34,97 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 
 ### Installation
 
-install from pypi
 ```bash
 pip install mle-agent
 ```
 
 ### Configuration
 
-You need to set up an LLM and choose tools before using the agent.
+You must set up an LLM and choose tools before using the agent.
 ```bash
 mle config
 ```
 
 ### Usage (Baseline Mode)
 
-Create a new project
+**Create a new project**
 ```bash
 mle new <project name>
 ```
 
-A workspace with `<project name>` will be created where you execute the `new` command.
+A workspace with `<project name>` will be created where you execute the `mle new` command.
 
-Start a project
+**Start a project**
 
-**_Debugging on  cloud may occur high cost, please make sure you have enough budget._**
 ```bash
 mle start
 ```
 
-You can start a project under any path, the code/data generated will be stored in the target workspace.
 
-Other operations.
+> [!NOTE]
+> 
+> - Debugging on  the cloud may incur high costs, please ensure you have enough budget.
+> - You can start a project under any path, the code/data generated will be stored in the target workspace.
+
+
+**Project-related operations**
+
 ```bash
 mle project ls # show all the available projects
 mle project delete <project name> # delete a given project
 mle project switch # switch the current working project
+mle project show # show the status of the current project
 ```
 
 ## Roadmap
 
-The following is a list of features that we plan to implement in the future. The list is not exhaustive, and we may add more features as we go along.
+The following is a list of the tasks we plan to do, welcome to propose something new!
 
-### Plan, Generate, Execute and Debug Code
+<details>
+  <summary><b> :hammer: Plan, Generate, Execute and Debug Code</b></summary>
+  
+  - [x] An easy-to-use CLI interface
+  - [x] Create/Select/Delete a project
+  - [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
+  - [x] Generate a detailed coding plan
+  - [x] Write baseline model code
+  - [x] Execute the code on the local machine/cloud
+  - [x] Debug the code and revise the code
+  - [x] Googling the error message to debug the code
+  - [ ] Data Augmentation
+  - [ ] Hyperparameter tuning
+  - [ ] Model evaluation
 
-- [x] An easy-to-use CLI interface
-- [x] Create/Select/Delete a project
-- [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
-- [x] Generate a detailed coding plan
-- [x] Write baseline model code
-- [x] Execute the code on the local machine / cloud
-- [x] Debug the code and revise the code
-- [x] Googling the error message to debug the code
-- [ ] Data Augmentation
-- [ ] Hyperparameter tuning
-- [ ] Model evaluation
+</details>
 
-### More LLMs and Serving tools
+<details>
+  <summary><b>:star: More LLMs and Serving Tools</b></summary>
+  
+  - [x] Ollama LLama 2/3
+  - [x] OpenAI GPT-3.5
+  - [x] OpenAI GPT-4
+  - [ ] Codellama
+  - [ ] Codemitral
+</details>
 
-- [x] Ollama
-- [x] GPT-3.5
-- [ ] GPT-4
-- [ ] Codellama
-- [ ] Codemitral
+<details>
+  <summary><b>:sparkling_heart: Better user experience</b></summary>
+  
+  - [ ] Web UI (coming soon)
+  - [ ] Discord
+</details>
 
-### Better user experience
+<details>
+  <summary><b>:jigsaw: Integrations</b></summary>
 
-- [ ] web interface (coming soon)
-- [ ] discord bot
-
-### Integrate with AI/ML Tools
-
-- [ ] snowflake / databricks 
-- [ ] wandb / mlflow 
-- [x] skypilot
-- [ ] dbt / airflow
-
-### Integrate with research tools
-
-- [ ] huggingface
-- [ ] paper with code
-- [ ] arxiv
+  - [x] SkyPilot
+  - [ ] Snowflake/Databricks 
+  - [ ] W&B/MLflow 
+  - [ ] DBT/Airflow
+  - [ ] HuggingFace
+  - [ ] Paper with Code
+  - [ ] Arxiv
+</details>
 
 ## Contributing
 
