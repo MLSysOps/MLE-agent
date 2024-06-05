@@ -6,6 +6,8 @@ pyyaml
 uvicorn
 fastapi
 requests
+colorama
+prettytable
 questionary
 prompt_toolkit
 pandas~=2.2.2
