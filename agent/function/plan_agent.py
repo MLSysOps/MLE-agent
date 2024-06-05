@@ -51,7 +51,7 @@ def gen_file_name(project, llm_agent):
                 console.log(f"Error parsing filenames: {e}")
                 file_name_candidates = []  # Fallback to an empty list if parsing fails
         else:
-            file_name_candidates = (file_name_candidates, )
+            file_name_candidates = (file_name_candidates,)
 
         file_path_candidates = [os.path.join(project.path, filename.strip("'")) for filename in file_name_candidates]
 
@@ -99,7 +99,7 @@ def pmpt_task_select():
 
     Output Format:
     Your response should include three entries formatted as a list of strings, where each string contains the task name followed by its description, e.g.:
-    ["Task1, Description of Task1", "Task2, Description of Task2", "Task3, Description of Task3"]
+    ["Task1: Description of Task1", "Task2: Description of Task2", "Task3: Description of Task3"]
 
     Note: Return only the task names followed by a brief description, without any additional information or punctuation.
     """
@@ -124,9 +124,9 @@ def pmpt_model_select():
     Please return a list of three strings, where each string includes the model's name followed by its summary.
     Ensure the description highlights how the model meets one of the selection criteria (best, balanced, fastest).
     Example format:
-    ["ModelName1, Best for task X with high accuracy of Y%, suitable for complex data analysis.",
-     "ModelName2, Balanced model, offers moderate accuracy with better speed, good for real-time applications.",
-     "ModelName3, Fastest model with lower accuracy, best for quick processing where speed is prioritized over precision."]
+    ["ModelName1: Best for task X with high accuracy of Y%, suitable for complex data analysis.",
+     "ModelName2: Balanced model, offers moderate accuracy with better speed, good for real-time applications.",
+     "ModelName3: Fastest model with lower accuracy, best for quick processing where speed is prioritized over precision."]
 
     Note: Ensure that the architecture names with summary are returned without any additional punctuation.
     """

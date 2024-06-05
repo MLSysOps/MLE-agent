@@ -50,11 +50,12 @@ class Plan(BaseModel):
 
 class Project(BaseModel):
     name: str
-    path: Optional[str] = None
     lang: str
     llm: str
+    path: Optional[str] = None
     plan: Optional[Plan] = None
     entry_file: Optional[str] = None
     debug_env: Optional[str] = DebugEnv.local
     description: Optional[str] = None
     requirement: Optional[str] = None
+    enhanced_requirement: Optional[str] = None
