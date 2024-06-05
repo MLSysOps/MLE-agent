@@ -60,6 +60,10 @@ class SetupAgent(BaseAgent):
         ).ask()
         update_project_state(self.project)
 
+        if self.project.debug_env == DebugEnv.not_running.value:
+            self.console.log("The code execution and reflection are skipped.")
+            return
+
         # read the source code and prepare the dependencies.
         source_code = read_file_to_string(self.project.entry_file)
         with self.console.status("Guessing and preparing the dependencies for the project plan..."):
@@ -84,7 +88,4 @@ class SetupAgent(BaseAgent):
         if self.project.debug_env == DebugEnv.cloud.value:
             cloud_type = questionary.select("Select the cloud service:", choices=load_yml('cloud.yml')).ask()
 
-        if self.project.debug_env == DebugEnv.not_running.value:
-            self.console.log("The code execution and reflection are skipped.")
-        else:
-            reflect_agent.invoke(cloud_type=cloud_type, dependency_list=dependencies)
+        reflect_agent.invoke(cloud_type=cloud_type, dependency_list=dependencies)

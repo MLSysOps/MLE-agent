@@ -69,6 +69,7 @@ class LeaderAgent:
                     raise SystemExit("The user requirement is not provided.")
 
                 # Generate entry file name based on requirement
+                enhanced_requirement = self.requirement
                 if self.entry_file is None:
                     self.entry_file = gen_file_name(self.project, self.model)
                 self.console.log(f"The entry file is: {self.entry_file}")
@@ -76,13 +77,13 @@ class LeaderAgent:
                 show_panel("STEP 2: Dataset Selection")
                 if self.project.plan.data_kind is None and self.project.plan.dataset is None:
                     self.project.plan.data_kind = analyze_requirement(
-                        self.requirement,
+                        enhanced_requirement,
                         pmpt_dataset_detect(),
                         self.model
                     )
                     if self.project.plan.data_kind == 'no_data_information_provided':
                         public_dataset_list = analyze_requirement(
-                            self.requirement,
+                            enhanced_requirement,
                             pmpt_public_dataset_guess(),
                             self.model
                         )
@@ -96,7 +97,7 @@ class LeaderAgent:
                         self.project.plan.dataset = questionary.text("Please provide the CSV data path:").ask()
                         if os.path.exists(self.project.plan.dataset) is False:
                             public_dataset_list = analyze_requirement(
-                                self.requirement,
+                                enhanced_requirement,
                                 pmpt_public_dataset_guess(),
                                 self.model
                             )
@@ -113,18 +114,19 @@ class LeaderAgent:
                     if self.project.plan.data_kind == 'csv_data':
                         csv_data_sample = read_csv_file(self.project.plan.dataset)
                         self.console.log(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
-                        self.requirement += f"\n\nDataset: {self.project.plan.dataset}"
-                        self.requirement += f"\n\nDataset Sample: {csv_data_sample}"
+                        enhanced_requirement += f"\nDataset: {self.project.plan.dataset}"
+                        enhanced_requirement += f"\nDataset Sample: {csv_data_sample}"
                         update_project_state(self.project)
 
                 show_panel("STEP 3: Task & Model Selection")
                 if self.project.plan.ml_task_type is None:
-                    ml_task_list = analyze_requirement(self.requirement, pmpt_task_select(), self.model)
+                    ml_task_list = analyze_requirement(enhanced_requirement, pmpt_task_select(), self.model)
                     ml_task_list = ast.literal_eval(ml_task_list)
                     ml_task_type = questionary.select(
                         "Please select the ML task type:",
                         choices=ml_task_list
                     ).ask()
+
                     self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
                     confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
                     if confirm_ml_task_type:
@@ -134,9 +136,9 @@ class LeaderAgent:
                         self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
                         return
 
-                self.requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
+                enhanced_requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
                 if self.project.plan.ml_model_arch is None:
-                    ml_model_list = analyze_requirement(self.requirement, pmpt_model_select(), self.model)
+                    ml_model_list = analyze_requirement(enhanced_requirement, pmpt_model_select(), self.model)
                     ml_model_list = ast.literal_eval(ml_model_list)
                     ml_model_arch = questionary.select(
                         "Please select the ML model architecture:",
@@ -151,17 +153,17 @@ class LeaderAgent:
                         self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
                         return
 
-                self.requirement += f"\n\nModel architecture: {self.project.plan.ml_model_arch}"
+                enhanced_requirement += f"\nModel architecture: {self.project.plan.ml_model_arch}"
 
                 show_panel("STEP 4: Planning")
                 if self.project.plan.tasks is None:
                     self.console.log(
                         f"The project [cyan]{self.project.name}[/cyan] has no existing plans. Start planning..."
                     )
-                    self.requirement += f"\n\nDataset: {self.project.plan.dataset}"
+                    enhanced_requirement += f"\nDataset: {self.project.plan.dataset}"
                     with self.console.status("Planning the tasks for you..."):
                         task_dicts = plan_generator(
-                            self.requirement,
+                            enhanced_requirement,
                             self.model,
                         )
                         self.console.print(generate_plan_card_ascii(task_dicts), highlight=False)

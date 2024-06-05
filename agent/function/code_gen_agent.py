@@ -34,10 +34,6 @@ class CodeAgent(BaseAgent):
         """
 
     def task_prompt(self, task: Task, requirement) -> str:
-
-        # TODO: need to find a better way to read user's requirement
-        # TODO: 3 requirements are ugly
-
         return f"""
         User Requirement: {requirement}
         Primary Language: {self.project.lang}
