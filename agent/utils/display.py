@@ -49,18 +49,18 @@ def split_text(text, max_width=80, max_lines=5):
 
 
 def generate_one_plan_card_ascii(
-    step: int,
-    name: str,
-    resources: list[str],
-    description: str,
-    max_width: int = 80,
-    require_arrow: bool = True,
+        step: int,
+        name: str,
+        resources: list[str],
+        description: str,
+        max_width: int = 80,
+        require_arrow: bool = True,
 ):
     """
     Generate ASCII art for a single plan card
 
     Args:
-        step_number (int): The step number
+        step (int): The step number
         name (str): The name of the task
         resources (list): List of resources
         description (str): Description of the task
@@ -73,10 +73,10 @@ def generate_one_plan_card_ascii(
     max_width = min(get_terminal_size() // 2 - 10, max_width)
     table = PrettyTable()
     table.title = (
-        Fore.YELLOW
-        + Style.BRIGHT
-        + f"Task {step + 1}: {name}"
-        + Style.RESET_ALL
+            Fore.YELLOW
+            + Style.BRIGHT
+            + f"Task {step + 1}: {name}"
+            + Style.RESET_ALL
     )
     table.field_names = [
         Fore.BLUE + "Resources" + Style.RESET_ALL,
@@ -105,12 +105,8 @@ def generate_one_plan_card_ascii(
         strs += " " * table_padding + line + "\n"
 
     if require_arrow:
-        strs += (
-            " " * (terminal_width // 2) + Fore.MAGENTA + "|" + Style.RESET_ALL + "\n"
-        )
-        strs += (
-            " " * (terminal_width // 2) + Fore.MAGENTA + "V" + Style.RESET_ALL + "\n"
-        )
+        strs += " " * (terminal_width // 2) + Fore.MAGENTA + "|" + Style.RESET_ALL + "\n"
+        strs += " " * (terminal_width // 2) + Fore.MAGENTA + "V" + Style.RESET_ALL + "\n"
 
     return strs
 
@@ -127,7 +123,5 @@ def generate_plan_card_ascii(task_dicts):
     """
     strs = ""
     for i, plan in enumerate(task_dicts["tasks"]):
-        strs += generate_one_plan_card_ascii(
-            step=i, require_arrow=i != len(task_dicts["tasks"]) - 1, **plan
-        )
+        strs += generate_one_plan_card_ascii(step=i, require_arrow=i != len(task_dicts["tasks"]) - 1, **plan)
     return strs
