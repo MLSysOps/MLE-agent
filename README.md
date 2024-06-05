@@ -20,7 +20,7 @@
 
 
 ## Overview
-_The project is under active development. The API may change frequently._
+_**The project is under active development. The API may change frequently.**_
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
 
@@ -60,6 +60,8 @@ mle new <project name>
 A workspace with `<project name>` will be created where you execute the `new` command.
 
 Start a project
+
+**_Debugging on  cloud may occur high cost, please make sure you have enough budget._**
 ```bash
 mle start
 ```
@@ -90,6 +92,14 @@ The following is a list of features that we plan to implement in the future. The
 - [ ] Data Augmentation
 - [ ] Hyperparameter tuning
 - [ ] Model evaluation
+
+### More LLMs and Serving tools
+
+- [x] Ollama
+- [x] GPT-3.5
+- [ ] GPT-4
+- [ ] Codellama
+- [ ] Codemitral
 
 ### Better user experience
 
