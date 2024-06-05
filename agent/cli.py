@@ -158,6 +158,21 @@ def ls():
             print(f"- {p.name}")
 
 
+@project.command()
+def show():
+    """
+    show: show the current project.
+    """
+    if configuration.read().get('project') is None:
+        console.log("You have not set up a project yet.")
+        console.log("Please create a new project first using 'mle new' command.")
+        return
+
+    project_name = configuration.read()['project']['name']
+    target_project = read_project_state(project_name)
+    print(target_project.dict())
+
+
 @cli.command()
 @click.option('--general', '-g', is_flag=True, help="Set up the general configuration for MLE Agent.")
 def config(general):
