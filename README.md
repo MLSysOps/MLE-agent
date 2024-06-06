@@ -13,6 +13,7 @@
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 ![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/MLE_Agent?logoColor=black)
 
+https://github.com/MLSysOps/MLE-agent/assets/5894780/e3c1ad52-3e3e-4d57-a661-d927f2e3a775
 
 </div>
 
@@ -63,7 +64,7 @@ mle start
 
 > [!NOTE]
 > 
-> - Debugging on  the cloud may incur high costs, please ensure you have enough budget.
+> - Debugging on the cloud may incur high costs, please ensure you have enough budget.
 > - You can start a project under any path, the code/data generated will be stored in the target workspace.
 
 
