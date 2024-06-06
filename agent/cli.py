@@ -183,7 +183,8 @@ def config(general):
 
 
 @cli.command()
-def start():
+@click.option('--reset', '-r', is_flag=True, help="Reset the project state.")
+def start(reset=False):
     """
     start: start the chat with LLM.
     """
@@ -200,6 +201,16 @@ def start():
     if p is None:
         console.log("Could not find the project in the database. Aborted.")
         return
+
+    if reset:
+        console.log("Resetting the project state.")
+        p = Project(
+            name=p.name,
+            description=p.description,
+            lang=p.lang,
+            llm=p.llm,
+            path=p.path
+        )
 
     if os.path.exists(p.path):
         chain = LeaderAgent(p, load_model())

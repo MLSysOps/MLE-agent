@@ -117,7 +117,8 @@ class LeaderAgent:
             self.console.print(f"[cyan]Data Source:[/cyan] {self.project.plan.dataset}")
             if self.project.plan.data_kind == 'csv_data':
                 csv_data_sample = read_csv_file(self.project.plan.dataset)
-                self.console.print(f"[cyan]Dataset examples:[/cyan] {csv_data_sample}")
+                self.console.print(f"[cyan]Dataset examples:[/cyan]")
+                display_dataframe(csv_data_sample)
                 self.project.enhanced_requirement += f"\nDataset Sample: {csv_data_sample}"
 
             self.project.enhanced_requirement += f"\nDataset: {self.project.plan.dataset}"
@@ -182,7 +183,7 @@ class LeaderAgent:
         if self.project.plan.tasks is None:
             show_panel("STEP 3: Task Planning")
             self.console.log(
-                f"The project [cyan]{self.project.name}[/cyan] has no existing plans. Start planning..."
+                f"The project [cyan]{self.project.name}[/cyan] has no existing plans. "
             )
             self.project.enhanced_requirement += f"\nDataset: {self.project.plan.dataset}"
             with self.console.status("Planning the tasks for you..."):

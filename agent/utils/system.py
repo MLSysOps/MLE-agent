@@ -201,6 +201,30 @@ def create_project(project: Project, set_current=False):
     return project
 
 
+def clear_project_state(project: Project):
+    """
+    Clear the project state.
+
+    :param: project: the project object.
+    :return: None
+    """
+
+    if project.enhanced_requirement:
+        project.enhanced_requirement = None
+
+    if project.path:
+        project.path = None
+
+    if project.plan:
+        project.plan = None
+
+    if project.entry_file:
+        project.entry_file = None
+
+    update_project_state(project)
+    return project
+
+
 def list_projects():
     """
     List all the projects.

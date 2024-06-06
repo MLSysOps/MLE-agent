@@ -1,5 +1,7 @@
 import os
+import pandas as pd
 from rich import print
+from rich.table import Table
 from rich.console import Console
 from prettytable import PrettyTable
 from colorama import Fore, Style, init
@@ -140,3 +142,23 @@ def show_panel(text: str):
     console.rule()
     print(f"[bold]{text}[bold]")
     console.rule()
+
+
+def display_dataframe(df: pd.DataFrame):
+    """
+    Display a pandas DataFrame using rich
+    :param df: the DataFrame to display
+    :return: None
+    """
+    console = Console()
+    table = Table(show_header=True, header_style="bold magenta")
+
+    # Add columns
+    for column in df.columns:
+        table.add_column(column)
+
+    # Add rows
+    for _, row in df.iterrows():
+        table.add_row(*[str(item) for item in row])
+
+    console.print(table)
