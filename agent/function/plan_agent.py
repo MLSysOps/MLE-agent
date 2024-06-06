@@ -97,9 +97,9 @@ def pmpt_task_select():
     Available Tasks:
     {task_list}
 
-    Output Format: Your response should include three entries formatted as a list of strings, where each string 
-    contains the task name followed by its description, e.g.: ["Task1: Description of Task1", "Task2: Description of 
-    Task2", "Task3: Description of Task3"]
+    Output Format: Your response should include three entries formatted as a list of strings, where each string
+     contains the task name followed by its description, e.g.: ["Task1: Description of Task1", "Task2: Description of
+     Task2", "Task3: Description of Task3"]
 
     Note: Return only the task names followed by a brief description, without any additional information or punctuation.
     """
