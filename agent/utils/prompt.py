@@ -50,11 +50,11 @@ def pmpt_public_dataset_guess():
 
     Example Output:
     [
-        "TrafficVolumeDataset, Contains hourly traffic volume for various highways, ideal for predictive traffic
+        "TrafficVolumeDataset: Contains hourly traffic volume for various highways, ideal for predictive traffic
         modeling.",
-        "RetailSalesForecasting, Provides daily sales data across several retail chains, suitable for demand
+        "RetailSalesForecasting: Provides daily sales data across several retail chains, suitable for demand
         forecasting.",
-        "SentimentAnalysisTweets, Comprised of labeled tweets for sentiment analysis, perfect for training NLP models.",
+        "SentimentAnalysisTweets: Comprised of labeled tweets for sentiment analysis, perfect for training NLP models.",
     ]
 
     Ensure your response strictly adheres to this format for clarity and consistency.
