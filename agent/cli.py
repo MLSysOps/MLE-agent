@@ -82,18 +82,48 @@ def build_config(general: bool = False):
         console.log(f"The {search_engine} search is not supported. Aborted.")
         sys.exit(0)
 
+    experiment_tracking_tool = questionary.select(
+        "Which experiment tracking tool do you want to use?",
+        choices=["no_exp_tracking_tool", "wandb", "mlflow"]
+    ).ask()
+
+    if experiment_tracking_tool == "no_exp_tracking_tool":
+        experiment_tracking_config = {}
+        console.log("No experiment tracking tool is set.")
+    elif experiment_tracking_tool == "wandb":
+        wandb_api_key = questionary.text("What is your Weights & Biases API key?").ask()
+        if not wandb_api_key:
+            sys.exit(0)
+        experiment_tracking_config = {
+            "tool": "wandb",
+            "api_key": wandb_api_key
+        }
+    elif experiment_tracking_tool == "mlflow":
+        mlflow_tracking_uri = questionary.text("What is your MLflow tracking URI?").ask()
+        if not mlflow_tracking_uri:
+            sys.exit(0)
+        experiment_tracking_config = {
+            "tool": "mlflow",
+            "tracking_uri": mlflow_tracking_uri
+        }
+    else:
+        console.log(f"The {experiment_tracking_tool} tracking tool is not supported. Aborted.")
+        sys.exit(0)
+
     code_language = CODE_LANGUAGE
 
     general_config = {
         'platform': platform,
         'code_language': code_language,
         'search_engine': search_engine,
+        'experiment_tracking_tool': experiment_tracking_tool
     }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
     if not general:
         configuration.write_section(platform, platform_config)
         configuration.write_section(search_engine, search_engine_config)
+        configuration.write_section("experiment_tracking", experiment_tracking_config)
 
 
 @click.group()
