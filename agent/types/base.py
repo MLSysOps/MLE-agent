@@ -52,6 +52,7 @@ class Project(BaseModel):
     name: str
     lang: str
     llm: str
+    exp_track: Optional[str] = None
     path: Optional[str] = None
     plan: Optional[Plan] = None
     entry_file: Optional[str] = None

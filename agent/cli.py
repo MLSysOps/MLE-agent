@@ -305,7 +305,8 @@ def new(name):
             name=name,
             description=description,
             lang=configuration.read()['general']['code_language'],
-            llm=configuration.read()['general']['platform']
+            llm=configuration.read()['general']['platform'],
+            exp_track=configuration.read()['general']['experiment_tracking_tool']
         ),
         set_current=True
     )

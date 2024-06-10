@@ -142,13 +142,8 @@ class LeaderAgent:
             ).ask()
 
             self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
-            confirm_ml_task_type = questionary.confirm("Are you sure to use this ml task type?").ask()
-            if confirm_ml_task_type:
-                self.project.plan.ml_task_type = ml_task_type
-            else:
-                self.console.log("Seems you are not satisfied with the task type. Aborting the chain.")
-                return
 
+            self.project.plan.ml_task_type = ml_task_type
             self.project.enhanced_requirement += f"\n\nML task type: {self.project.plan.ml_task_type}"
         else:
             self.console.print(f"[cyan]ML Task:[/cyan] {self.project.plan.ml_task_type}")
@@ -162,13 +157,8 @@ class LeaderAgent:
                 choices=ml_model_list
             ).ask()
             self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
-            confirm_ml_model_arch = questionary.confirm("Are you sure to use this ml arch?").ask()
-            if confirm_ml_model_arch:
-                self.project.plan.ml_model_arch = ml_model_arch
-            else:
-                self.console.log("Seems you are not satisfied with the model architecture. Aborting the chain.")
-                return
 
+            self.project.plan.ml_model_arch = ml_model_arch
             self.project.enhanced_requirement += f"\nModel architecture: {self.project.plan.ml_model_arch}"
         else:
             self.console.print(f"[cyan]Model Architecture:[/cyan] {self.project.plan.ml_model_arch}")
