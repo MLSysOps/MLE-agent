@@ -12,6 +12,8 @@ class CodeAgent(BaseAgent):
         very carefully and generate a new code script that meets them step by step.
         
         Please make sure the output only contains the source code.
+        
+        Please make sure the generated code uses users preferred tools {self.project.exp_track}.
 
         The output format should be:
 
@@ -25,6 +27,8 @@ class CodeAgent(BaseAgent):
         
         Please use the following information to modify or add new changes to the existing code to finish the task.
         Please make sure the output only contains the source code.
+        
+        Please make sure the generated code uses users preferred tools {self.project.exp_track}.
 
         Existing Code: {code}
 
