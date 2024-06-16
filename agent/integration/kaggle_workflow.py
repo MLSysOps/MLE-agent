@@ -87,7 +87,7 @@ class KaggleAgent(LeaderAgent):
         requirements = self.fetch_competition_overview(selected_competition)
 
         self.project.requirement = requirements
-        self.project.enhanced_requirement = requirements
+        self.project.enhanced_requirement = self.project.requirement
 
         if self.entry_file is None:
             self.entry_file = gen_file_name(self.project, self.model)
