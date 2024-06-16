@@ -14,7 +14,7 @@
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 ![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/MLE_Agent?logoColor=black)
 
-https://github.com/MLSysOps/MLE-agent/assets/5894780/e3c1ad52-3e3e-4d57-a661-d927f2e3a775
+https://github.com/MLSysOps/MLE-agent/assets/5894780/02b30c24-c674-4c38-a8b7-f76d88e2019c
 
 </div>
 
