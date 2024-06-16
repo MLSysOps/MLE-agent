@@ -1,13 +1,12 @@
 import ast
 
 import questionary
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
 
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
 from agent.types import Plan
 from agent.utils import *
+from .base import BaseAgent
 from .code_gen_agent import CodeAgent
 from .plan_agent import (
     plan_generator,
@@ -22,30 +21,22 @@ from .launch_agent import SetupAgent
 config = Config()
 
 
-class LeaderAgent:
+class LeaderAgent(BaseAgent):
     def __init__(self, project: Project, model):
         """
         LeaderAgent: the interactive chain of the current ML task.
         :param project: the current working project.
         :param model: the language model.
         """
-        self.project = project
-        self.model = model
-        self.chat_history = []
-        self.console = Console()
+        super().__init__(model, project)
+
         # if the project is not set up, then raise an error.
         if config.read().get('project') is None:
             self.console.log("You have not set up a project yet.")
             self.console.log("Please create a new project first using 'mle new project_name' command then try again.")
             raise SystemExit
 
-        self.project_home = config.read().get('project')['path']
-        self.session = PromptSession(
-            history=FileHistory(str(os.path.join(self.project_home, CONFIG_TASK_HISTORY_FILE)))
-        )
-
         self.entry_file = self.project.entry_file
-        self.requirement = self.project.requirement
         # initialize the plan if it is not set up.
         if self.project.plan is None:
             self.project.plan = Plan(current_task=0)
@@ -221,7 +212,7 @@ class LeaderAgent:
         launch_agent.invoke()
         update_project_state(self.project)
 
-    def start(self):
+    def invoke(self):
         """
         Execute the chain.
         :return: the result of the chain.
