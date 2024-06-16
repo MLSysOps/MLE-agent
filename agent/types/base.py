@@ -61,4 +61,5 @@ class Project(BaseModel):
     requirement: Optional[str] = None
     enhanced_requirement: Optional[str] = None
     kaggle_config: Optional[dict] = None
+    kaggle_competition: Optional[str] = None
 

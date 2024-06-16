@@ -4,7 +4,7 @@ import click
 import questionary
 
 import agent
-from agent.integration.kaggle_workflow import start_kaggle_project
+from agent.integration.kaggle_workflow import KaggleAgent
 from agent.server import start_server
 from agent.function import Chat, LeaderAgent
 from agent.utils import *
@@ -241,16 +241,18 @@ def start(reset=False):
             lang=p.lang,
             llm=p.llm,
             path=p.path,
-            kaggle_config=p.kaggle_config
+            kaggle_config=p.kaggle_config,
+            kaggle_competition=p.kaggle_competition
         )
 
     if os.path.exists(p.path):
         if p.kaggle_config:
             console.log("Starting Kaggle project...")
-            start_kaggle_project(p.kaggle_config)
+            kaggle_agent = KaggleAgent(p, load_model())
+            kaggle_agent.invoke()
         else:
             chain = LeaderAgent(p, load_model())
-            chain.start()
+            chain.invoke()
     else:
         console.log(f"Project path'{p.path}' does not exist. Aborted.")
 
