@@ -60,3 +60,5 @@ class Project(BaseModel):
     description: Optional[str] = None
     requirement: Optional[str] = None
     enhanced_requirement: Optional[str] = None
+    kaggle_config: Optional[dict] = None
+

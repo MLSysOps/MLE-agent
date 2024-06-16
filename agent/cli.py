@@ -4,6 +4,7 @@ import click
 import questionary
 
 import agent
+from agent.integration.kaggle_workflow import start_kaggle_project
 from agent.server import start_server
 from agent.function import Chat, LeaderAgent
 from agent.utils import *
@@ -239,12 +240,17 @@ def start(reset=False):
             description=p.description,
             lang=p.lang,
             llm=p.llm,
-            path=p.path
+            path=p.path,
+            kaggle_config=p.kaggle_config
         )
 
     if os.path.exists(p.path):
-        chain = LeaderAgent(p, load_model())
-        chain.start()
+        if p.kaggle_config:
+            console.log("Starting Kaggle project...")
+            start_kaggle_project(p.kaggle_config)
+        else:
+            chain = LeaderAgent(p, load_model())
+            chain.start()
     else:
         console.log(f"Project path'{p.path}' does not exist. Aborted.")
 
@@ -299,6 +305,21 @@ def new(name):
         console.log("Please provide a valid project name. Aborted.")
         return
 
+    is_kaggle = questionary.confirm("Is this a Kaggle project?").ask()
+
+    if is_kaggle:
+        kaggle_username = questionary.text("What is your Kaggle username?").ask()
+        kaggle_key = questionary.text("What is your Kaggle API key?").ask()
+        if not kaggle_username or not kaggle_key:
+            console.log("Kaggle credentials are required for a Kaggle project. Aborted.")
+            return
+        kaggle_config = {
+            "username": kaggle_username,
+            "key": kaggle_key
+        }
+    else:
+        kaggle_config = None
+
     description = questionary.text("What is the description of this project? (Optional)").ask()
     create_project(
         Project(
@@ -306,7 +327,8 @@ def new(name):
             description=description,
             lang=configuration.read()['general']['code_language'],
             llm=configuration.read()['general']['platform'],
-            exp_track=configuration.read()['general']['experiment_tracking_tool']
+            exp_track=configuration.read()['general']['experiment_tracking_tool'],
+            kaggle_config=kaggle_config
         ),
         set_current=True
     )
