@@ -7,6 +7,7 @@
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg) 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/mle-agent)
+[![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 
 
