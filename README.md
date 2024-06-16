@@ -1,7 +1,7 @@
 <div align="center">
-<h1 align="center">Keia: A Pair Agent for AI Engineer / Researchers</h1>
-<p align="center">:love_letter: Fathers' love for Keia :love_letter:</p>
-<img alt="keia-llama" height="200px" src="assets/keia_llama.webp">
+<h1 align="center">Kaia: A Pair Agent for AI Engineer / Researchers</h1>
+<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
+<img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg) 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg) 
@@ -32,6 +32,7 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 ## Milestones
 
 :rocket: June 16th, 2024: Pre-release the **Kaggle Mode** (need to install from the source code)
+
 :rocket: June 1st, 2024: Release the **Baseline Mode** (v0.1.0)
 
 ## Get started
