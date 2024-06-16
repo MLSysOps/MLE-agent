@@ -24,12 +24,14 @@ https://github.com/MLSysOps/MLE-agent/assets/5894780/e3c1ad52-3e3e-4d57-a661-d92
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
 
+- :rocket: **Kaggle Mode** will help you to easily participate in Kaggle competitions, prepare submissions and get a good score.
 - :coffee: **Baseline Mode** can quickly build a baseline model for your AI project according to your requirements.
 - :fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
 
 
 ## Milestones
 
+:rocket: June 16th, 2024: Pre-release the **Kaggle Mode** (need to install from the source code)
 :rocket: June 1st, 2024: Release the **Baseline Mode** (v0.1.0)
 
 ## Get started
