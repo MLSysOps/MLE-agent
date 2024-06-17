@@ -89,17 +89,16 @@ def pmpt_task_select():
     As an ML project expert, you are tasked with selecting the most appropriate tasks based on the user's requirements
     and provided data samples.
 
-    Instructions:
     - Analyze the provided user requirements and data samples carefully.
-    - Select three tasks that are most relevant to the requirements.
+    - Select 3 tasks that are most relevant to the requirements.
     - For each selected task, provide a one-sentence description explaining its relevance.
 
     Available Tasks:
     {task_list}
 
-    Output Format: Your response should include three entries formatted as a list of strings, where each string
-     contains the task name followed by its description, e.g.: ["Task1: Description of Task1", "Task2: Description of
-     Task2", "Task3: Description of Task3"]
+    Example Output (in a single list):
+    
+    ["Task1: Description of Task1", "Task2: Description of Task2", "Task3: Description of Task3"]
 
     Note: Return only the task names followed by a brief description, without any additional information or punctuation.
     """
