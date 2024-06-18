@@ -4,7 +4,6 @@ import click
 import questionary
 
 import agent
-from agent.integration.kaggle_workflow import KaggleAgent
 from agent.server import start_server
 from agent.function import Chat, LeaderAgent
 from agent.utils import *
@@ -248,6 +247,7 @@ def start(reset=False):
     if os.path.exists(p.path):
         if p.kaggle_config:
             console.log("Starting Kaggle project...")
+            from agent.integration.kaggle_workflow import KaggleAgent
             kaggle_agent = KaggleAgent(p, load_model())
             kaggle_agent.invoke()
         else:

@@ -1,7 +1,7 @@
 from .base import BaseAgent
 from agent.types import Task
 from agent.utils import read_file_to_string, update_project_state
-
+from .code_retrieve_agent import CodeRetrieveAgent
 
 class CodeAgent(BaseAgent):
 
@@ -77,6 +77,8 @@ class CodeAgent(BaseAgent):
         return code
 
     def invoke(self, task_num, requirement):
+        code_retriever = CodeRetrieveAgent(self.model, self.project)
+        code_retriever.invoke()
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
