@@ -369,34 +369,34 @@ def status():
 
     target_project = read_project_state(project_name)
 
-    console.log("> [green]Current project:[/green]", target_project.name)
-    console.log("> [green]Project path:[/green]", target_project.path)
-    console.log("> [green]Project entry file:[/green]", target_project.entry_file)
-    console.log("> [green]Project language:[/green]", target_project.lang)
+    console.print("> [green]Current project:[/green]", target_project.name)
+    console.print("> [green]Project path:[/green]", target_project.path)
+    console.print("> [green]Project entry file:[/green]", target_project.entry_file)
+    console.print("> [green]Project language:[/green]", target_project.lang)
     console.line()
 
     if target_project.plan:
         # display the current task name
         current_task = target_project.plan.tasks[target_project.plan.current_task - 1]
-        console.log("> [green]Current task:[/green]", current_task.name)
-        console.log("> [green]Task progress:[/green]",
-                    f"{target_project.plan.current_task}/{len(target_project.plan.tasks)}")
-        console.log("> [green]Task description:[/green]", current_task.description)
+        console.print("> [green]Current task:[/green]", current_task.name)
+        console.print("> [green]Task progress:[/green]",
+                      f"{target_project.plan.current_task}/{len(target_project.plan.tasks)}")
+        console.print("> [green]Task description:[/green]", current_task.description)
 
         if current_task.resources:
             console.line()
-            console.log("> [green]Resources:[/green]")
+            console.print("> [green]Resources:[/green]")
             for resource in current_task.resources:
-                console.log(f"- {resource.name}: {resource.uri}")
+                console.print(f"- {resource.name}: {resource.uri}")
 
         if current_task.functions:
             console.line()
-            console.log("> [green]Functions:[/green]")
+            console.print("> [green]Functions:[/green]")
             for function in current_task.functions:
-                console.log(f"- {function.name}: {function.description}")
+                console.print(f"- {function.name}: {function.description}")
 
         if current_task.debug:
             console.line()
-            console.log("> [green]Debugging:[/green]")
-            console.log(f"- Maximum debug attempts: {current_task.debug}")
-            console.log(f"- Debugging environment: {target_project.debug_env}")
+            console.print("> [green]Debugging:[/green]")
+            console.print(f"- Maximum debug attempts: {current_task.debug}")
+            console.print(f"- Debugging environment: {target_project.debug_env}")
