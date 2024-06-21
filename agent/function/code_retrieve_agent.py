@@ -122,7 +122,7 @@ class CodeRetrieveAgent(BaseAgent):
         Invoke the agent.
         """
         # step 1: find relevant github repos
-        with self.console.status("Searching the relevant repositories from GitHub..."):
+        with self.console.status("Searching relevant repositories from GitHub..."):
             relevant_repos = []
             for kw in self.gen_keywords():
                 repos = retrieve_repos(kw, self.project.lang, self.token)
@@ -149,7 +149,7 @@ class CodeRetrieveAgent(BaseAgent):
         relevant_codes = []
         for idx, repo in enumerate(relevant_repos):
             with self.console.status(
-                f"[{idx+1}/{len(relevant_repos)}] Searching the codes from [green]{repo['name']}[/green] ..."
+                f"[{idx+1}/{len(relevant_repos)}] Searching codes from [green]{repo['name']}[/green] ..."
             ):
                 # it currently let agent to glance code / dir to select matched codes
                 # TODO: support reflect chain and RAG to match codes

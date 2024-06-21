@@ -37,15 +37,16 @@ class CodeAgent(BaseAgent):
         Code: {{code}}
         """
 
-    def task_prompt(self, task: Task, requirement) -> str:
+    def task_prompt(self, task: Task, requirement, enhanced_codes = None) -> str:
         return f"""
         User Requirement: {requirement}
         Primary Language: {self.project.lang}
         Current Task: {task.name}
         Task Description: {task.description}
+        Some Relevant Codes: {enhanced_codes}
         """
 
-    def gen_code(self, task: Task, requirement):
+    def gen_code(self, task: Task, requirement, enhanced_codes = None):
         """
         Generate the content of the current task.
         :param task: the task to work on
@@ -69,7 +70,7 @@ class CodeAgent(BaseAgent):
         self.chat_history.extend(
             [
                 {"role": 'system', "content": sys_prompt},
-                {"role": 'user', "content": self.task_prompt(task, requirement)}
+                {"role": 'user', "content": self.task_prompt(task, requirement, enhanced_codes)}
             ]
         )
 
@@ -79,13 +80,16 @@ class CodeAgent(BaseAgent):
     def invoke(self, task_num, requirement):
         code_retriever = CodeRetrieveAgent(self.model, self.project)
         if code_retriever.token:
-            code_retriever.invoke()
+            enhanced_codes = code_retriever.invoke()
+        else:
+            enhanced_codes = None
+
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
                 # TODO: add supports for other kind of tasks.
                 if task.kind == 'code_generation':
-                    result = self.gen_code(task, requirement)
+                    result = self.gen_code(task, requirement, enhanced_codes)
                     if result is None:
                         self.console.log("[red]Task failed. Aborting the chain.")
                         return
