@@ -1,18 +1,24 @@
-import os
 import re
 import ast
+from rich.console import Console
 
 from .base import BaseAgent
+from agent.utils import Config
 from agent.integration.github import (
     retrieve_repos,
     retrieve_repo_contents,
     retrieve_file_content,
 )
 
-TOKEN = os.getenv("TOKEN", "")
+
+config = Config()
 
 
 class CodeRetrieveAgent(BaseAgent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.console = Console()
+        self.token = config.read()["general"].get("github_token")
 
     def system_pmpt_retrival_keywords(self) -> str:
         return f"""
@@ -70,18 +76,20 @@ class CodeRetrieveAgent(BaseAgent):
 
     def gen_keywords(self) -> list[str]:
         chat_history = [
-            {"role": 'system', "content": self.system_pmpt_retrival_keywords()},
-            {"role": 'user', "content": self.project_prompt()}
+            {"role": "system", "content": self.system_pmpt_retrival_keywords()},
+            {"role": "user", "content": self.project_prompt()},
         ]
         return ast.literal_eval(self.model.query(chat_history))
 
     def retrieve_repos(self, all_repos) -> list[dict]:
         chat_history = [
-            {"role": 'system', "content": self.system_pmpt_retrival_repos()},
-            {"role": 'user', "content": self.project_prompt()},
-            {"role": 'user', "content": f"github repository lists: {all_repos}"}
+            {"role": "system", "content": self.system_pmpt_retrival_repos()},
+            {"role": "user", "content": self.project_prompt()},
+            {"role": "user", "content": f"github repository lists: {all_repos}"},
         ]
-        match = re.search(r"```json([^`]*)```", self.model.query(chat_history), re.DOTALL)
+        match = re.search(
+            r"```json([^`]*)```", self.model.query(chat_history), re.DOTALL
+        )
         if match:
             return ast.literal_eval(match.group(1).strip())
         return None
@@ -91,16 +99,18 @@ class CodeRetrieveAgent(BaseAgent):
             {
                 "path": path["path"],
                 "type": path["type"],
-                "size": path["size"]
-            } for path in paths
+                "size": path["size"],
+            }
+            for path in paths
         ]
 
         chat_history = [
-            {"role": 'system', "content": self.system_pmpt_retrival_codes()},
-            {"role": 'user', "content": self.project_prompt()},
-            {"role": 'user', "content": f"github repository: {repo}"},
-            {"role": 'user', "content": f"repository files: {paths}"},
+            {"role": "system", "content": self.system_pmpt_retrival_codes()},
+            {"role": "user", "content": self.project_prompt()},
+            {"role": "user", "content": f"github repository: {repo}"},
+            {"role": "user", "content": f"repository files: {paths}"},
         ]
+
         output = self.model.query(chat_history)
         match = re.search(r"```json([^`]*)```", output, re.DOTALL)
         if match:
@@ -112,48 +122,76 @@ class CodeRetrieveAgent(BaseAgent):
         Invoke the agent.
         """
         # step 1: find relevant github repos
-        relevant_repos = []
-        for kw in self.gen_keywords():
-            repos = retrieve_repos(kw, self.project.lang, TOKEN)
-            relevant_repos.extend([
-                {
-                "name": repo["full_name"],
-                "description": repo["description"],
-                "forks": repo["forks_count"],
-                "stars": repo["stargazers_count"],
-                "license": repo["license"].get("name", "") if repo.get("license") else "",
-            } for repo in repos[:5]])
-        relevant_repos = self.retrieve_repos(relevant_repos)
+        with self.console.status("Searching the relevant repositories from GitHub..."):
+            relevant_repos = []
+            for kw in self.gen_keywords():
+                repos = retrieve_repos(kw, self.project.lang, self.token)
+                relevant_repos.extend(
+                    [
+                        {
+                            "name": repo["full_name"],
+                            "description": repo["description"],
+                            "forks": repo["forks_count"],
+                            "stars": repo["stargazers_count"],
+                            # "license": repo.get("license", {}).get("name", ""),
+                        }
+                        for repo in repos[:5]
+                    ]
+                )
+            relevant_repos = self.retrieve_repos(relevant_repos)
+            self.console.log("> [blue]Relevant GitHub repositories: [/blue]")
+            for repo in relevant_repos:
+                self.console.log(
+                    f"- [green]{repo['name']}[/green], [grey]{repo['description']}[/grey]"
+                )
 
         # step 2: select the matched codes
         relevant_codes = []
-        for repo in relevant_repos:
-            # it currently let agent to glance code / dir to select matched codes
-            # TODO: support reflect chain and RAG to match codes
-            owner, repo_name = repo["name"].split('/')
-            paths = retrieve_repo_contents(owner, repo_name, "/", TOKEN)
+        for idx, repo in enumerate(relevant_repos):
+            with self.console.status(
+                f"[{idx+1}/{len(relevant_repos)}] Searching the codes from [green]{repo['name']}[/green] ..."
+            ):
+                # it currently let agent to glance code / dir to select matched codes
+                # TODO: support reflect chain and RAG to match codes
+                owner, repo_name = repo["name"].split("/")
+                paths = retrieve_repo_contents(owner, repo_name, "/", self.token)
 
-            def glance_retrieve_codes():
-                output = self.retrieve_codes(repo, paths)
-                for o in output:
-                    if not o["type"] == "dir":
-                        continue
-                    paths.extend(retrieve_repo_contents(owner, repo_name, o["path"], TOKEN) or [])
-                return output
+                def glance_retrieve_codes():
+                    output = self.retrieve_codes(repo, paths)
+                    for o in output:
+                        if not o["type"] == "dir":
+                            continue
+                        paths.extend(
+                            retrieve_repo_contents(
+                                owner, repo_name, o["path"], self.token
+                            )
+                            or []
+                        )
+                    return output
 
-            retry_chanices = 5
-            output = glance_retrieve_codes()
-            while not all([o["type"] == "file" for o in output]):
-                retry_chanices -= 1
-                output = glance_retrieve_codes()
-                if retry_chanices <= 0:
-                    break
+                try:
+                    retry_chanices = 5
+                    output = glance_retrieve_codes()
+                    while not all([o["type"] == "file" for o in output]):
+                        retry_chanices -= 1
+                        output = glance_retrieve_codes()
+                        if retry_chanices <= 0:
+                            break
 
-            relevant_codes.extend([
-                {
-                    "repo": repo["name"],
-                    "path": o["path"],
-                    "content": retrieve_file_content(owner, repo_name, o["path"], TOKEN),
-                } for o in output if o["type"] == "file"])
+                    relevant_codes.extend(
+                        [
+                            {
+                                "url": f"https://github.com/{repo['name']}/{o['path']}",
+                                "content": retrieve_file_content(
+                                    owner, repo_name, o["path"], self.token
+                                ),
+                            }
+                            for o in output
+                            if o["type"] == "file"
+                        ]
+                    )
+
+                except Exception:
+                    continue
 
         return relevant_codes

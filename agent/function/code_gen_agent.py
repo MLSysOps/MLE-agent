@@ -78,7 +78,8 @@ class CodeAgent(BaseAgent):
 
     def invoke(self, task_num, requirement):
         code_retriever = CodeRetrieveAgent(self.model, self.project)
-        code_retriever.invoke()
+        if code_retriever.token:
+            code_retriever.invoke()
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
