@@ -1,7 +1,7 @@
 from .base import BaseAgent
 from agent.types import Task
 from agent.utils import read_file_to_string, update_project_state
-
+from .code_retrieve_agent import CodeRetrieveAgent
 
 class CodeAgent(BaseAgent):
 
@@ -37,19 +37,21 @@ class CodeAgent(BaseAgent):
         Code: {{code}}
         """
 
-    def task_prompt(self, task: Task, requirement) -> str:
+    def task_prompt(self, task: Task, requirement, searched_code = None) -> str:
         return f"""
         User Requirement: {requirement}
         Primary Language: {self.project.lang}
         Current Task: {task.name}
         Task Description: {task.description}
+        Relevant Codes: {searched_code}
         """
 
-    def gen_code(self, task: Task, requirement):
+    def gen_code(self, task: Task, requirement, searched_code = None):
         """
         Generate the content of the current task.
         :param task: the task to work on
         :param requirement: the user's requirement
+        :param searched_code: the searched codes to enhance the generation
 
         :return: the content of the task.
         """
@@ -69,7 +71,7 @@ class CodeAgent(BaseAgent):
         self.chat_history.extend(
             [
                 {"role": 'system', "content": sys_prompt},
-                {"role": 'user', "content": self.task_prompt(task, requirement)}
+                {"role": 'user', "content": self.task_prompt(task, requirement, searched_code)}
             ]
         )
 
@@ -77,12 +79,18 @@ class CodeAgent(BaseAgent):
         return code
 
     def invoke(self, task_num, requirement):
+        code_retriever = CodeRetrieveAgent(self.model, self.project)
+        if code_retriever.token:
+            searched_code = code_retriever.invoke()
+        else:
+            searched_code = None
+
         for task in self.project.plan.tasks:
             if self.project.plan.current_task < task_num:
                 self.console.log(f"Working on task: {task.name} ({self.project.plan.current_task + 1}/{task_num})")
                 # TODO: add supports for other kind of tasks.
                 if task.kind == 'code_generation':
-                    result = self.gen_code(task, requirement)
+                    result = self.gen_code(task, requirement, searched_code)
                     if result is None:
                         self.console.log("[red]Task failed. Aborting the chain.")
                         return
