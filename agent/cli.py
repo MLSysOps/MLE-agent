@@ -59,7 +59,7 @@ def build_config(general: bool = False):
 
     search_engine = questionary.select(
         "Which search engine do you want to use?",
-        choices=[SEARCH_ENGINE_GOOGLE, SEARCH_ENGINE_SEARCHAPI, SEARCH_ENGINE_BING, "no_web_search"]
+        choices=["no_web_search", SEARCH_ENGINE_GOOGLE, SEARCH_ENGINE_SEARCHAPI, SEARCH_ENGINE_BING]
     ).ask()
 
     if search_engine == "no_web_search":
@@ -111,23 +111,26 @@ def build_config(general: bool = False):
         sys.exit(0)
 
     code_language = CODE_LANGUAGE
-
-    need_code_rag = questionary.confirm(
-        "Do you need retrieve the open-source codes from GitHub?",
-    ).ask()
-    github_token = None
+    need_code_rag = questionary.confirm("Do you need retrieve the open-source codes from GitHub?").ask()
     if need_code_rag:
         github_token = questionary.text(
             "What is your GitHub tokens for code retrival?",
         ).ask()
- 
-    general_config = {
-        'platform': platform,
-        'code_language': code_language,
-        'search_engine': search_engine,
-        'github_token': github_token,
-        'experiment_tracking_tool': experiment_tracking_tool
-    }
+
+        general_config = {
+            'platform': platform,
+            'code_language': code_language,
+            'search_engine': search_engine,
+            'github_token': github_token,
+            'experiment_tracking_tool': experiment_tracking_tool
+        }
+    else:
+        general_config = {
+            'platform': platform,
+            'code_language': code_language,
+            'search_engine': search_engine,
+            'experiment_tracking_tool': experiment_tracking_tool
+        }
 
     configuration.write_section(CONFIG_SEC_GENERAL, general_config)
     if not general:

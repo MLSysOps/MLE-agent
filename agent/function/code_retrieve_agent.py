@@ -10,7 +10,6 @@ from agent.integration.github import (
     retrieve_file_content,
 )
 
-
 config = Config()
 
 
@@ -149,7 +148,7 @@ class CodeRetrieveAgent(BaseAgent):
         relevant_codes = []
         for idx, repo in enumerate(relevant_repos):
             with self.console.status(
-                f"[{idx+1}/{len(relevant_repos)}] Searching codes from [green]{repo['name']}[/green] ..."
+                    f"[{idx + 1}/{len(relevant_repos)}] Searching codes from [green]{repo['name']}[/green] ..."
             ):
                 # it currently let agent to glance code / dir to select matched codes
                 # TODO: support reflect chain and RAG to match codes
