@@ -81,7 +81,7 @@ class CodeRetrieveAgent(BaseAgent):
         ]
         return ast.literal_eval(self.model.query(chat_history))
 
-    def retrieve_repos(self, all_repos) -> list[dict]:
+    def query_repos(self, all_repos) -> list[dict]:
         chat_history = [
             {"role": "system", "content": self.system_pmpt_retrival_repos()},
             {"role": "user", "content": self.project_prompt()},
@@ -94,7 +94,7 @@ class CodeRetrieveAgent(BaseAgent):
             return ast.literal_eval(match.group(1).strip())
         return None
 
-    def retrieve_codes(self, repo, paths) -> list[dict]:
+    def query_codes(self, repo, paths) -> list[dict]:
         paths = [
             {
                 "path": path["path"],
@@ -138,7 +138,7 @@ class CodeRetrieveAgent(BaseAgent):
                         for repo in repos[:5]
                     ]
                 )
-            relevant_repos = self.retrieve_repos(relevant_repos)
+            relevant_repos = self.query_repos(relevant_repos)
             self.console.log("> [blue]Relevant GitHub repositories: [/blue]")
             for repo in relevant_repos:
                 self.console.log(
@@ -156,8 +156,8 @@ class CodeRetrieveAgent(BaseAgent):
                 owner, repo_name = repo["name"].split("/")
                 paths = retrieve_repo_contents(owner, repo_name, "/", self.token)
 
-                def glance_retrieve_codes():
-                    output = self.retrieve_codes(repo, paths)
+                def glance_query_codes():
+                    output = self.query_codes(repo, paths)
                     for o in output:
                         if not o["type"] == "dir":
                             continue
@@ -171,10 +171,10 @@ class CodeRetrieveAgent(BaseAgent):
 
                 try:
                     retry_chanices = 5
-                    output = glance_retrieve_codes()
+                    output = glance_query_codes()
                     while not all([o["type"] == "file" for o in output]):
                         retry_chanices -= 1
-                        output = glance_retrieve_codes()
+                        output = glance_query_codes()
                         if retry_chanices <= 0:
                             break
 
