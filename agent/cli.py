@@ -112,10 +112,20 @@ def build_config(general: bool = False):
 
     code_language = CODE_LANGUAGE
 
+    need_code_rag = questionary.confirm(
+        "Do you need retrieve the open-source codes from GitHub?",
+    ).ask()
+    github_token = None
+    if need_code_rag:
+        github_token = questionary.text(
+            "What is your GitHub tokens for code retrival?",
+        ).ask()
+ 
     general_config = {
         'platform': platform,
         'code_language': code_language,
         'search_engine': search_engine,
+        'github_token': github_token,
         'experiment_tracking_tool': experiment_tracking_tool
     }
 
