@@ -1,8 +1,20 @@
 from .base import BaseAgent
-from agent.utils import update_project_state
+from agent.utils import update_project_state, list_all_files
 
 
 class ReproduceAgent(BaseAgent):
+
+    def __init__(self, model, project):
+        super().__init__(model, project)
+        self.file_list = []
+
+    def acquire_files(self, target_path: str):
+        """
+        Acquire the files in the project directory.
+        :return:
+        """
+        self.file_list = list_all_files(target_path)
+        return self.file_list
 
     def pmpt_scan_readme(self) -> str:
         """
