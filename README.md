@@ -22,7 +22,7 @@ https://github.com/MLSysOps/MLE-agent/assets/5894780/02b30c24-c674-4c38-a8b7-f76
 
 ## Overview
 
-MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in two major modes:
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in **three** major modes:
 
 - :rocket: **Kaggle Mode** will help you to easily participate in Kaggle competitions, prepare submissions and get a good score.
 - :coffee: **Baseline Mode** can quickly build a baseline model for your AI project according to your requirements.
@@ -110,6 +110,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [x] OpenAI GPT-4
   - [ ] Codellama
   - [ ] Codemitral
+  - [ ] Anthropic Codex
 </details>
 
 <details>
@@ -123,9 +124,12 @@ The following is a list of the tasks we plan to do, welcome to propose something
   <summary><b>:jigsaw: Integrations</b></summary>
 
   - [x] SkyPilot
-  - [ ] Snowflake/Databricks 
-  - [ ] W&B/MLflow 
-  - [ ] DBT/Airflow
+  - [ ] Snowflake
+  - [ ] Databricks 
+  - [x] Wandb
+  - [ ] MLflow
+  - [ ] DBT
+  - [ ] Airflow
 </details>
 
 <details>
