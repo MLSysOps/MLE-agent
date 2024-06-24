@@ -129,7 +129,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
 </details>
 
 <details>
-  <summary><b>:search: Search Enhancement</b></summary>
+  <summary><b>:globe_with_meridians: Search Enhancement</b></summary>
     
   - [x] Google
   - [x] GitHub
