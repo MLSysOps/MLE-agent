@@ -126,6 +126,13 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [ ] Snowflake/Databricks 
   - [ ] W&B/MLflow 
   - [ ] DBT/Airflow
+</details>
+
+<details>
+  <summary><b>:search: Search Enhancement</b></summary>
+    
+  - [x] Google
+  - [x] GitHub
   - [ ] HuggingFace
   - [ ] Paper with Code
   - [ ] Arxiv
