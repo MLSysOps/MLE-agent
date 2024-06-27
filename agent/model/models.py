@@ -1,7 +1,7 @@
 import importlib.util
 
-from agent.types.const import LLM_TYPE_OPENAI, LLM_TYPE_OLLAMA
 from agent.model.base import Model
+from agent.types.const import LLM_TYPE_OPENAI, LLM_TYPE_OLLAMA
 
 
 class OllamaModel(Model):

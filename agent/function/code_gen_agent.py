@@ -1,7 +1,8 @@
-from .base import BaseAgent
 from agent.types import Task
 from agent.utils import read_file_to_string, update_project_state
+from .base import BaseAgent
 from .code_retrieve_agent import CodeRetrieveAgent
+
 
 class CodeAgent(BaseAgent):
 
@@ -37,7 +38,7 @@ class CodeAgent(BaseAgent):
         Code: {{code}}
         """
 
-    def task_prompt(self, task: Task, requirement, searched_code = None) -> str:
+    def task_prompt(self, task: Task, requirement, searched_code=None) -> str:
         return f"""
         User Requirement: {requirement}
         Primary Language: {self.project.lang}
@@ -46,7 +47,7 @@ class CodeAgent(BaseAgent):
         Relevant Codes: {searched_code}
         """
 
-    def gen_code(self, task: Task, requirement, searched_code = None):
+    def gen_code(self, task: Task, requirement, searched_code=None):
         """
         Generate the content of the current task.
         :param task: the task to work on

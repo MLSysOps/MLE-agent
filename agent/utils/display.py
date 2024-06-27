@@ -1,10 +1,11 @@
 import os
+
 import pandas as pd
-from rich import print
-from rich.table import Table
-from rich.console import Console
-from prettytable import PrettyTable
 from colorama import Fore, Style, init
+from prettytable import PrettyTable
+from rich import print
+from rich.console import Console
+from rich.table import Table
 
 init(autoreset=True)
 

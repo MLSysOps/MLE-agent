@@ -8,6 +8,7 @@ from agent.types import Plan
 from agent.utils import *
 from .base import BaseAgent
 from .code_gen_agent import CodeAgent
+from .launch_agent import SetupAgent
 from .plan_agent import (
     plan_generator,
     analyze_requirement,
@@ -16,7 +17,6 @@ from .plan_agent import (
     pmpt_task_select,
     pmpt_model_select
 )
-from .launch_agent import SetupAgent
 
 config = Config()
 

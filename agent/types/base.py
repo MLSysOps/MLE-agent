@@ -1,6 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class DebugEnv(str, Enum):
@@ -62,4 +63,3 @@ class Project(BaseModel):
     enhanced_requirement: Optional[str] = None
     kaggle_config: Optional[dict] = None
     kaggle_competition: Optional[str] = None
-
