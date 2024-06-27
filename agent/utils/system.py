@@ -5,14 +5,14 @@ import subprocess
 from pathlib import Path
 from typing import TypeVar
 
-from tinydb import TinyDB, Query
 from pydantic import BaseModel
 from rich.console import Console
+from tinydb import TinyDB, Query
 
-from agent.types import Project
-from agent.utils import Config, CONFIG_SEC_PROJECT
 from agent.model import OpenAIModel, OllamaModel
+from agent.types import Project
 from agent.types.const import TABLE_PROJECTS, LLM_TYPE_OPENAI, CONFIG_SEC_API_KEY, LLM_TYPE_OLLAMA
+from agent.utils import Config, CONFIG_SEC_PROJECT
 
 T = TypeVar('T', bound=BaseModel)
 project_db = TinyDB(os.path.join(Config().home, TABLE_PROJECTS))

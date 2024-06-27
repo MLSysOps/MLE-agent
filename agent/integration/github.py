@@ -1,4 +1,5 @@
 import base64
+
 import requests
 
 
@@ -20,7 +21,7 @@ def retrieve_repos(query, language, token):
         'Authorization': f'token {token}',
         'Accept': 'application/vnd.github.v3+json'
     }
-    params = {'q': query} #{'q': f'language:{language} {query}'}
+    params = {'q': query}  # {'q': f'language:{language} {query}'}
     response = requests.get(url, headers=headers, params=params)
     if response.status_code == 200:
         return response.json()['items']

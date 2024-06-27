@@ -1,11 +1,11 @@
-import os
-import sys
-import subprocess
 import importlib.util
+import os
+import subprocess
+import sys
 
+from agent.utils import Config, read_file_to_string
 from .base import BaseAgent
 from .search_agent import SearchAgent
-from agent.utils import Config, read_file_to_string
 
 config = Config()
 

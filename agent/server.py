@@ -3,12 +3,12 @@ The RESTFul server of MLE-Agent
 """
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
-from agent.utils import *
 from agent.function import Chat
 from agent.types import Project, ConfigUpdateRequest
+from agent.utils import *
 
 app = FastAPI()
 origins = ["*"]

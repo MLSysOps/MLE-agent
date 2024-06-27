@@ -4,10 +4,10 @@ import click
 import questionary
 
 import agent
-from agent.server import start_server
 from agent.function import Chat, LeaderAgent
-from agent.utils import *
+from agent.server import start_server
 from agent.types import Project
+from agent.utils import *
 
 console = Console()
 configuration = Config()
@@ -120,7 +120,7 @@ def build_config(general: bool = False):
         github_token = questionary.text(
             "What is your GitHub tokens for code retrival?",
         ).ask()
- 
+
     general_config = {
         'platform': platform,
         'code_language': code_language,
