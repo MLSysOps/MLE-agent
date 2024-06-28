@@ -16,3 +16,6 @@ instructor
 pydantic~=2.6.4
 setuptools~=68.2.2
 kaggle
+numexpr~=2.10.1
+bottleneck~=1.4.0
+

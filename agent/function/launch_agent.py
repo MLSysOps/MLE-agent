@@ -2,11 +2,11 @@ import json
 
 import questionary
 
-from agent.function import ReflectAgent
 from agent.hub import load_yml
 from agent.types import DebugEnv
 from agent.utils import run_commands, preprocess_json_string, update_project_state, read_file_to_string
 from .base import BaseAgent
+from .reflect_agent import ReflectAgent
 
 
 class SetupAgent(BaseAgent):
