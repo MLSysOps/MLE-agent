@@ -82,8 +82,10 @@ class CodeAgent(BaseAgent):
     def invoke(self, task_num, requirement):
         code_retriever = CodeRetrieveAgent(self.model, self.project)
         if code_retriever.token:
+            self.console.log("Searching for relevant codes from GitHub...")
             searched_code = code_retriever.invoke()
         else:
+            self.console.log("No GitHub token found. Skipping code retrieval.")
             searched_code = None
 
         for task in self.project.plan.tasks:
