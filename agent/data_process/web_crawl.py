@@ -22,4 +22,4 @@ def kaggle_url_to_text(url: str):
                 text_dict[section] = response.text
             except requests.exceptions.HTTPError:
                 continue
-    return text_dict
+    return text_dict['overview'], text_dict['data']

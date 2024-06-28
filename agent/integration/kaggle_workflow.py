@@ -4,6 +4,7 @@ from zipfile import ZipFile
 import kaggle
 import pandas as pd
 import questionary
+from rich.console import Console
 
 from ..data_process import kaggle_url_to_text
 from ..function import LeaderAgent
@@ -11,6 +12,48 @@ from ..function.plan_agent import gen_file_name
 from ..utils import update_project_state, show_panel, Config
 
 config = Config()
+
+
+def pmpt_kaggle_req():
+    return """
+    You are a machine learning engineer tasked with understanding the requirements of a Kaggle competition step-by-step.
+    
+    Instructions:
+    - You will be provided with the kaggle competition overview and data description.
+    - You will need to understand them and provide a detailed summary of the competition by following the template.
+    
+    Output:
+    The output must have the following format:
+    
+    Competition Requirements:
+    
+    Data Description:
+    
+    Evaluation Criteria:
+    
+    Submission Format:
+    
+    FAQ:
+    """
+
+
+def gen_kaggle_requirements(overview, data_desc, llm_Agent) -> str:
+    """
+    Generate a formatted string from the raw Kaggle requirements.
+    """
+    console = Console()
+    prompt_message = pmpt_kaggle_req()
+
+    raw_req = overview + '\n' + data_desc
+
+    with console.status("Generating Kaggle requirements..."):
+        chat_history = [
+            {"role": 'system', "content": prompt_message},
+            {"role": 'user', "content": raw_req}
+        ]
+        enhanced_req = llm_Agent.query(chat_history)
+
+    return enhanced_req
 
 
 class KaggleAgent(LeaderAgent):
@@ -27,19 +70,13 @@ class KaggleAgent(LeaderAgent):
     def select_competition(self):
         competitions = kaggle.api.competitions_list()
         competition_names = [comp.ref for comp in competitions]
+        self.console.log(f"You must join a Kaggle competition on Kaggle.com to proceed.")
         selected_competition = questionary.select(
             "Please select a Kaggle competition to join:",
             choices=competition_names
         ).ask()
         self.console.log(f"Selected competition: {selected_competition}")
         return selected_competition
-
-    def fetch_competition_overview(self, selected_competition):
-        competition_url = selected_competition
-        overview_data = kaggle_url_to_text(competition_url)
-        requirements = overview_data.get('overview', 'No overview available')
-        self.console.log(f"Competition requirements:\n{requirements}")
-        return requirements
 
     def download_competition_dataset(self, selected_competition):
         project_data_path = os.path.join(self.project_home, 'data')
@@ -70,9 +107,17 @@ class KaggleAgent(LeaderAgent):
 
     def kaggle_requirements_understanding(self, selected_competition):
         show_panel("STEP 0: Kaggle Requirements Understanding")
-        requirements = self.fetch_competition_overview(selected_competition)
 
-        self.project.requirement = requirements
+        competition_url = selected_competition
+        overview, data_desc = kaggle_url_to_text(competition_url)
+        requirement = gen_kaggle_requirements(overview, data_desc, self.model)
+        print(requirement)
+
+        if requirement is None:
+            raise ValueError("Kaggle requirements understanding failed.")
+
+        self.console.log(f"{selected_competition} requirements: {requirement}")
+        self.project.requirement = requirement
         self.project.enhanced_requirement = self.project.requirement
 
         if self.entry_file is None:
@@ -84,7 +129,7 @@ class KaggleAgent(LeaderAgent):
         self.authenticate_kaggle()
 
         # STEP 0: Kaggle Requirements Understanding
-        if self.project.kaggle_competition:
+        if self.project.kaggle_competition and self.project.requirement:
             self.console.print(f"[cyan]Kaggle Competition:[/cyan] {self.project.kaggle_competition}")
             self.console.print(f"[cyan]User Requirement:[/cyan] {self.project.requirement}")
         else:
