@@ -3,10 +3,10 @@ import os
 import click
 import questionary
 
-from agent.cli import build_config
 from agent.integration.kaggle_workflow import KaggleAgent
 from agent.types import Project
-from agent.utils import Console, Config, read_project_state, create_project, load_model
+from agent.utils import Console, Config, create_project, load_model
+from .build_config import get_project_config
 
 console = Console()
 configuration = Config()
@@ -61,32 +61,7 @@ def start(reset=False):
     """
     start: start the Kaggle project.
     """
-    if configuration.read() is None:
-        console.log("Configuration file does not exist. Creating a new one...")
-        build_config()
-
-    if configuration.read().get('project') is None:
-        console.log("You have not set up a project yet.")
-        console.log("Please create a new project first using 'mle kaggle new your_project_name' command,"
-                    " or set the project using 'mle project switch'.")
-        return
-
-    p = read_project_state(configuration.read()['project']['name'])
-    if p is None:
-        console.log("Could not find the project in the database. Aborted.")
-        return
-
-    if reset:
-        console.log("Resetting the project state.")
-        p = Project(
-            name=p.name,
-            description=p.description,
-            lang=p.lang,
-            llm=p.llm,
-            path=p.path,
-            kaggle_config=p.kaggle_config,
-            kaggle_competition=p.kaggle_competition
-        )
+    p = get_project_config(reset)
 
     if os.path.exists(p.path):
         if p.kaggle_config:

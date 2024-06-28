@@ -1,11 +1,16 @@
+import os
+
 import click
+import questionary
 
 import agent
 from agent.function import Chat, LeaderAgent
 from agent.server import start_server
-from agent.utils import *
-from agent.utils import configuration, build_config, console
+from agent.utils import delete_project, list_projects, read_project_state, load_model, pmpt_chat_init, create_project
+from .build_config import configuration, build_config, console, get_project_config
 from .kaggle_cli import kaggle
+from .types import Project
+from .types.const import CONFIG_SEC_PROJECT
 
 
 @click.group()
@@ -103,32 +108,7 @@ def start(reset=False):
     """
     start: start the chat with LLM.
     """
-    if configuration.read() is None:
-        console.log("Configuration file does not exist. Creating a new one...")
-        build_config()
-
-    if configuration.read().get('project') is None:
-        console.log("You have not set up a project yet.")
-        console.log("Please create a new project first using 'mle new your_project_name' command,"
-                    " or set the project using 'mle set_project <project path>'.")
-        return
-
-    p = read_project_state(configuration.read()['project']['name'])
-    if p is None:
-        console.log("Could not find the project in the database. Aborted.")
-        return
-
-    if reset:
-        console.log("Resetting the project state.")
-        p = Project(
-            name=p.name,
-            description=p.description,
-            lang=p.lang,
-            llm=p.llm,
-            path=p.path,
-            kaggle_config=p.kaggle_config,
-            kaggle_competition=p.kaggle_competition
-        )
+    p = get_project_config(reset)
 
     if os.path.exists(p.path):
         chain = LeaderAgent(p, load_model())

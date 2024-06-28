@@ -1,5 +1,7 @@
 import ast
 
+import questionary
+
 from agent.hub.utils import match_plan
 from agent.integration import read_csv_file
 from agent.types import Plan
