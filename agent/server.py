@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from agent.function import Chat
-from agent.types import Project, ConfigUpdateRequest
+from agent.types import ConfigUpdateRequest
 from agent.utils import *
 
 app = FastAPI()
