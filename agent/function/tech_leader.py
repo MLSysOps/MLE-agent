@@ -179,8 +179,8 @@ class LeaderAgent(BaseAgent):
             if confirm_plan:
                 update_project_state(self.project)
             else:
-                self.console.log("Seems you are not satisfied with the plan. Aborting the chain.")
-                return
+                self.console.log("")
+                raise SystemExit("Seems you are not satisfied with the plan. Aborting the agent")
         else:
             tasks = []
             for t in self.project.plan.tasks:
