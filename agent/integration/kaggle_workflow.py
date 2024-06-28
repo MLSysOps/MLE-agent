@@ -4,27 +4,13 @@ from zipfile import ZipFile
 import kaggle
 import pandas as pd
 import questionary
-import requests
 
+from ..data_process import kaggle_url_to_text
 from ..function import LeaderAgent
 from ..function.plan_agent import gen_file_name
 from ..utils import update_project_state, show_panel, Config
 
 config = Config()
-
-
-def url_to_text(url: str):
-    """
-    Fetches content from the given URL using Jina Reader and returns it as a dictionary.
-    """
-    SECTIONS = ["overview", "data"]
-    text_dict = {}
-    for section in SECTIONS:
-        reader_url = f"https://r.jina.ai/{url}/{section}"
-        response = requests.get(reader_url)
-        response.raise_for_status()
-        text_dict[section] = response.text
-    return text_dict
 
 
 class KaggleAgent(LeaderAgent):
@@ -50,7 +36,7 @@ class KaggleAgent(LeaderAgent):
 
     def fetch_competition_overview(self, selected_competition):
         competition_url = selected_competition
-        overview_data = url_to_text(competition_url)
+        overview_data = kaggle_url_to_text(competition_url)
         requirements = overview_data.get('overview', 'No overview available')
         self.console.log(f"Competition requirements:\n{requirements}")
         return requirements
