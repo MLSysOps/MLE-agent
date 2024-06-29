@@ -1,4 +1,5 @@
 import ast
+import json
 
 import questionary
 
@@ -126,11 +127,17 @@ class LeaderAgent(BaseAgent):
         # select the ml task type
         if self.project.plan.ml_task_type is None:
             ml_task_list = analyze_requirement(self.project.enhanced_requirement, pmpt_task_select(), self.model)
-            ml_task_list = ast.literal_eval(ml_task_list)
+            ml_task_list = json.loads(ml_task_list)
+            task_choices = [f"{task_name}: {description}" for task_name, description in ml_task_list.items()]
+            task_choices.append("Other")
+
             ml_task_type = questionary.select(
                 "Please select the ML task type:",
-                choices=ml_task_list
+                choices=task_choices
             ).ask()
+
+            if ml_task_type == 'Other':
+                ml_task_type = questionary.text("Please provide the ML task type:").ask()
 
             self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
 

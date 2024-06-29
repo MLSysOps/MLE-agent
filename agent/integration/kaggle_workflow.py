@@ -2,13 +2,12 @@ import os
 from zipfile import ZipFile
 
 import kaggle
-import pandas as pd
 import questionary
 from rich.console import Console
 
-from ..data_process import kaggle_url_to_text
 from ..function import LeaderAgent
 from ..function.plan_agent import gen_file_name
+from ..tools import kaggle_url_to_text, csv_sample_dataset
 from ..utils import update_project_state, show_panel, Config
 
 config = Config()
@@ -96,15 +95,6 @@ class KaggleAgent(LeaderAgent):
                 os.remove(os.path.join(project_data_path, file))
         return project_data_path
 
-    def sample_dataset(self, project_data_path):
-        csv_files = [f for f in os.listdir(project_data_path) if f.endswith('.csv')]
-        sample_data = None
-        if csv_files:
-            sample_file = csv_files[0]
-            sample_data = pd.read_csv(os.path.join(project_data_path, sample_file)).head()
-            self.console.print(f"Sample data from {sample_file}:\n{sample_data}")
-        return sample_data
-
     def kaggle_requirements_understanding(self, selected_competition):
         show_panel("STEP 0: Kaggle Requirements Understanding")
 
@@ -123,7 +113,6 @@ class KaggleAgent(LeaderAgent):
         if self.entry_file is None:
             self.entry_file = gen_file_name(self.project, self.model)
         self.console.print(f"[cyan]Entry File:[/cyan] {self.entry_file}")
-        update_project_state(self.project)
 
     def start_kaggle_project(self):
         self.authenticate_kaggle()
@@ -135,12 +124,16 @@ class KaggleAgent(LeaderAgent):
         else:
             self.kaggle_competition = self.select_competition()
             self.project.kaggle_competition = self.kaggle_competition
-            update_project_state(self.project)
             self.kaggle_requirements_understanding(self.kaggle_competition)
+            update_project_state(self.project)
 
         # STEP 1: Dataset Preparation
         project_data_path = self.download_competition_dataset(self.project.kaggle_competition)
-        sample_data = self.sample_dataset(project_data_path)
+
+        # TODO: tool calling for the check of the datasets
+        sample_data = csv_sample_dataset(project_data_path)
+        self.console.print(f"Sample data from {project_data_path}:\n{sample_data}")
+
         if sample_data is not None:
             self.project.enhanced_requirement += f"\nDataset Sample: {sample_data.to_string()}"
 
