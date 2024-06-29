@@ -149,11 +149,19 @@ class LeaderAgent(BaseAgent):
         # select the mode architecture
         if self.project.plan.ml_model_arch is None:
             ml_model_list = analyze_requirement(self.project.enhanced_requirement, pmpt_model_select(), self.model)
-            ml_model_list = ast.literal_eval(ml_model_list)
+            ml_model_list = json.loads(ml_model_list)
+
+            print(ml_model_list)
+            model_choices = [f"{model_name}: {description}" for model_name, description in ml_model_list.items()]
+            model_choices.append("Other")
             ml_model_arch = questionary.select(
                 "Please select the ML model architecture:",
-                choices=ml_model_list
+                choices=model_choices
             ).ask()
+
+            if ml_model_arch == 'Other':
+                ml_model_arch = questionary.text("Please provide the ML model architecture:").ask()
+
             self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
 
             self.project.plan.ml_model_arch = ml_model_arch

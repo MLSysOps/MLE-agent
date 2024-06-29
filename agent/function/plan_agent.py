@@ -125,12 +125,14 @@ def pmpt_model_select():
     accuracy, and its speed.
 
     Output Format:
-    Please return a list of three strings, where each string includes the model's name followed by its summary.
+    Please return a JSON array of 3 objects, where each object includes the model's name followed by its summary.
     Ensure the description highlights how the model meets one of the selection criteria (best, balanced, fastest).
     Example format:
-    ["ModelName1: Best for task X with high accuracy of Y%, suitable for complex data analysis.",
-     "ModelName2: Balanced model, offers moderate accuracy with better speed, good for real-time applications.",
-     "ModelName3: Fastest model with lower accuracy, best for quick processing where speed is prioritized over precision."]
+    [
+        {{"model1 name": "description"}},
+        {{"model2 Name": "description"}},
+        {{"model3 Name": "description"}}
+    ]
 
     Note: Ensure that the architecture names with summary are returned without any additional punctuation.
     """
