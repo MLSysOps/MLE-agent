@@ -77,15 +77,24 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
 
-    def query(self, chat_history):
+    def query(self, chat_history, json_mode=False):
         """
         Query the LLM model.
-        Args:
-            chat_history: The context (chat history).
+
+        Parameters
+        ----------
+        chat_history
+        json_mode
+
+        Returns
+        -------
+
         """
 
         completion = self.client.chat.completions.create(
             model=self.model,
+            #(TODO) ollama cant support json mode and need to improve this
+            response_format={"type": "json_object"} if json_mode else {"type": "text"},
             messages=chat_history,
             temperature=self.temperature,
             stream=False

@@ -1,4 +1,5 @@
 import ast
+import json
 
 import questionary
 
@@ -126,11 +127,17 @@ class LeaderAgent(BaseAgent):
         # select the ml task type
         if self.project.plan.ml_task_type is None:
             ml_task_list = analyze_requirement(self.project.enhanced_requirement, pmpt_task_select(), self.model)
-            ml_task_list = ast.literal_eval(ml_task_list)
+            ml_task_list = json.loads(ml_task_list)
+            task_choices = [f"{task_name}: {description}" for task_name, description in ml_task_list.items()]
+            task_choices.append("Other")
+
             ml_task_type = questionary.select(
                 "Please select the ML task type:",
-                choices=ml_task_list
+                choices=task_choices
             ).ask()
+
+            if ml_task_type == 'Other':
+                ml_task_type = questionary.text("Please provide the ML task type:").ask()
 
             self.console.log(f"[cyan]ML task type detected:[/cyan] {ml_task_type}")
 
@@ -142,11 +149,19 @@ class LeaderAgent(BaseAgent):
         # select the mode architecture
         if self.project.plan.ml_model_arch is None:
             ml_model_list = analyze_requirement(self.project.enhanced_requirement, pmpt_model_select(), self.model)
-            ml_model_list = ast.literal_eval(ml_model_list)
+            ml_model_list = json.loads(ml_model_list)
+
+            print(ml_model_list)
+            model_choices = [f"{model_name}: {description}" for model_name, description in ml_model_list.items()]
+            model_choices.append("Other")
             ml_model_arch = questionary.select(
                 "Please select the ML model architecture:",
-                choices=ml_model_list
+                choices=model_choices
             ).ask()
+
+            if ml_model_arch == 'Other':
+                ml_model_arch = questionary.text("Please provide the ML model architecture:").ask()
+
             self.console.log(f"[cyan]Model architecture detected:[/cyan] {ml_model_arch}")
 
             self.project.plan.ml_model_arch = ml_model_arch
@@ -181,8 +196,8 @@ class LeaderAgent(BaseAgent):
             if confirm_plan:
                 update_project_state(self.project)
             else:
-                self.console.log("Seems you are not satisfied with the plan. Aborting the chain.")
-                return
+                self.console.log("")
+                raise SystemExit("Seems you are not satisfied with the plan. Aborting the agent")
         else:
             tasks = []
             for t in self.project.plan.tasks:

@@ -96,9 +96,14 @@ def pmpt_task_select():
     Available Tasks:
     {task_list}
 
-    Example Output (in a single list):
+    Output must be a JSON list of the selected tasks with their descriptions.
     
-    ["Task1: Description of Task1", "Task2: Description of Task2", "Task3: Description of Task3"]
+    [
+      {{"task1 name": "description"}},
+      {{"task2 name": "description"}},
+      {{"task3 name", "description"}}
+    ]
+
 
     Note: Return only the task names followed by a brief description, without any additional information or punctuation.
     """
@@ -120,12 +125,14 @@ def pmpt_model_select():
     accuracy, and its speed.
 
     Output Format:
-    Please return a list of three strings, where each string includes the model's name followed by its summary.
+    Please return a JSON array of 3 objects, where each object includes the model's name followed by its summary.
     Ensure the description highlights how the model meets one of the selection criteria (best, balanced, fastest).
     Example format:
-    ["ModelName1: Best for task X with high accuracy of Y%, suitable for complex data analysis.",
-     "ModelName2: Balanced model, offers moderate accuracy with better speed, good for real-time applications.",
-     "ModelName3: Fastest model with lower accuracy, best for quick processing where speed is prioritized over precision."]
+    [
+        {{"model1 name": "description"}},
+        {{"model2 Name": "description"}},
+        {{"model3 Name": "description"}}
+    ]
 
     Note: Ensure that the architecture names with summary are returned without any additional punctuation.
     """
@@ -143,7 +150,7 @@ def analyze_requirement(requirement: str, sys_prompt: str, llm_agent):
         {"role": 'system', "content": sys_prompt},
         {"role": 'user', "content": requirement}
     ]
-    return llm_agent.query(chat_history)
+    return llm_agent.query(chat_history, json_mode=True)
 
 
 def description_generator(requirement: str, task_list, llm_agent):
