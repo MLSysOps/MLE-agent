@@ -93,6 +93,7 @@ class OpenAIModel(Model):
 
         completion = self.client.chat.completions.create(
             model=self.model,
+            #(TODO) ollama cant support json mode and need to improve this
             response_format={"type": "json_object"} if json_mode else {"type": "text"},
             messages=chat_history,
             temperature=self.temperature,
