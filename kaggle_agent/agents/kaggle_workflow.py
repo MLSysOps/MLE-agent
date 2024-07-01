@@ -5,10 +5,10 @@ import kaggle
 import questionary
 from rich.console import Console
 
-from ..function import LeaderAgent
-from ..function.plan_agent import gen_file_name
-from ..tools import kaggle_url_to_text, csv_sample_dataset
-from ..utils import update_project_state, show_panel, Config
+from agent.function import LeaderAgent
+from agent.function.plan_agent import gen_file_name
+from agent.tools import kaggle_url_to_text, csv_sample_dataset
+from agent.utils import update_project_state, show_panel, Config
 
 config = Config()
 

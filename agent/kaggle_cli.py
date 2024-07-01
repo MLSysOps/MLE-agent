@@ -3,7 +3,7 @@ import os
 import click
 import questionary
 
-from agent.integration.kaggle_workflow import KaggleAgent
+from kaggle_agent.agents.kaggle_workflow import KaggleAgent
 from agent.types import Project
 from agent.utils import Console, Config, create_project, load_model
 from .build_config import get_project_config
