@@ -6,7 +6,7 @@ from os import path
 from io import open  # for Python 2 and 3 compatibility
 
 # get __version__ from _version.py
-ver_file = path.join('agent', 'version.py')
+ver_file = path.join('mle', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
@@ -35,13 +35,10 @@ setup(
     download_url='https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip',
     keywords=['LLM', 'deep learning', 'MLOps', 'shell', 'neural networks'],
     packages=find_packages(),
-    package_data={
-        'metadata': ['agent/hub/*.yml']
-    },
     entry_points={
         "console_scripts": [
-            "mle-agent=agent.cli:cli",
-            "mle=agent.cli:cli",
+            "mle-agent=mle.cli:cli",
+            "mle=mle.cli:cli",
         ]
     },
     zip_safe=False,
