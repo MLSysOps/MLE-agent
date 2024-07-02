@@ -1,5 +1,6 @@
 from .files import *
 from .search import *
+from .execution import *
 
 
 def get_function(function_name: str):
@@ -20,6 +21,8 @@ def get_function(function_name: str):
         return create_directory
     elif function_name == 'web_search':
         return web_search
+    elif function_name == 'execute_command':
+        return execute_command
     else:
         raise ValueError(f"Function {function_name} is not supported.")
 
@@ -118,6 +121,21 @@ schema_web_search = {
             'query': {
                 'type': 'string',
                 'description': 'The search query to perform'
+            }
+        }
+    }
+}
+
+schema_execute_command = {
+    'name': 'execute_command',
+    'description': 'Execute a command in the system shell. '
+                   'Use this function when there is a need to run a system command, and execute programs.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'command': {
+                'type': 'string',
+                'description': 'The command to execute in the system shell'
             }
         }
     }
