@@ -11,11 +11,11 @@ class Model(ABC):
         self.model_type = None
 
     @abstractmethod
-    def query(self, chat_history, json_mode=False):
+    def query(self, chat_history, **kwargs):
         pass
 
     @abstractmethod
-    def stream(self, chat_history, json_mode=False):
+    def stream(self, chat_history, **kwargs):
         pass
 
 
@@ -43,21 +43,19 @@ class OllamaModel(Model):
                 "More information, please refer to: https://github.com/ollama/ollama-python"
             )
 
-    def query(self, chat_history, json_mode=False):
+    def query(self, chat_history, **kwargs):
         """
         Query the LLM model.
         Args:
             chat_history: The context (chat history).
-            json_mode: The output format in a structured JSON format.
         """
         return self.client.chat(model=self.model, messages=chat_history)['message']['content']
 
-    def stream(self, chat_history, json_mode=False):
+    def stream(self, chat_history, **kwargs):
         """
         Stream the output from the LLM model.
         Args:
             chat_history: The context (chat history).
-            json_mode: The output format in a structured JSON format.
         """
         for chunk in self.client.chat(
                 model=self.model,
@@ -94,55 +92,34 @@ class OpenAIModel(Model):
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
 
-    def query(self, chat_history, json_mode=False):
+    def query(self, chat_history, **kwargs):
         """
         Query the LLM model.
 
         Args:
             chat_history: The context (chat history).
-            json_mode: The output format in a structured JSON format.
-
         """
-
-        if json_mode:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=chat_history,
-                temperature=self.temperature,
-                stream=False,
-                response_format={"type": "json_object"}
-            )
-        else:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=chat_history,
-                temperature=self.temperature,
-                stream=False
-            )
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            messages=chat_history,
+            temperature=self.temperature,
+            stream=False,
+            **kwargs
+        )
 
         return completion.choices[0].message.content
 
-    def stream(self, chat_history, json_mode=False):
+    def stream(self, chat_history, **kwargs):
         """
         Stream the output from the LLM model.
         Args:
             chat_history: The context (chat history).
-            json_mode: The output format in a structured JSON
         """
-        if json_mode:
-            for chunk in self.client.chat.completions.create(
-                    model=self.model,
-                    messages=chat_history,
-                    temperature=self.temperature,
-                    stream=True,
-                    response_format={"type": "json_object"}
-            ):
-                yield chunk.choices[0].delta.content
-        else:
-            for chunk in self.client.chat.completions.create(
-                    model=self.model,
-                    messages=chat_history,
-                    temperature=self.temperature,
-                    stream=True
-            ):
-                yield chunk.choices[0].delta.content
+        for chunk in self.client.chat.completions.create(
+                model=self.model,
+                messages=chat_history,
+                temperature=self.temperature,
+                stream=True,
+                **kwargs
+        ):
+            yield chunk.choices[0].delta.content
