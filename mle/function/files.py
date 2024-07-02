@@ -15,7 +15,7 @@ def read_file(file_path: str):
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     except FileNotFoundError:
-        return None
+        return f"File not found: {file_path}"
 
 
 def create_file(path, content=""):
@@ -28,9 +28,9 @@ def create_file(path, content=""):
     try:
         with open(path, 'w') as f:
             f.write(content)
-        return f"[green]File created: {path}"
+        return f"File created: {path}"
     except Exception as e:
-        return f"[red]Error creating file: {str(e)}"
+        return f"Error creating file: {str(e)}"
 
 
 def write_file(path, content):
@@ -43,9 +43,9 @@ def write_file(path, content):
     try:
         with open(path, 'w') as f:
             f.write(content)
-        return f"[green]Content written to file: {path}"
+        return f"Content written to file: {path}"
     except Exception as e:
-        return f"[red]Error writing to file: {str(e)}"
+        return f"Error writing to file: {str(e)}"
 
 
 def list_files(path="."):
@@ -59,7 +59,7 @@ def list_files(path="."):
     Returns: A string containing the list of file and directory names under the given path, or None if the path is a file.
     """
     if os.path.isfile(path):
-        return None
+        return "The given path is a file. Please provide a path of a directory."
 
     file_list = []
     for root, dirs, files in os.walk(path):
@@ -79,6 +79,6 @@ def create_directory(path: str):
     """
     try:
         os.makedirs(path, exist_ok=True)
-        return f"[green]Directory '{path}' created successfully. Use 'mle start' to start the project."
+        return f"Directory '{path}' created successfully. Use 'mle start' to start the project."
     except OSError as error:
-        return f"[red]Creation of the directory '{path}' failed due to: {error}"
+        return f"Creation of the directory '{path}' failed due to: {error}"

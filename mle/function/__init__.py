@@ -1,5 +1,26 @@
 from .files import *
 
+
+def get_function(function_name: str):
+    """
+    Get the function schema by the given function name.
+    :param function_name: the function name.
+    :return: the function schema.
+    """
+    if function_name == 'read_file':
+        return read_file
+    elif function_name == 'create_file':
+        return create_file
+    elif function_name == 'write_file':
+        return write_file
+    elif function_name == 'list_files':
+        return list_files
+    elif function_name == 'create_directory':
+        return create_directory
+    else:
+        raise ValueError(f"Function {function_name} is not supported.")
+
+
 # File system related functions schemas
 schema_read_file = {
     'name': 'read_file',

@@ -1,27 +1,7 @@
 import os
 import re
-import yaml
 import shutil
 import subprocess
-from pathlib import Path
-
-from rich.console import Console
-from mle.model import OpenAIModel, OllamaModel
-
-
-def load_model(platform: str):
-    """
-    load_model: load the model based on the configuration.
-    :param platform: the platform to load the model from.
-    """
-    with open(os.path.join(str(Path.home()), ".mle", 'config.yml'), 'r') as file:
-        data = yaml.safe_load(file)
-        if platform == 'OpenAI':
-            return OpenAIModel(api_key=data['api_key'], model=data['model'])
-        if platform == 'Ollama':
-            return OllamaModel(model=data['model'])
-
-    return None
 
 
 def preprocess_json_string(json_string):

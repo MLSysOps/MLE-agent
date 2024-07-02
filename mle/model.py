@@ -1,5 +1,14 @@
+import os
+import yaml
+import json
 import importlib.util
 from abc import ABC, abstractmethod
+from rich.console import Console
+
+from mle.function import get_function
+
+MODEL_OLLAMA = 'Ollama'
+MODEL_OPENAI = 'OpenAI'
 
 
 class Model(ABC):
@@ -33,7 +42,7 @@ class OllamaModel(Model):
         spec = importlib.util.find_spec(dependency)
         if spec is not None:
             self.model = model
-            self.model_type = 'Ollama'
+            self.model_type = MODEL_OLLAMA
             self.ollama = importlib.import_module(dependency)
             self.client = self.ollama.Client(host=host_url)
         else:
@@ -88,7 +97,7 @@ class OpenAIModel(Model):
             )
 
         self.model = model
-        self.model_type = 'OpenAI'
+        self.model_type = MODEL_OPENAI
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
 
@@ -115,6 +124,8 @@ class OpenAIModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        arguments = ''
+        function_name = ''
         for chunk in self.client.chat.completions.create(
                 model=self.model,
                 messages=chat_history,
@@ -122,4 +133,41 @@ class OpenAIModel(Model):
                 stream=True,
                 **kwargs
         ):
-            yield chunk.choices[0].delta.content
+            delta = chunk.choices[0].delta
+            if delta.function_call:
+                if delta.function_call.name:
+                    function_name = delta.function_call.name
+                if delta.function_call.arguments:
+                    arguments += delta.function_call.arguments
+
+            if chunk.choices[0].finish_reason == "function_call":
+                chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": "",
+                        "function_call": {"name": function_name, "arguments": arguments},
+                    }
+                )
+
+                result = get_function(function_name)(**json.loads(arguments))
+                yield f"Call function: {function_name}\n"
+                chat_history.append({"role": "function", "content": result, "name": function_name})
+                yield from self.stream(chat_history, **kwargs)
+            else:
+                yield delta.content
+
+
+def load_model(project_dir: str, model_name: str):
+    """
+    load_model: load the model based on the configuration.
+    Args:
+        project_dir (str): The project directory.
+        model_name (str): The model name.
+    """
+    with open(os.path.join(project_dir, 'project.yml'), 'r') as file:
+        data = yaml.safe_load(file)
+        if data['platform'] == MODEL_OPENAI:
+            return OpenAIModel(api_key=data['api_key'], model=model_name)
+        if data['platform'] == MODEL_OLLAMA:
+            return OllamaModel(model=model_name)
+    return None

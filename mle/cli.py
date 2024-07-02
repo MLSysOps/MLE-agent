@@ -3,9 +3,14 @@ import yaml
 import click
 import questionary
 from pathlib import Path
+from rich.live import Live
+from rich.panel import Panel
 from rich.console import Console
+from rich.markdown import Markdown
 
 import mle
+from mle.model import load_model
+from mle.agents import CodeAgent
 
 console = Console()
 CONFIG_FILE = 'project.yml'
@@ -46,6 +51,33 @@ def start(mode):
         config_path = os.path.join(current_work_dir, CONFIG_FILE)
         if not check_config(config_path):
             return
+
+
+@cli.command()
+def chat():
+    """
+    chat: start an interactive chat with LLM to work on your ML project.
+    """
+    current_work_dir = os.getcwd()
+    config_path = os.path.join(current_work_dir, CONFIG_FILE)
+    if not check_config(config_path):
+        return
+
+    model = load_model(current_work_dir, model_name='gpt-3.5-turbo')
+    coder = CodeAgent(model)
+
+    while True:
+        try:
+            user_pmpt = questionary.text("[Exit/Ctrl+D]: ").ask()
+            if user_pmpt:
+                with Live(console=Console()) as live:
+                    for text in coder.handle_response(user_pmpt.strip()):
+                        live.update(
+                            Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
+                            refresh=True
+                        )
+        except (KeyboardInterrupt, EOFError):
+            exit()
 
 
 @cli.command()
