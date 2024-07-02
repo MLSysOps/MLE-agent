@@ -79,6 +79,6 @@ def create_directory(path: str):
     """
     try:
         os.makedirs(path, exist_ok=True)
-        return f"Directory '{path}' created successfully. Use 'mle start' to start the project."
+        return f"Directory '{path}' created successfully."
     except OSError as error:
         return f"Creation of the directory '{path}' failed due to: {error}"

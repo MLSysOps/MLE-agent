@@ -3,7 +3,6 @@ import yaml
 import json
 import importlib.util
 from abc import ABC, abstractmethod
-from rich.console import Console
 
 from mle.function import get_function
 
@@ -116,7 +115,16 @@ class OpenAIModel(Model):
             **kwargs
         )
 
-        return completion.choices[0].message.content
+        resp = completion.choices[0].message
+        if resp.function_call:
+            function_name = resp.function_call.name
+            arguments = json.loads(resp.function_call.arguments)
+            print(f"Call function: {function_name}")
+            result = get_function(function_name)(**arguments)
+            chat_history.append({"role": "function", "content": result, "name": function_name})
+            return self.query(chat_history, **kwargs)
+        else:
+            return resp.content
 
     def stream(self, chat_history, **kwargs):
         """
@@ -141,14 +149,6 @@ class OpenAIModel(Model):
                     arguments += delta.function_call.arguments
 
             if chunk.choices[0].finish_reason == "function_call":
-                chat_history.append(
-                    {
-                        "role": "assistant",
-                        "content": "",
-                        "function_call": {"name": function_name, "arguments": arguments},
-                    }
-                )
-
                 result = get_function(function_name)(**json.loads(arguments))
                 yield f"Call function: {function_name}\n"
                 chat_history.append({"role": "function", "content": result, "name": function_name})
