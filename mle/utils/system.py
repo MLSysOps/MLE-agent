@@ -42,48 +42,6 @@ def preprocess_json_string(json_string):
     return json_string
 
 
-def list_all_files(path):
-    """
-    Lists all files and directories under the given path if it is a directory.
-    If the path is a file, returns None.
-
-    Args:
-    path (str): The file system path to check and list contents from.
-
-    Returns:
-    list of str or None: A list of file and directory names under the given path, or None if the path is a file.
-    """
-    if os.path.isfile(path):
-        return None  # Return None if the path is a file
-
-    file_list = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            file_list.append(os.path.join(root, name))
-        for name in dirs:
-            file_list.append(os.path.join(root, name))
-
-    return file_list
-
-
-def create_directory(dir_name: str):
-    """
-    Create a directory if it does not exist.
-    :param dir_name: the name of the directory to create.
-    :return: the directory created.
-    """
-    console = Console()
-    cwd = os.getcwd()
-    path = os.path.join(cwd, dir_name)
-
-    try:
-        os.makedirs(path, exist_ok=True)
-        console.log(f"[green]Directory '{path}' created successfully. Use 'mle start' to start the project.")
-    except OSError as error:
-        console.log(f"[red]Creation of the directory '{path}' failed due to: {error}")
-    return path
-
-
 def delete_directory(path):
     """
     delete_directory: delete a directory and all its contents.

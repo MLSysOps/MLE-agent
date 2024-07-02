@@ -33,14 +33,19 @@ def cli():
 
 
 @cli.command()
-def start():
+@click.argument('mode', default='general')
+def start(mode):
     """
     start: start the chat with LLM.
     """
-    current_work_dir = os.getcwd()
-    config_path = os.path.join(current_work_dir, CONFIG_FILE)
-    if not check_config(config_path):
+    if mode == 'kaggle':
+        console.log("Kaggle mode is not supported yet. Aborted.")
         return
+    else:
+        current_work_dir = os.getcwd()
+        config_path = os.path.join(current_work_dir, CONFIG_FILE)
+        if not check_config(config_path):
+            return
 
 
 @cli.command()
