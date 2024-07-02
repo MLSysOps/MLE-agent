@@ -11,6 +11,7 @@ def read_file(file_path: str):
     Returns:
     str: The contents of the file as a string.
     """
+    print(f"[FUNC CALL] read_file({file_path})")
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
@@ -25,6 +26,7 @@ def create_file(path, content=""):
         path (str): The path to the file to create.
         content (str): The initial content to write to the file.
     """
+    print(f"[FUNC CALL] create_file({path})")
     try:
         with open(path, 'w') as f:
             f.write(content)
@@ -40,6 +42,7 @@ def write_file(path, content):
         path (str): The path to the file to write to.
         content (str): The content to write to the file.
     """
+    print(f"[FUNC CALL] write_file({path})")
     try:
         with open(path, 'w') as f:
             f.write(content)
@@ -58,6 +61,7 @@ def list_files(path="."):
 
     Returns: A string containing the list of file and directory names under the given path, or None if the path is a file.
     """
+    print(f"[FUNC CALL] list_files({path})")
     if os.path.isfile(path):
         return "The given path is a file. Please provide a path of a directory."
 
@@ -77,6 +81,7 @@ def create_directory(path: str):
     Args:
         path (str): The path to the directory to create.
     """
+    print(f"[FUNC CALL] create_directory({path})")
     try:
         os.makedirs(path, exist_ok=True)
         return f"Directory '{path}' created successfully."

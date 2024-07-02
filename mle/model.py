@@ -119,7 +119,8 @@ class OpenAIModel(Model):
         if resp.function_call:
             function_name = resp.function_call.name
             arguments = json.loads(resp.function_call.arguments)
-            print(f"Call function: {function_name}")
+            if "#" in function_name:
+                function_name = function_name.split("#")[-1]
             result = get_function(function_name)(**arguments)
             chat_history.append({"role": "function", "content": result, "name": function_name})
             return self.query(chat_history, **kwargs)
@@ -149,8 +150,9 @@ class OpenAIModel(Model):
                     arguments += delta.function_call.arguments
 
             if chunk.choices[0].finish_reason == "function_call":
+                if "#" in function_name:
+                    function_name = function_name.split("#")[-1]
                 result = get_function(function_name)(**json.loads(arguments))
-                yield f"Call function: {function_name}\n"
                 chat_history.append({"role": "function", "content": result, "name": function_name})
                 yield from self.stream(chat_history, **kwargs)
             else:

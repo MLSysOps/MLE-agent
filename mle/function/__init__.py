@@ -1,4 +1,5 @@
 from .files import *
+from .search import *
 
 
 def get_function(function_name: str):
@@ -17,6 +18,8 @@ def get_function(function_name: str):
         return list_files
     elif function_name == 'create_directory':
         return create_directory
+    elif function_name == 'web_search':
+        return web_search
     else:
         raise ValueError(f"Function {function_name} is not supported.")
 
@@ -100,6 +103,21 @@ schema_create_directory = {
             'path': {
                 'type': 'string',
                 'description': 'The path of the directory to create'
+            }
+        }
+    }
+}
+
+schema_web_search = {
+    'name': 'web_search',
+    'description': 'Perform a web search and return a concise answer along with relevant sources. '
+                   'Use this function when there is a need to search for information on the web.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'query': {
+                'type': 'string',
+                'description': 'The search query to perform'
             }
         }
     }
