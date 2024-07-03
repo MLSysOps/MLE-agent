@@ -13,7 +13,7 @@ def web_search(query: str):
     """
     print(f"[FUNC CALL] web_search({query})")
     try:
-        client = TavilyClient(api_key=os.environ["SEARCH_API_KEY"])
+        client = TavilyClient(api_key=os.environ['SEARCH_API_KEY'])
         response = client.qna_search(query=query, search_depth="advanced")
         return response
     except Exception as e:

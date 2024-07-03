@@ -2,31 +2,6 @@ from .files import *
 from .search import *
 from .execution import *
 
-
-def get_function(function_name: str):
-    """
-    Get the function schema by the given function name.
-    :param function_name: the function name.
-    :return: the function schema.
-    """
-    if 'read_file' in function_name:
-        return read_file
-    elif 'create_file' in function_name:
-        return create_file
-    elif 'write_file' in function_name:
-        return write_file
-    elif 'list_files' in function_name:
-        return list_files
-    elif 'create_directory' in function_name:
-        return create_directory
-    elif 'web_search' in function_name:
-        return web_search
-    elif 'execute_command' in function_name:
-        return execute_command
-    else:
-        raise ValueError(f"Function {function_name} is not supported.")
-
-
 # File system related functions schemas
 schema_read_file = {
     'name': 'read_file',
@@ -111,6 +86,7 @@ schema_create_directory = {
     }
 }
 
+# Web search related function schema
 schema_web_search = {
     'name': 'web_search',
     'description': 'Perform a web search and return a concise answer along with relevant sources. '
@@ -126,6 +102,7 @@ schema_web_search = {
     }
 }
 
+# Code execution related function schema
 schema_execute_command = {
     'name': 'execute_command',
     'description': 'Execute a command in the system shell. '
@@ -140,3 +117,51 @@ schema_execute_command = {
         }
     }
 }
+
+# Mapping of function names to function schemas
+FUNCTION_NAMES = [
+    'read_file',
+    'create_file',
+    'write_file',
+    'list_files',
+    'create_directory',
+    'web_search',
+    'execute_command'
+]
+
+FUNCTIONS = [
+    read_file,
+    create_file,
+    write_file,
+    list_files,
+    create_directory,
+    web_search,
+    execute_command
+]
+
+
+# Function related utility functions
+def get_function(function_name: str):
+    """
+    Get the function schema by the given function name.
+    :param function_name: the function name.
+    :return: the function schema.
+    """
+    for func in FUNCTIONS:
+        if func.__name__ == function_name:
+            return func
+
+    raise ValueError(f"Function {function_name} is not supported.")
+
+
+def process_function_name(function_name: str):
+    """
+    Process the function name to avoid the LLM handling errors.
+    :param function_name: the generated function name.
+    :return: the correct function name.
+    """
+    for func in FUNCTION_NAMES:
+        if func in function_name:
+            return func
+
+    raise ValueError(f"Function {function_name} is not supported.")

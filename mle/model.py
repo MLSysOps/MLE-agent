@@ -4,7 +4,7 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 
-from mle.function import get_function
+from mle.function import get_function, process_function_name
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
@@ -117,7 +117,7 @@ class OpenAIModel(Model):
 
         resp = completion.choices[0].message
         if resp.function_call:
-            function_name = resp.function_call.name
+            function_name = process_function_name(resp.function_call.name)
             arguments = json.loads(resp.function_call.arguments)
             result = get_function(function_name)(**arguments)
             chat_history.append({"role": "function", "content": result, "name": function_name})
@@ -143,7 +143,7 @@ class OpenAIModel(Model):
             delta = chunk.choices[0].delta
             if delta.function_call:
                 if delta.function_call.name:
-                    function_name = delta.function_call.name
+                    function_name = process_function_name(delta.function_call.name)
                 if delta.function_call.arguments:
                     arguments += delta.function_call.arguments
 

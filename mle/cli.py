@@ -11,6 +11,7 @@ from rich.markdown import Markdown
 import mle
 from mle.model import load_model
 from mle.agents import CodeAgent
+from mle.workflow import baseline, kaggle
 
 console = Console()
 CONFIG_FILE = 'project.yml'
@@ -57,10 +58,10 @@ def start(mode):
     if mode == 'kaggle':
         # Kaggle mode
         console.log("Kaggle mode is not supported yet. Aborted.")
-        return
+        return kaggle()
     else:
         # Baseline mode
-        return
+        return baseline()
 
 
 @cli.command()

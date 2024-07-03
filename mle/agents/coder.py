@@ -1,4 +1,5 @@
 from mle.function import *
+from mle.utils import get_config
 
 
 class CodeAgent:
@@ -12,65 +13,74 @@ class CodeAgent:
         Args:
             model: the model to use.
         """
+        config_data = get_config()
         self.model = model
         self.chat_history = []
         self.working_dir = working_dir
         self.sys_prompt = f"""
-    You are a programmer working on a Python project. You are currently working on: {self.working_dir}.
-    
-    Your capabilities include:
-    
-    1. Creating project structures based on the user requirement using function `create_directory`
-    2. Writing clean, efficient, and well-documented code using function `create_file`
-    3. Exam the source code make re-use the existing code snippets using function `read_file`, or
-     modify the code to meet the requirements using function `write_file`
-    4. Offering architectural insights and design patterns
-    5. Listing files in the root directory of the project to understand the project structure with function `list_files`
-    6. Reading and analyzing existing files in the project directory using function `read_file`
-    7. Set clear, achievable goals for yourself based on the user's requirements and task descriptions
-    8. Performing web searches use function `web_search` to get up-to-date information or additional context
-    
-    """
+        You are a programmer working on a Python project. You are currently working on: {self.working_dir}.
+        
+        Your capabilities include:
+        
+        1. Creating project structures based on the user requirement using function `create_directory`
+        2. Writing clean, efficient, and well-documented code using function `create_file`
+        3. Exam the source code make re-use the existing code snippets using function `read_file`, or
+         modify the code to meet the requirements using function `write_file`
+        4. Offering architectural insights and design patterns
+        5. Listing files in the  project to understand the project structure with function `list_files`
+        6. Reading and analyzing existing files in the project directory using function `read_file`
+        7. Set clear, achievable goals for yourself based on the user's requirements and task descriptions
+        
+        """
+        self.search_prompt = """
+        
+        8. Performing web searches use function `web_search` to get up-to-date information or additional context
+        """
         self.json_mode_prompt = """
+
+        The output format should be in JSON format, include:
         
-    The output format should be in JSON format, include:
-    
-    1. the coding status (completed or failed)
-    2. the dependency list that the project needs to run
-    3. and the command to run and test the project
-    4. the reason why failed if the status is failed
-    
-    Two examples of JSON output:
-    
-    {
-       "status":"completed",
-       "dependency":[
-          "torch",
-          "scikit-learn"
-       ],
-       "command":"python /path/to/your/project.py",
-       "reason":""
-    }
+        1. the coding status (completed or failed)
+        2. the dependency list that the project needs to run
+        3. and the command to run and test the project
+        4. the reason why failed if the status is failed
         
-    {
-       "status":"failed",
-       "dependency":[
-          "torch",
-          "scikit-learn"
-       ],
-       "command":"python /path/to/your/project.py",
-       "reason":"error messages"
-    }
-    
-    """
+        Two examples of JSON output:
+        
+        {
+           "status":"completed",
+           "dependency":[
+              "torch",
+              "scikit-learn"
+           ],
+           "command":"python /path/to/your/project.py",
+           "reason":""
+        }
+            
+        {
+           "status":"failed",
+           "dependency":[
+              "torch",
+              "scikit-learn"
+           ],
+           "command":"python /path/to/your/project.py",
+           "reason":"error messages"
+        }
+        
+        """
         self.functions = [
             schema_read_file,
             schema_create_file,
             schema_write_file,
             schema_list_files,
-            schema_create_directory,
-            schema_web_search
+            schema_create_directory
         ]
+
+        if config_data.get('search_key'):
+            self.functions.append(schema_web_search)
+            self.sys_prompt += self.search_prompt
+
+        self.sys_prompt += self.json_mode_prompt
 
     def handle_query(self, user_prompt):
         """
@@ -78,7 +88,7 @@ class CodeAgent:
         Args:
             user_prompt: the user prompt.
         """
-        self.chat_history.append({"role": 'system', "content": self.sys_prompt + self.json_mode_prompt})
+        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
         self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
@@ -93,6 +103,8 @@ class CodeAgent:
     def handle_stream(self, user_prompt):
         """
         Handle the response from the model streaming.
+        The stream mode is integrative with the model streaming function, we don't
+        need to set it into the JSON mode.
         Args:
             user_prompt: the user prompt.
         """

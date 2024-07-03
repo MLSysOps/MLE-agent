@@ -1,25 +1,20 @@
 import os
 import re
+import yaml
 import shutil
-import subprocess
 
 
-def preprocess_json_string(json_string):
+def get_config():
     """
-    Preprocess a JSON string to handle single quotes and other special cases.
-    :param json_string: the input JSON string.
-    :return: the preprocessed JSON string.
+    Get the configuration file.
+    :return: the configuration file.
     """
-    # Replace single quotes with double quotes
-    json_string = re.sub(r"'", r'"', json_string)
+    config_path = os.path.join(os.getcwd(), 'project.yml')
+    if not os.path.exists(config_path):
+        return None
 
-    # Handle cases where single quotes are used inside double quotes
-    json_string = re.sub(r'"\s*:\s*"', r'": "', json_string)
-    json_string = re.sub(r'"\s*,\s*"', r'", "', json_string)
-    json_string = re.sub(r'\[\s*"', r'["', json_string)
-    json_string = re.sub(r'"\s*\]', r'"]', json_string)
-
-    return json_string
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
 
 
 def delete_directory(path):
@@ -62,40 +57,6 @@ def extract_file_name(text: str):
     if match:
         return match.group(1)
     else:
-        return None
-
-
-def extract_code(text: str):
-    """
-    Extracts the code block from a given text string.
-
-    Args:
-    text (str): The text containing the code block.
-
-    Returns:
-    str: The extracted code block, or an empty string if no code block is found.
-    """
-    match = re.search(r'```(?:[a-zA-Z0-9]+)?\n(.*?)```', text, re.DOTALL)
-    if match:
-        return match.group(1)
-    else:
-        return None
-
-
-def read_file_to_string(file_path: str):
-    """
-    Reads the contents of a file and returns it as a string.
-
-    Args:
-    file_path (str): The path to the file that needs to be read.
-
-    Returns:
-    str: The contents of the file as a string.
-    """
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
-    except FileNotFoundError:
         return None
 
 
