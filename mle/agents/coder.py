@@ -59,11 +59,8 @@ class CodeAgent:
             
         {
            "status":"failed",
-           "dependency":[
-              "torch",
-              "scikit-learn"
-           ],
-           "command":"python /path/to/your/project.py",
+           "dependency":[],
+           "command":"",
            "reason":"error messages"
         }
         
