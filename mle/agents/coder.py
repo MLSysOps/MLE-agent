@@ -3,7 +3,7 @@ from mle.function import *
 
 class CodeAgent:
 
-    def __init__(self, model):
+    def __init__(self, model, working_dir='.'):
         """
         CodeAgent: the agent to solve the given coding problems, by planning coding tasks, searching websites,
         and generating code snippets. It does not execute the code, only make use of built-in functions to provides
@@ -14,33 +14,53 @@ class CodeAgent:
         """
         self.model = model
         self.chat_history = []
-        self.sys_prompt = """
-    You are a programmer working on a Python project. Your capabilities include:
+        self.working_dir = working_dir
+        self.sys_prompt = f"""
+    You are a programmer working on a Python project. You are currently working on: {self.working_dir}.
     
-    1. Creating project structures, including folders and files
-    2. Writing clean, efficient, and well-documented code
-    3. Offering architectural insights and design patterns
-    4. Staying up-to-date with the latest technologies and industry trends
-    5. Reading and analyzing existing files in the project directory
-    6. Listing files in the root directory of the project
-    7. Set clear, achievable goals for yourself based on the user's request
-    8. When you use search make sure you use the best query to get the most accurate and up-to-date information
-    9. Performing web searches to get up-to-date information or additional context
-    10. You should work under the given project directory
+    Your capabilities include:
     
-    When asked to create a project:
-    - Always start by creating a root folder for the project.
-    - Then, create the necessary subdirectories and files within that root folder.
-    - Organize the project structure logically and follow best practices for the specific type of project being created.
-    - Use the provided tools to create folders and files as needed.
+    1. Creating project structures based on the user requirement using function `create_directory`
+    2. Writing clean, efficient, and well-documented code using function `create_file`
+    3. Exam the source code make re-use the existing code snippets using function `read_file`, or
+     modify the code to meet the requirements using function `write_file`
+    4. Offering architectural insights and design patterns
+    5. Listing files in the root directory of the project to understand the project structure with function `list_files`
+    6. Reading and analyzing existing files in the project directory using function `read_file`
+    7. Set clear, achievable goals for yourself based on the user's requirements and task descriptions
+    8. Performing web searches use function `web_search` to get up-to-date information or additional context
     
-    When asked to make edits or improvements:
-    - Use the read_file tool to examine the contents of existing files.
-    - Analyze the code and suggest improvements or make necessary edits.
-    - Use the write_to_file tool to implement changes.
-
-    When you need current information or feel that a search could provide a better answer, use the web_search tool.
-     This tool performs a web search and returns a concise answer along with relevant sources.
+    """
+        self.json_mode_prompt = """
+        
+    The output format should be in JSON format, include:
+    
+    1. the coding status (completed or failed)
+    2. the dependency list that the project needs to run
+    3. and the command to run and test the project
+    4. the reason why failed if the status is failed
+    
+    Two examples of JSON output:
+    
+    {
+       "status":"completed",
+       "dependency":[
+          "torch",
+          "scikit-learn"
+       ],
+       "command":"python /path/to/your/project.py",
+       "reason":""
+    }
+        
+    {
+       "status":"failed",
+       "dependency":[
+          "torch",
+          "scikit-learn"
+       ],
+       "command":"python /path/to/your/project.py",
+       "reason":"error messages"
+    }
     
     """
         self.functions = [
@@ -51,20 +71,20 @@ class CodeAgent:
             schema_create_directory,
             schema_web_search
         ]
-        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def handle_query(self, user_prompt, work_dir: str = None):
+    def handle_query(self, user_prompt):
         """
         Handle the query from the model query response.
         Args:
             user_prompt: the user prompt.
-            work_dir: the working directory.
         """
-        self.chat_history.append({"role": "user", "content": user_prompt + f"\nproject directory: {work_dir}"})
+        self.chat_history.append({"role": 'system', "content": self.sys_prompt + self.json_mode_prompt})
+        self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
             function_call='auto',
-            functions=self.functions
+            functions=self.functions,
+            response_format={"type": "json_object"}
         )
 
         self.chat_history.append({"role": "assistant", "content": text})
@@ -77,6 +97,7 @@ class CodeAgent:
             user_prompt: the user prompt.
         """
         text = ''
+        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
         self.chat_history.append({"role": "user", "content": user_prompt})
         for content in self.model.stream(
                 self.chat_history,
