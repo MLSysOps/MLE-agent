@@ -9,19 +9,19 @@ def get_function(function_name: str):
     :param function_name: the function name.
     :return: the function schema.
     """
-    if function_name == 'read_file':
+    if 'read_file' in function_name:
         return read_file
-    elif function_name == 'create_file':
+    elif 'create_file' in function_name:
         return create_file
-    elif function_name == 'write_file':
+    elif 'write_file' in function_name:
         return write_file
-    elif function_name == 'list_files':
+    elif 'list_files' in function_name:
         return list_files
-    elif function_name == 'create_directory':
+    elif 'create_directory' in function_name:
         return create_directory
-    elif function_name == 'web_search':
+    elif 'web_search' in function_name:
         return web_search
-    elif function_name == 'execute_command':
+    elif 'execute_command' in function_name:
         return execute_command
     else:
         raise ValueError(f"Function {function_name} is not supported.")

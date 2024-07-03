@@ -16,18 +16,24 @@ class DebugAgent:
         self.sys_prompt = """
     You are a program tester working on a Python project. Your capabilities include:
 
-    1. You need to first read the structure of the project, understand it. You need to use
-     function `list_files` to show the whole project structure.
-    2. Then you may need to call `read_file` function to read the content of the code file, check
+    1. You need to first call function `execute_command` function to test a code locally, this command will return the
+     logs from the program.
+    2. If the program returns no errors, then you should return a report with JSON format:
+     {{"execution": "no errors", "changes": "none"}}.
+    3. If the program returns errors, you need to debug the code based on the logs, you may need to first read the
+     structure of the project, understand it. You need to use function `list_files` to show the whole project structure.
+    4. Then you may need to call `read_file` function to read the content of the code file, check
      if there are any errors or bugs in the code by viewing it. Give some comments on the code based on
      the best practice, it comes from code style, code structure, or code logic, etc.
-    3. You may need to call `execute_command` function to test a code locally, this command will return the
-     logs from the program.
-    4. You need to debug the code based on the logs, if there are errors or exceptions, you may need to
+    5. You need to debug the code based on the logs, if there are errors or exceptions, you may need to
      call `web_search` function to search for the solutions or reasons for the errors.
-    5. The final output is a QA report, which includes the comment on the code, the requested changes on
-     specific file and lines, and the reasons for the changes. If there is any error, you need to provide
-     the reason and the solution for it.
+    6. The final output if there is a bug should be a JSON object like this:
+     {{"execution": "errors", "changes": [{"file": "xxx.py", "line": 10, "issue": "xxx", "suggestion": "xxx"}]}}
+    7. All the return should be in JSON format.
+     
+    The target project path will given by the user:
+    
+    {{target project absolute path}}
     """
         self.functions = [
             schema_read_file,
@@ -47,7 +53,8 @@ class DebugAgent:
         text = self.model.query(
             self.chat_history,
             function_call='auto',
-            functions=self.functions
+            functions=self.functions,
+            response_format={"type": "json_object"}
         )
 
         self.chat_history.append({"role": "assistant", "content": text})
@@ -64,7 +71,8 @@ class DebugAgent:
         for content in self.model.stream(
                 self.chat_history,
                 function_call='auto',
-                functions=self.functions
+                functions=self.functions,
+                response_format={"type": "json_object"}
         ):
             if content:
                 text += content

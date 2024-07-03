@@ -51,7 +51,7 @@ def write_file(path, content):
         return f"Error writing to file: {str(e)}"
 
 
-def list_files(path="."):
+def list_files(path):
     """
     Lists all files and directories under the given path if it is a directory.
     If the path is a file, returns None.
@@ -65,14 +65,8 @@ def list_files(path="."):
     if os.path.isfile(path):
         return "The given path is a file. Please provide a path of a directory."
 
-    file_list = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            file_list.append(os.path.join(root, name))
-        for name in dirs:
-            file_list.append(os.path.join(root, name))
-
-    return "\n".join(file_list)
+    files = os.listdir(path)
+    return "\n".join(files)
 
 
 def create_directory(path: str):

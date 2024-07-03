@@ -51,12 +51,16 @@ def start(mode):
     """
     start: start the chat with LLM.
     """
+    if not check_config():
+        return
+
     if mode == 'kaggle':
+        # Kaggle mode
         console.log("Kaggle mode is not supported yet. Aborted.")
         return
     else:
-        if not check_config():
-            return
+        # Baseline mode
+        return
 
 
 @cli.command()
