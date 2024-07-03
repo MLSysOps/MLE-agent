@@ -68,7 +68,7 @@ class DebugAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def handle_query(self, user_prompt):
+    def analyze(self, user_prompt):
         """
         Handle the query from the model query response.
         Args:

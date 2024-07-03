@@ -80,7 +80,7 @@ def chat():
             user_pmpt = questionary.text("[Exit/Ctrl+D]: ").ask()
             if user_pmpt:
                 with Live(console=Console()) as live:
-                    for text in coder.handle_stream(user_pmpt.strip()):
+                    for text in coder.chat(user_pmpt.strip()):
                         live.update(
                             Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
                             refresh=True

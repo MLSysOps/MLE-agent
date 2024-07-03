@@ -82,7 +82,7 @@ class CodeAgent:
 
         self.sys_prompt += self.json_mode_prompt
 
-    def handle_query(self, user_prompt):
+    def code(self, user_prompt):
         """
         Handle the query from the model query response.
         Args:
@@ -100,7 +100,14 @@ class CodeAgent:
         self.chat_history.append({"role": "assistant", "content": text})
         return text
 
-    def handle_stream(self, user_prompt):
+    def improve(self, debug_result: str):
+        """
+        Improve the code based on the debug result from DebugAgent.
+        :return:
+        """
+        pass
+
+    def chat(self, user_prompt):
         """
         Handle the response from the model streaming.
         The stream mode is integrative with the model streaming function, we don't

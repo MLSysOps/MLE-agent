@@ -17,5 +17,5 @@ def baseline():
     coder = CodeAgent(model, working_dir)
     debugger = DebugAgent(model)
 
-    print(f"Developer: {coder.handle_query(requirement)}")
-    print(f"Debugger: {debugger.handle_query(working_dir)}")
+    print(f"Developer: {coder.code(requirement)}")
+    print(f"Debugger: {debugger.analyze(working_dir)}")
