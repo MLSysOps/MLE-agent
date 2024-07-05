@@ -102,6 +102,21 @@ schema_web_search = {
     }
 }
 
+schema_search_arxiv = {
+    'name': 'search_arxiv',
+    'description': 'Search for papers on arXiv and return the top results. '
+                   'Use this function when there is a need to search for research papers.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'query': {
+                'type': 'string',
+                'description': 'The search query to perform'
+            }
+        }
+    }
+}
+
 # Code execution related function schema
 schema_execute_command = {
     'name': 'execute_command',
@@ -126,6 +141,7 @@ FUNCTION_NAMES = [
     'list_files',
     'create_directory',
     'web_search',
+    'search_arxiv',
     'execute_command'
 ]
 
@@ -136,6 +152,7 @@ FUNCTIONS = [
     list_files,
     create_directory,
     web_search,
+    search_arxiv,
     execute_command
 ]
 
