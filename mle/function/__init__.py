@@ -104,8 +104,9 @@ schema_web_search = {
 
 schema_search_arxiv = {
     'name': 'search_arxiv',
-    'description': 'Search for papers on arXiv and return the top results. '
-                   'Use this function when there is a need to search for research papers.',
+    'description': 'Search for papers on arXiv and return the top results based on keywords'
+                   ' (task, model, dataset, etc.) Use this function when there is a need to search'
+                   ' for research papers.',
     'parameters': {
         'type': 'object',
         'properties': {

@@ -23,15 +23,15 @@ class AdviseAgent:
 
         1. Read and understand the user's requirements, the requirements may include the task, the dataset, the model,
             and the evaluation metrics. You should always follow the user's requirements.
-        2. If the user does not provide the details (task/model/dataset/evaluation metrics), you should provide them.
-        3. Use the function `search_arxiv` to search the state-of-the-art machine learning
+        2. And then you should use the function `search_arxiv` to search the state-of-the-art machine learning
          tasks/models/datasets that can be used to solve the user's requirements, and stay up-to-date with the latest.
-        4. You should provide the paper reference of the task/model/dataset/metrics you suggest if any. You may need
-        to call the `search_arxiv` function to find the reference from the arxiv.
+        3. If the user does not provide the details (task/model/dataset/metric), you should provide them.
+        4. You should provide the paper reference of the task/model/dataset/metric you suggest. You use the search
+         results from the function `search_arxiv`.
         """
         self.search_prompt = """
-        5. You can also use function `web_search` to search for articles, papers, or tutorials related to the
-         task/model/dataset to help you decide which one to use.
+        5. You should also use function `web_search` to search for articles, papers, or tutorials related to the
+         task/model/dataset/metric to help you decide which one to use.
         """
         self.json_mode_prompt = """
 
@@ -54,10 +54,7 @@ class AdviseAgent:
         }
         
         """
-        self.functions = [
-            search_arxiv
-        ]
-
+        self.functions = [schema_search_arxiv]
         if config_data.get('search_key'):
             self.functions.append(schema_web_search)
             self.sys_prompt += self.search_prompt
@@ -71,7 +68,7 @@ class AdviseAgent:
         Args:
             user_prompt: the user prompt.
         """
-        self.chat_history.append({"role": "user", "content": "Advisor: " + user_prompt})
+        self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
             function_call='auto',
