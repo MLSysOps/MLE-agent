@@ -14,9 +14,10 @@ def baseline():
     requirement = "Create a Python program that solve LeetCode problem 102, you may search the problem on the web."
 
     ml_requirement = """
-    I want to build a machine learning model to predict the stock price of Apple Inc.
-     based on the historical data.
-     """
+    I want to build a baseline for the continue learning method of the spoken keyword spotting task.
+    """
+
+    print(f"User: {ml_requirement}")
 
     model = load_model(working_dir, 'gpt-4o')
     # coder = CodeAgent(model, working_dir)

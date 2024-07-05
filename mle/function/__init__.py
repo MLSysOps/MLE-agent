@@ -113,6 +113,10 @@ schema_search_arxiv = {
             'query': {
                 'type': 'string',
                 'description': 'The search query to perform'
+            },
+            'max_results': {
+                'type': 'integer',
+                'description': 'The maximum number of results to return'
             }
         }
     }
