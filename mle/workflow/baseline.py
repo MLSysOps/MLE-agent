@@ -21,7 +21,7 @@ def baseline(work_dir: str):
     suggestion = advisor.suggest(ml_requirement)
     enhanced_requirement = f"""
     The user's requirement: {ml_requirement}
-    The ML Task: {suggestion.get('task')},
+    The ML task: {suggestion.get('task')},
     The model: {suggestion.get('model')},
     The dataset: {suggestion.get('dataset')},
     The reference: {suggestion.get('reference')},
