@@ -31,9 +31,10 @@ class CodeAgent:
         5. Writing the code into the file when creating new files, do not create empty files
         7. For the ML training and serving scripts, you should write log/print functions to give feedback to the user
         8. Decide whether the task requires execution and debugging before moving to the next or not
+        9. You only write Python scripts, don't write Jupiter notebooks which require interactive execution
         """
         self.search_prompt = """
-        9. Performing web searches use function `web_search` to get up-to-date information or additional context
+        10. Performing web searches use function `web_search` to get up-to-date information or additional context
         """
         self.json_mode_prompt = """
 
