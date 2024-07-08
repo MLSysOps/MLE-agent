@@ -1,3 +1,5 @@
+import json
+
 from mle.function import *
 from mle.utils import get_config
 
@@ -77,4 +79,4 @@ class AdviseAgent:
         )
 
         self.chat_history.append({"role": "assistant", "content": text})
-        return text
+        return json.loads(text)

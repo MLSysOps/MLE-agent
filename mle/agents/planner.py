@@ -1,3 +1,6 @@
+import json
+
+
 class PlanAgent:
 
     def __init__(self, model):
@@ -67,4 +70,4 @@ class PlanAgent:
         )
 
         self.chat_history.append({"role": "assistant", "content": text})
-        return text
+        return json.loads(text)

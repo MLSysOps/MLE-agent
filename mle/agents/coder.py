@@ -1,3 +1,4 @@
+import json
 from mle.function import *
 from mle.utils import get_config
 
@@ -43,7 +44,10 @@ class CodeAgent:
         1. the coding status (completed or failed)
         2. the dependency list that the project needs to run
         3. and the command to run and test the project
-        4. the reason why failed if the status is failed
+        4. the reason why failed if the status is failed, put it in the "message" field
+        5. whether the task requires debugging or not -- If the task only create new directories or files, it does not.
+         If the task requires modifying existing code or generating new code, it does. If the "command" is empty, the
+         "debug" should be false.
         
         Two examples of JSON output:
         
@@ -54,14 +58,16 @@ class CodeAgent:
               "scikit-learn"
            ],
            "command":"python /path/to/your/project.py",
-           "reason":""
+           "message":"the project-related has been generated in the project.py.",
+           "debug":"true"
         }
             
         {
            "status":"failed",
            "dependency":[],
            "command":"",
-           "reason":"error messages"
+           "message":"error messages",
+           "debug":"false"
         }
         
         """
@@ -78,6 +84,7 @@ class CodeAgent:
             self.sys_prompt += self.search_prompt
 
         self.sys_prompt += self.json_mode_prompt
+        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
     def code(self, user_prompt):
         """
@@ -85,7 +92,6 @@ class CodeAgent:
         Args:
             user_prompt: the user prompt.
         """
-        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
         self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
@@ -95,14 +101,7 @@ class CodeAgent:
         )
 
         self.chat_history.append({"role": "assistant", "content": text})
-        return text
-
-    def improve(self, debug_result: str):
-        """
-        Improve the code based on the debug result from DebugAgent.
-        :return:
-        """
-        pass
+        return json.loads(text)
 
     def chat(self, user_prompt):
         """
@@ -113,7 +112,6 @@ class CodeAgent:
             user_prompt: the user prompt.
         """
         text = ''
-        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
         self.chat_history.append({"role": "user", "content": user_prompt})
         for content in self.model.stream(
                 self.chat_history,
