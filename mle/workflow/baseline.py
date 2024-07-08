@@ -49,7 +49,7 @@ def baseline(work_dir: str):
         I have finish the task: {current_task.get('task')}. {code_report.get('message')}\n
         The dependencies required to run the code: {code_report.get('dependency')}\n
         The command to run the code: {code_report.get('command')}\n
-        Whether the code is required to test and debug: {code_report.get('debug')}
+        Whether the code is required to execute and debug: {code_report.get('debug')}
         """)
         print_in_box(code_prompt, title="Developer", color="cyan")
 
