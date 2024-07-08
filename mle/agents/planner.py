@@ -43,8 +43,8 @@ class PlanAgent:
                     },
                     {
                         "task": "process ImageNet",
-                        "description": "Write a Python script called `process_data.py` to process the dataset by resizing
-                          the images to 224x224 pixels and save the processed data to the 'processed_data' directory."
+                        "description": "Write a Python script called `process_data.py` to process the dataset by
+                         resizing the images to 224x224 pixels and save the data to the 'processed_data' directory."
                     },
                     {
                         "task": "train model",

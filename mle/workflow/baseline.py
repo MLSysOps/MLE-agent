@@ -12,8 +12,8 @@ def baseline(work_dir: str):
     The workflow of the baseline mode.
     :return:
     """
-    ml_requirement = "I want to build an image classification model."
-    print_in_box(ml_requirement, title="User", color="blue")
+    ml_requirement = "I want to build a simple machine learning baseline model for sentiment analysis"
+    print_in_box(ml_requirement, title="User")
     model = load_model(work_dir, 'gpt-4o')
 
     advisor = AdviseAgent(model)
