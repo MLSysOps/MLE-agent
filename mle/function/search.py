@@ -13,7 +13,6 @@ def web_search(query: str):
     Args:
         query: The search query.
     """
-    print(f"[FUNC CALL] web_search({query})")
     try:
         client = TavilyClient(api_key=os.environ['SEARCH_API_KEY'])
         response = client.qna_search(query=query, search_depth="advanced")
@@ -23,7 +22,6 @@ def web_search(query: str):
 
 
 def search_arxiv(query, max_results=5):
-    print(f"[FUNC CALL] search_arxiv({query}, {max_results})")
     url = 'https://export.arxiv.org/api/query'
     params = {
         'search_query': query,
@@ -53,3 +51,33 @@ def search_arxiv(query, max_results=5):
         """
 
     return output
+
+
+def search_papers_with_code(query: str, k: int = 5) -> str:
+    url = f"https://paperswithcode.com/api/v1/search/"
+    response = requests.get(url, params={'page': 1, 'q': query})
+    if response.status_code != 200:
+        return "Failed to retrieve data from Papers With Code."
+
+    data = response.json()
+    if 'results' not in data:
+        return "No results found for the given query."
+
+    results = data['results'][:k]  # Get top-k results
+    result_strings = []
+
+    for result in results:
+        paper = result['paper']
+        paper_title = paper.get('title', 'No title available')
+        abstract = paper.get('abstract', 'No abstract available')
+        paper_pdf_url = paper.get('url_pdf', 'No PDF available')
+        repository = result.get('repository', [])
+        if repository:
+            code_url = repository.get('url', 'No official code link available')
+        else:
+            code_url = 'No official code link available'
+
+        result_string = f"Title: {paper_title}\nAbstract:{abstract}\nPaper URL: {paper_pdf_url}\nCode URL: {code_url}\n"
+        result_strings.append(result_string)
+
+    return "\n".join(result_strings)

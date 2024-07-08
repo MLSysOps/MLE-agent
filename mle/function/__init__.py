@@ -1,6 +1,7 @@
 from .files import *
 from .search import *
 from .execution import *
+from .interaction import *
 
 # File system related functions schemas
 schema_read_file = {
@@ -122,6 +123,26 @@ schema_search_arxiv = {
     }
 }
 
+schema_search_papers_with_code = {
+    'name': 'search_papers_with_code',
+    'description': 'Search for papers on Papers with Code and return the top results based on keywords'
+                   ' (task, model, dataset, etc.) Use this function when there is a need to search'
+                   ' for research papers and the source code.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'query': {
+                'type': 'string',
+                'description': 'The search query to perform'
+            },
+            'k': {
+                'type': 'integer',
+                'description': 'The maximum number of results to return'
+            }
+        }
+    }
+}
+
 # Code execution related function schema
 schema_execute_command = {
     'name': 'execute_command',
@@ -138,6 +159,59 @@ schema_execute_command = {
     }
 }
 
+# Interaction related function schema
+schema_ask_question = {
+    'name': 'ask_question',
+    'description': 'Ask a question to the user and get a response. '
+                   'Use this function when there is a need to interact with the user by asking questions.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'question': {
+                'type': 'string',
+                'description': 'The question to ask the user'
+            }
+        }
+    }
+}
+
+schema_ask_yes_no = {
+    'name': 'ask_yes_no',
+    'description': 'Ask a yes/no question to the user and get a response. '
+                   'Use this function when there is a need to ask the user a yes/no question.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'question': {
+                'type': 'string',
+                'description': 'The yes/no question to ask the user'
+            }
+        }
+    }
+}
+
+schema_ask_choices = {
+    'name': 'ask_choices',
+    'description': 'Ask a multiple-choice question to the user and get a response. '
+                   'Use this function when there is a need to ask the user to choose from multiple options.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'question': {
+                'type': 'string',
+                'description': 'The multiple-choice question to ask the user'
+            },
+            'choices': {
+                'type': 'array',
+                'items': {
+                    'type': 'string'
+                },
+                'description': 'The list of choices for the user to select from'
+            }
+        }
+    }
+}
+
 # Mapping of function names to function schemas
 FUNCTION_NAMES = [
     'read_file',
@@ -147,7 +221,11 @@ FUNCTION_NAMES = [
     'create_directory',
     'web_search',
     'search_arxiv',
-    'execute_command'
+    'search_papers_with_code',
+    'execute_command',
+    'ask_question',
+    'ask_yes_no',
+    'ask_choices'
 ]
 
 FUNCTIONS = [
@@ -158,7 +236,11 @@ FUNCTIONS = [
     create_directory,
     web_search,
     search_arxiv,
-    execute_command
+    search_papers_with_code,
+    execute_command,
+    ask_question,
+    ask_yes_no,
+    ask_choices
 ]
 
 

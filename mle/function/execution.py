@@ -13,7 +13,6 @@ def execute_command(command: str):
 
     Return: a string of the output, error (if any), and exit status for the command.
     """
-    print(f"[FUNC CALL] run_commands({command})")
     try:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         output = ''

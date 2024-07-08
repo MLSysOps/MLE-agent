@@ -119,6 +119,7 @@ class OpenAIModel(Model):
         if resp.function_call:
             function_name = process_function_name(resp.function_call.name)
             arguments = json.loads(resp.function_call.arguments)
+            print("[FUNC CALL]: ", function_name)
             result = get_function(function_name)(**arguments)
             chat_history.append({"role": "function", "content": result, "name": function_name})
             return self.query(chat_history, **kwargs)

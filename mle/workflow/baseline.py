@@ -1,7 +1,7 @@
 """
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
 from mle.model import load_model
 
 
@@ -26,5 +26,8 @@ def baseline():
     # print(f"Developer: {coder.code(requirement)}")
     # print(f"Debugger: {debugger.analyze(working_dir)}")
 
-    advisor = AdviseAgent(model)
-    print(f"Advisor: {advisor.suggest(ml_requirement)}")
+    # advisor = AdviseAgent(model)
+    # print(f"Advisor: {advisor.suggest(ml_requirement)}")
+
+    planner = PlanAgent(model)
+    print(f"Planner: {planner.plan(ml_requirement)}")
