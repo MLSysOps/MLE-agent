@@ -45,9 +45,9 @@ class CodeAgent:
         2. the dependency list that the project needs to run
         3. and the command to run and test the project
         4. the reason why failed if the status is failed, put it in the "message" field
-        5. whether the task requires debugging or not -- If the task only create new directories or files, it does not.
-         If the task requires modifying existing code or generating new code, it does. If the "command" is empty, the
-         "debug" should be false.
+        5. whether the task requires debugging or not -- If the task only create new directories or files, it is "false"
+        . If the task requires modifying existing code or generating new code, it is "true". If the "command" is empty,
+         the "debug" should be "false".
         
         Two examples of JSON output:
         

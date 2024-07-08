@@ -3,6 +3,22 @@ import re
 import yaml
 import shutil
 
+from rich.panel import Panel
+from rich.console import Console
+
+
+def print_in_box(text: str, title: str = "", color: str = "white"):
+    """
+    Print the text in a box.
+    :param text: the text to print.
+    :param title: the title of the box.
+    :param color: the border color.
+    :return:
+    """
+    console = Console()
+    panel = Panel(text, title=title, border_style=color, expand=False)
+    console.print(panel)
+
 
 def get_config():
     """
