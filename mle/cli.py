@@ -61,7 +61,7 @@ def start(mode):
         return kaggle()
     else:
         # Baseline mode
-        return baseline()
+        return baseline(os.getcwd())
 
 
 @cli.command()

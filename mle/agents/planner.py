@@ -1,6 +1,3 @@
-from mle.function import *
-
-
 class PlanAgent:
 
     def __init__(self, model):
@@ -25,21 +22,10 @@ class PlanAgent:
 
         1. Understand the user's requirements, the requirements may include the task, the dataset, the model, and the
             evaluation metrics, or it can be a general requirement. You should always follow the user's requirements.
-        2. Help the user enhance the requirements by asking questions or providing choices for some details in the
-            requirements. For example, the user asks for a model, you can ask the user to provide more details about the
-            task that the model will be used for; If the user ask you to write a script to process an existing dataset,
-            you should ask the user to provide the dataset format, and the expected output, etc.
-        3. The generated plan should include several coding tasks, and the task should include specific instructions for
+        2. The generated plan should include several coding tasks, and the task should include specific instructions for
             the developer. For example: "Create a directory named 'dataset' under the project root, and write a Python
             script called 'data_loader.py' to download the dataset ImageNet from the official website."
-        4. The questions you ask should be clear and concise, and the choices you provide should be relevant to the
-            user's requirements. The user has the right to skip the questions.
-        
-        The functions you can use:
-        
-        1. `ask_question` to ask the user questions.
-        2. `ask_choices` to provide the user with choices.
-        3. `ask_yes_no` to ask the user to provide a yes/no answer.
+    
         """
         self.json_mode_prompt = """
 
@@ -61,21 +47,10 @@ class PlanAgent:
                         "task": "train model",
                         "description": "Write a Python script called `train_model.py` to train an image classification
                           model on the processed data and save the trained model to the 'model' directory."
-                    },
-                    {
-                        "task": "evaluate model",
-                        "description": "Added a Python function in the `train_model.py` script to evaluate the trained
-                          model using the test dataset and print the evaluation metrics."
                     }
               ]
         }
         """
-        self.functions = [
-            schema_ask_question,
-            schema_ask_yes_no,
-            schema_ask_choices
-        ]
-
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
@@ -88,8 +63,6 @@ class PlanAgent:
         self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
-            function_call='auto',
-            functions=self.functions,
             response_format={"type": "json_object"}
         )
 

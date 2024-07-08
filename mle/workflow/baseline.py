@@ -1,33 +1,38 @@
 """
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
+import json
 from mle.model import load_model
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
 
 
-def baseline():
+def baseline(work_dir: str):
     """
     The workflow of the baseline mode.
     :return:
     """
-    working_dir = '/Users/huangyz0918/desktop/test'
-    requirement = "Create a Python program that solve LeetCode problem 102, you may search the problem on the web."
-
     ml_requirement = """
     I want to build a baseline for the continue learning method of the spoken keyword spotting task.
     """
 
     print(f"User: {ml_requirement}")
+    model = load_model(work_dir, 'gpt-4o')
 
-    model = load_model(working_dir, 'gpt-4o')
-    # coder = CodeAgent(model, working_dir)
-    # debugger = DebugAgent(model)
-    #
-    # print(f"Developer: {coder.code(requirement)}")
-    # print(f"Debugger: {debugger.analyze(working_dir)}")
-
-    # advisor = AdviseAgent(model)
-    # print(f"Advisor: {advisor.suggest(ml_requirement)}")
+    advisor = AdviseAgent(model)
+    suggestion = advisor.suggest(ml_requirement)
+    print(f"Advisor: {suggestion}")
 
     planner = PlanAgent(model)
-    print(f"Planner: {planner.plan(ml_requirement)}")
+    coding_plan = planner.plan(ml_requirement + suggestion)
+    print(f"Planner: {coding_plan}")
+
+    coder = CodeAgent(model, work_dir)
+    debugger = DebugAgent(model)
+
+    while True:
+        code_report = coder.code(coding_plan)
+        print(f"Developer: {code_report}")
+        debug_report = debugger.analyze(code_report)
+        print(f"Debugger: {debug_report}")
+        if json.loads(debug_report).get('status') == 'success':
+            break
