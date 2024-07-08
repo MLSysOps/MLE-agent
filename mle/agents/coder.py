@@ -30,7 +30,7 @@ class CodeAgent:
         4. Offering architectural insights and design patterns
         5. Listing files in the  project to understand the project structure with function `list_files`
         6. Reading and analyzing existing files in the project directory using function `read_file`
-        7. Set clear, achievable goals for yourself based on the user's requirements and task descriptions
+        7. For the ML training and serving scripts, you should write log functions to monitor the processes
         
         """
         self.search_prompt = """
