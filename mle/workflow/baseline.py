@@ -24,9 +24,11 @@ def baseline(work_dir: str):
     print_in_box(ml_requirement, console, title="User")
     model = load_model(work_dir, 'gpt-4o')
 
+    advisor = AdviseAgent(model)
+    requirement_with_qa = advisor.ask(ml_requirement)
+
     with console.status("Advisor is thinking the suggestion for the requirements..."):
-        advisor = AdviseAgent(model)
-        suggestion = advisor.suggest(ml_requirement)
+        suggestion = advisor.suggest(requirement_with_qa)
         enhanced_requirement = textwrap.dedent(f"""
         The user's requirement: {ml_requirement}
         The ML task: {suggestion.get('task')},

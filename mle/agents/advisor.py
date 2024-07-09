@@ -30,7 +30,7 @@ class AdviseAgent:
          tasks/models/datasets that can be used to solve the user's requirements, and stay up-to-date with the latest.
         3. If the user does not provide the details (task/model/dataset/metric), you should provide them.
         4. You should provide the paper reference of the task/model/dataset/metric you suggest. You use the search
-         results from the function `search_arxiv`.
+         results from the function `search_arxiv` by generating keywords from the requirements and Q/A.
         """
         self.ask_prompt = """
         You are an Machine learning expert, now you are talking to the user to help them write better ML project
@@ -112,7 +112,7 @@ class AdviseAgent:
             if answer:
                 self.ask_history.append({"role": "user", "content": answer})
                 requirement += f"\nQuestion: {question}\nAnswer: {answer}"
-                self.ask(requirement)
+                return self.ask(requirement)
         else:
             return requirement
 

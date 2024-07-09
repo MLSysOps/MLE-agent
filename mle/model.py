@@ -4,7 +4,7 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 
-from mle.function import get_function, process_function_name, INTERACTION_FUNCTIONS
+from mle.function import get_function, process_function_name
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
