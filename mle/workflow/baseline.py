@@ -30,14 +30,15 @@ def baseline(work_dir: str):
     with console.status("Advisor is thinking the suggestion for the requirements..."):
         suggestion = advisor.suggest(requirement_with_qa)
         enhanced_requirement = textwrap.dedent(f"""
-        The user's requirement: {ml_requirement}
+        The user's requirement: {ml_requirement}\n
         The ML task: {suggestion.get('task')},
         The model: {suggestion.get('model')},
         The dataset: {suggestion.get('dataset')},
         The reference: {suggestion.get('reference')},
-        The evaluation metric: {suggestion.get('evaluation_metric')}
+        The evaluation metric: {suggestion.get('evaluation_metric')},
+        The suggestion: {suggestion.get('suggestion')}
         """)
-        print_in_box(enhanced_requirement, console, title="Advisor", color="green")
+        print_in_box(enhanced_requirement, console, title="MLE Advisor", color="green")
 
     with console.status("Planner is planning the coding tasks..."):
         planner = PlanAgent(model)
@@ -45,7 +46,7 @@ def baseline(work_dir: str):
         plan_str = ""
         for task in coding_plan.get('tasks'):
             plan_str += f"[Task]: {task.get('task')}\n[Description]: {task.get('description')}\n\n"
-        print_in_box(plan_str, console, title="Planner", color="purple")
+        print_in_box(plan_str, console, title="MLE Planner", color="purple")
 
     coder = CodeAgent(model, work_dir)
     debugger = DebugAgent(model)
@@ -64,7 +65,7 @@ def baseline(work_dir: str):
             The command to run the code: {code_report.get('command')}\n
             Whether the code is required to execute and debug: {code_report.get('debug')}
             """)
-            print_in_box(code_prompt, console, title="Developer", color="cyan")
+            print_in_box(code_prompt, console, title="MLE Developer", color="cyan")
 
         while True:
             is_debugging = code_report.get('debug')
@@ -82,7 +83,7 @@ def baseline(work_dir: str):
                     The suggestion: {debug_report.get("suggestion")}
                     
                     """)
-                    print_in_box(improve_prompt, console, title="Debugger", color="yellow")
+                    print_in_box(improve_prompt, console, title="MLE Debugger", color="yellow")
                     with console.status("Coder is improving the code..."):
                         code_report = coder.code(improve_prompt)
             else:

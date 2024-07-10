@@ -25,12 +25,14 @@ class AdviseAgent:
         Your capabilities include:
 
         1. Read and understand the user's requirements, the requirements may include the task, the dataset, the model,
-            and the evaluation metrics. You should always follow the user's requirements.
-        2. And then you should use the function `search_arxiv` to search the state-of-the-art machine learning
+            and the evaluation metrics. You should always follow the user's requirements, for example, if the user
+            has provided a local dataset, you should use the path of the dataset.
+        2. Read the Q&A history to understand the user's intent and the context of the conversation.
+        3. And then you should use the function `search_arxiv` to search the state-of-the-art machine learning
          tasks/models/datasets that can be used to solve the user's requirements, and stay up-to-date with the latest.
-        3. If the user does not provide the details (task/model/dataset/metric), you should provide them.
-        4. You should provide the paper reference of the task/model/dataset/metric you suggest. You use the search
-         results from the function `search_arxiv` by generating keywords from the requirements and Q/A.
+        4. If the user does not provide the details (task/model/dataset/metric), you should always suggest them.
+        5. You should provide the paper reference of the task/model/dataset/metric you suggest. You use the search
+         results from the function `search_arxiv` or `search_papers_with_code` by generating keywords.
         """
         self.ask_prompt = """
         You are an Machine learning expert, now you are talking to the user to help them write better ML project
@@ -40,8 +42,8 @@ class AdviseAgent:
         1. Read the user requirements and trying to understand the user's intent.
         2. Decide if the requirement is clear enough or not. If not clear, you should ask the user to provide more
          details.
-        3. It is ok for the users to provide unclear answers, but you job is to help user understand the goal that
-         the user wants to achieve, and with as more as details.
+        3. It is ok for the users to provide unclear answers (e.g., "No" or "I don't know"), but you job is to help
+         user understand the goal that the user wants to achieve, and with as more as details.
         4. You question should be clear and simple, do not ask too many questions at once, you should ask them one
          by one. For example: "What kind of data you are using locally?", "What kind of ML task you want to do?",
          "What evaluation metrics you want to use?".
@@ -54,10 +56,10 @@ class AdviseAgent:
          {"status": "unclear", "question": "What is your dataset looks like?"}
          
          {"status": "completed", "question": ""}
-                
+         
         """
         self.search_prompt = """
-        5. You should also use function `web_search` to search for articles, papers, or tutorials related to the
+        6. You should also use function `web_search` to search for articles, papers, or tutorials related to the
          task/model/dataset/metric to help you decide which one to use.
         """
         self.json_mode_prompt = """
@@ -69,19 +71,24 @@ class AdviseAgent:
               "model":"Random Forest",
               "dataset":"iris",
               "reference": ["10.1109/ICDM50108.2020.00131"],
-              "evaluation_metric": ["accuracy", "precision", "recall", "f1"]
+              "evaluation_metric": ["accuracy", "precision", "recall", "f1"],
+              "suggestion:" "Based on the user requirement, I suggest the user to use the Random Forest model, which is
+               suitable for the iris dataset, you can use the accuracy, precision, recall, and f1 as the evaluation
+                metrics."
         }
         
         {
             "task":"text-classification",
             "model":"BERT-base",
-            "dataset":"IMDB Reviews",
+            "dataset":"/home/user/dataset.csv",
             "reference": ["https://arxiv.org/abs/1810.04805"],
-            "evaluation_metric": ["accuracy", "f1"]
+            "evaluation_metric": ["accuracy", "f1"],
+            "suggestion": "Based on the user requirement, BERT is suitable for extracting the features from the dataset
+             you provided, you can use the accuracy and f1 as the evaluation metrics."
         }
         
         """
-        self.functions = [schema_search_arxiv]
+        self.functions = [schema_search_arxiv, schema_search_papers_with_code]
         if config_data.get('search_key'):
             self.functions.append(schema_web_search)
             self.sys_prompt += self.search_prompt
