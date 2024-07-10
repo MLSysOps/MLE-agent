@@ -25,15 +25,16 @@ class CodeAgent:
         
         1. Creating project structures based on the user requirement using function `create_directory`
         2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`
-        3. Listing files in the  project to understand the project structure with function `list_files`
+        3. Listing files in the project to understand the project structure with function `list_files`
         4. Exam the source code make re-use the existing code snippets using function `read_file`, or
             modify the code to meet the requirements using the function `write_file`
         5. Writing the code into the file when creating new files, do not create empty files
         7. For the ML training and serving scripts, you should write log/print functions to give feedback to the user
         8. Decide whether the task requires execution and debugging before moving to the next or not
+        9. You only write Python scripts, don't write Jupiter notebooks which require interactive execution
         """
         self.search_prompt = """
-        9. Performing web searches use function `web_search` to get up-to-date information or additional context
+        10. Performing web searches use function `web_search` to get up-to-date information or additional context
         """
         self.json_mode_prompt = """
 

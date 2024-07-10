@@ -18,7 +18,7 @@ def read_file(file_path: str):
         return f"File not found: {file_path}"
 
 
-def create_file(path, content=""):
+def create_file(path, content):
     """
     Create a file with the given path and content.
     Args:

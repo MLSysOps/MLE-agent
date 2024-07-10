@@ -7,15 +7,18 @@ from rich.panel import Panel
 from rich.console import Console
 
 
-def print_in_box(text: str, title: str = "", color: str = "white"):
+def print_in_box(text: str, console=None, title: str = "", color: str = "white"):
     """
     Print the text in a box.
     :param text: the text to print.
+    :param console: the console to print the text.
     :param title: the title of the box.
     :param color: the border color.
     :return:
     """
-    console = Console()
+    if console is None:
+        console = Console()
+
     panel = Panel(text, title=title, border_style=color, expand=False)
     console.print(panel)
 

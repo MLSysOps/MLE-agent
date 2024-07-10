@@ -21,8 +21,8 @@ schema_read_file = {
 
 schema_create_file = {
     'name': 'create_file',
-    'description': 'Create a file with the given path and content. '
-                   'Use this function when there is a need to create a new file.',
+    'description': 'Create a file with the given path and content.'
+                   'Use this function when there is a need to create a new file with initial content.',
     'parameters': {
         'type': 'object',
         'properties': {
@@ -32,7 +32,7 @@ schema_create_file = {
             },
             'content': {
                 'type': 'string',
-                'description': 'The initial content to write to the file, default can be an empty string'
+                'description': 'The initial content to write to the file'
             }
         }
     }
