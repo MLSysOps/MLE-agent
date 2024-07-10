@@ -25,7 +25,7 @@ class CodeAgent:
         
         1. Creating project structures based on the user requirement using function `create_directory`
         2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`
-        3. Listing files in the  project to understand the project structure with function `list_files`
+        3. Listing files in the project to understand the project structure with function `list_files`
         4. Exam the source code make re-use the existing code snippets using function `read_file`, or
             modify the code to meet the requirements using the function `write_file`
         5. Writing the code into the file when creating new files, do not create empty files
