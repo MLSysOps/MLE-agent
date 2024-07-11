@@ -62,60 +62,57 @@ mle chat
 The following is a list of the tasks we plan to do, welcome to propose something new!
 
 <details>
-  <summary><b> :hammer: Plan, Generate, Execute and Debug Code</b></summary>
+  <summary><b> :hammer: General Features</b></summary>
   
-  - [x] An easy-to-use CLI interface
-  - [x] Create/Select/Delete a project
-  - [x] Understand users' requirements to suggest the file name, dataset, task, model arch, etc
-  - [x] Generate a detailed coding plan
-  - [x] Write baseline model code
-  - [x] Execute the code on the local machine/cloud
-  - [x] Debug the code and revise the code
-  - [x] Googling the error message to debug the code
-  - [ ] Data Augmentation
-  - [ ] Hyperparameter tuning
-  - [ ] Model evaluation
+  - [x] Understand users' requirements to create an end-to-end AI project
+  - [x] Suggest the SOTA data science solutions by using the web search
+  - [x] Plan the ML engineering tasks with human interaction
+  - [x] Execute the code on the local machine/cloud, debug and fix the errors
+  - [x] Leverage the built-in functions to complete ML engineering tasks
+  - [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
+  - [ ] Kaggle mode: to finish a Kaggle task without humans
+  - [ ] Summary and reflect the whole ML/AI pipeline
+  - [ ] Integration with Cloud data and testing and debugging platforms
+  - [ ] Local RAG support to make personal ML/AI coding assistant
+  - [ ] Function zoo: generate AI/ML functions and save them for future usage
+
 
 </details>
 
 <details>
   <summary><b>:star: More LLMs and Serving Tools</b></summary>
   
-  - [x] Ollama LLama 2/3
-  - [x] OpenAI GPT-3.5
-  - [x] OpenAI GPT-4
-  - [ ] Codellama
-  - [ ] Codemitral
-  - [ ] Anthropic Codex
+  - [x] Ollama LLama3
+  - [x] OpenAI GPTs
+  - [ ] Anthropic Claude 3.5 Sonnet
 </details>
 
 <details>
   <summary><b>:sparkling_heart: Better user experience</b></summary>
-  
-  - [ ] Web UI (coming soon)
+
+  - [x] CLI Application
+  - [ ] Web UI
   - [ ] Discord
 </details>
 
 <details>
-  <summary><b>:jigsaw: Integrations</b></summary>
-
-  - [x] SkyPilot
-  - [ ] Snowflake
-  - [ ] Databricks 
-  - [x] Wandb
-  - [ ] MLflow
-  - [ ] DBT
-  - [ ] Airflow
+  <summary><b>:jigsaw: Functions and Integrations</b></summary>
+  
+  - [x] Local file system
+  - [x] Local code exectutor
+  - [x] Arxiv.org search
+  - [x] Papers with Code search
+  - [x] General keyword search
+  - [ ] Hugging Face
+  - [ ] SkyPilot cloud deployment
+  - [ ] Snowflake data
+  - [ ] AWS S3 data
+  - [ ] Databricks data catalog
+  - [ ] Wandb experiment monitoring
+  - [ ] MLflow management
+  - [ ] DBT data transform
 </details>
 
-<details>
-  <summary><b>:globe_with_meridians: Search Enhancement</b></summary>
-    
-  - [x] Google
-  - [x] GitHub
-  - [ ] HuggingFace
-  - [ ] Paper with Code
-  - [ ] Arxiv
 </details>
 
 ## Contributing
