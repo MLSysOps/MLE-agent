@@ -107,12 +107,12 @@ def new(name):
 
     api_key = None
     if platform == 'OpenAI':
-        api_key = questionary.text("What is your OpenAI API key?").ask()
+        api_key = questionary.password("What is your OpenAI API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
 
-    search_api_key = questionary.text("What is your Tavily API key? (if no, the web search will be disabled)").ask()
+    search_api_key = questionary.password("What is your Tavily API key? (if no, the web search will be disabled)").ask()
     if search_api_key:
         os.environ["SEARCH_API_KEY"] = search_api_key
 
