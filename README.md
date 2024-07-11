@@ -1,39 +1,28 @@
 <div align="center">
-<h1 align="center">Kaia: A Pair Agent for AI Engineer / Researchers</h1>
-<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
+<h1 align="center">A Pair Coding Agent for AI Engineer and Data Scientist</h1>
 <img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
+<p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg) 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg) 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/MLSysOps/MLE-agent)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/mle-agent)
 [![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
-
-
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
-![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/MLE_Agent?logoColor=black)
-
-https://github.com/MLSysOps/MLE-agent/assets/5894780/02b30c24-c674-4c38-a8b7-f76d88e2019c
 
 </div>
 
 
-
 ## Overview
 
-MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured in **three** major modes:
+MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
 
-- :rocket: **Kaggle Mode** will help you to easily participate in Kaggle competitions, prepare submissions and get a good score.
-- :coffee: **Baseline Mode** can quickly build a baseline model for your AI project according to your requirements.
-- :fire: **Advanced Mode (Coming Soon)** is designed to utilize users' favorite MLOps tools, understand SOTA methods, and suggest optimizations for users' machine learning projects.
+- 🤖 Autonomous agent for building an ML/AI baseline
+- :coffee: Interactive chat interface in the CLI to improve existing projects
+- 📂 File system integration to build a well-organized project structure
+- 🔍 Integration with [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) for best practice and SOTA methods
+- 🐛 Automatic debugger-coder interaction for high-quality code generation
+- 🧰 AI/ML functions and MLOps tools integration
 
-
-## Milestones
-
-:rocket: June 16th, 2024: Pre-release the **Kaggle Mode** (need to install from the source code)
-
-:rocket: June 1st, 2024: Release the **Baseline Mode** (v0.1.0)
 
 ## Get started
 
@@ -43,43 +32,30 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 pip install mle-agent
 ```
 
-### Configuration
+### Usage
 
-You must set up an LLM and choose tools before using the agent.
-```bash
-mle config
-```
-
-### Usage (Baseline Mode)
-
-**Create a new project**
 ```bash
 mle new <project name>
 ```
 
-A workspace with `<project name>` will be created where you execute the `mle new` command.
-
-**Start a project**
+And a project directory will be created under the current path, you need to start the project under the project directory.
 
 ```bash
+cd <project name>
 mle start
 ```
 
-
-> [!NOTE]
-> 
-> - Debugging on the cloud may incur high costs, please ensure you have enough budget.
-> - You can start a project under any path, the code/data generated will be stored in the target workspace.
-
-
-**Project-related operations**
+You can also start an interactive chat in the terminal under the project directory:
 
 ```bash
-mle project ls # show all the available projects
-mle project delete <project name> # delete a given project
-mle project switch # switch the current working project
-mle project show # show the status of the current project
+mle chat
 ```
+
+
+## Milestones
+
+- :rocket: 11 July 2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- :rocket: June 1st, 2024: Release the first rule-based version of MLE agent (v0.1.0)
 
 ## Roadmap
 
