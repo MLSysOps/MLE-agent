@@ -9,7 +9,7 @@ from mle.utils import print_in_box
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
 
 
-def baseline(work_dir: str):
+def baseline(work_dir: str, model='gpt-4o'):
     """
     The workflow of the baseline mode.
     :return:
@@ -22,7 +22,7 @@ def baseline(work_dir: str):
         return
 
     print_in_box(ml_requirement, console, title="User")
-    model = load_model(work_dir, 'gpt-4o')
+    model = load_model(work_dir, model)
 
     advisor = AdviseAgent(model)
     requirement_with_qa = advisor.ask(ml_requirement)
