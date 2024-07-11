@@ -48,7 +48,8 @@ def cli():
 
 @cli.command()
 @click.argument('mode', default='general')
-def start(mode):
+@click.option('--model', default='gpt-4o', help='The model to use for the chat.')
+def start(mode, model):
     """
     start: start the chat with LLM.
     """
@@ -61,7 +62,7 @@ def start(mode):
         return kaggle()
     else:
         # Baseline mode
-        return baseline(os.getcwd())
+        return baseline(os.getcwd(), model)
 
 
 @cli.command()

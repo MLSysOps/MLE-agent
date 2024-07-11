@@ -115,7 +115,17 @@ class CodeAgent:
         for content in self.model.stream(
                 self.chat_history,
                 function_call='auto',
-                functions=self.functions
+                functions=[
+                    schema_read_file,
+                    schema_create_file,
+                    schema_write_file,
+                    schema_list_files,
+                    schema_create_directory,
+                    schema_search_arxiv,
+                    schema_search_papers_with_code,
+                    schema_web_search,
+                    schema_execute_command,
+                ]
         ):
             if content:
                 text += content

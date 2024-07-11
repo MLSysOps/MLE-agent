@@ -117,11 +117,15 @@ class AdviseAgent:
             question = resp.get("question")
             answer = questionary.text(question).ask()
             if answer:
+                if answer.lower() in ["end", "exit"]:
+                    return requirement
+
                 self.ask_history.append({"role": "user", "content": answer})
                 requirement += f"\nQuestion: {question}\nAnswer: {answer}"
                 return self.ask(requirement)
-        else:
-            return requirement
+            else:
+                return self.ask(requirement)
+        return requirement
 
     def suggest(self, requirement):
         """
