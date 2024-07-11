@@ -24,6 +24,13 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 - 🐛 Automatic debugger-coder interaction for high-quality code generation
 - 🧰 AI/ML functions and MLOps tools integration
 
+## Demo Video
+
+
+
+https://github.com/user-attachments/assets/885c0fd4-b628-48b2-a811-98ff2b238bba
+
+
 
 ## Get started
 
