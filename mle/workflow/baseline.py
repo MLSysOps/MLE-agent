@@ -24,6 +24,11 @@ def baseline(work_dir: str, model='gpt-4o'):
     print_in_box(ml_requirement, console, title="User")
     model = load_model(work_dir, model)
 
+    print_in_box("I am going to ask your several questions to understand your requirements better, "
+                 "if you don't want to answer or have no idea, you can reply \"no\" ot \"I don't know\""
+                 "To end the question, you can reply \"end\" or \"exit\".",
+                 console, title="MLE Advisor", color="green")
+
     advisor = AdviseAgent(model)
     requirement_with_qa = advisor.ask(ml_requirement)
 
