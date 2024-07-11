@@ -59,7 +59,7 @@ Here are some example user requirements you can try:
 I want to train an image classification model using CIFAR-10 dataset
 ```
 ```
-I want to implement a SOTA continue learning for my sentiment analysis task
+I want to implement a SOTA continue learning algorithm for my sentiment analysis task
 ```
 ```
 I want to build a text feature extraction model on my dataset located in /home/desktop/data/text.csv
