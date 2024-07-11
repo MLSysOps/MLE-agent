@@ -5,6 +5,7 @@
 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg) 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/test.yml/badge.svg) 
+![PyPI - Version](https://img.shields.io/pypi/v/mle-agent)
 [![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
