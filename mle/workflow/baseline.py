@@ -16,7 +16,7 @@ def baseline(work_dir: str, model='gpt-4o'):
     """
 
     console = Console()
-    ml_requirement = questionary.text("Your requirement:").ask()
+    ml_requirement = questionary.text("User requirement:").ask()
     if not ml_requirement:
         print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
         return
