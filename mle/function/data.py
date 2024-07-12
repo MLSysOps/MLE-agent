@@ -1,16 +1,13 @@
-import os
 import pandas as pd
 
 
-def csv_sample_dataset(project_data_path):
+def preview_csv_data(path: str, limit_rows: int = 5):
     """
-    Load a sample dataset from the project data path.
-    :param project_data_path:
+    Preview the sample dataset from the project data path.
+    :param path: the path to a local CSV file.
+    :param limit_rows: the number of rows to preview.
     :return: the sample dataset.
     """
-    csv_files = [f for f in os.listdir(project_data_path) if f.endswith('.csv')]
-    sample_data = None
-    if csv_files:
-        sample_file = csv_files[0]
-        sample_data = pd.read_csv(os.path.join(project_data_path, sample_file)).head()
-    return sample_data
+    df = pd.read_csv(path)
+    df_limited = df.head(limit_rows)
+    return df_limited.to_string(index=False)
