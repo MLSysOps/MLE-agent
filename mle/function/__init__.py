@@ -227,7 +227,7 @@ schema_preview_csv_data = {
             },
             'limit_rows': {
                 'type': 'integer',
-                'description': 'The number of rows to preview, should not be a very large number. Default is 5.'
+                'description': 'The number of rows to preview, should not be a very large number. Default is 3.'
             }
         }
     }
