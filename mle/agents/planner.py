@@ -1,9 +1,22 @@
+import sys
 import json
+import questionary
+from rich.console import Console
+
+from mle.utils import print_in_box
+
+
+def process_plan(plan_dict: dict):
+    plan_str = ""
+    for task in plan_dict.get('tasks'):
+        plan_str += f"[Task]: {task.get('task')}\n[Description]: {task.get('description')}\n\n"
+
+    return plan_str
 
 
 class PlanAgent:
 
-    def __init__(self, model):
+    def __init__(self, model, console=None):
         """
         PlanAgent: the agent to plan the machine learning project. By receiving the user's requirements, the agent will
         first analyze the requirements and ask the user to provide more details if necessary. Then the agent will
@@ -15,11 +28,17 @@ class PlanAgent:
         Args:
             model: the model to use.
         """
+        self.console = console
+        if not self.console:
+            self.console = Console()
+
+        self.plan_dict = None
         self.model = model
         self.chat_history = []
         self.sys_prompt = """
         You are an Machine learning Product Manager, you are going to collaborate with the user to plan the ML
-         project. Your goal is to generate the project plan based on the user's requirements and the user's input.
+         project. Your goal is to generate the project plan based on the user's input data format and the user's
+         requirements.
 
         Your capabilities include:
 
@@ -28,6 +47,8 @@ class PlanAgent:
         2. The generated plan should include several coding tasks, and the task should include specific instructions for
             the developer. For example: "Create a directory named 'dataset' under the project root, and write a Python
             script called 'data_loader.py' to download the dataset ImageNet from the official website."
+        3. The coding plan should include multiple tasks, the task should be clear and specific, and the task should be
+            completed in a reasonable order. Please avoid complex tasks in one task.
     
         """
         self.json_mode_prompt = """
@@ -63,11 +84,37 @@ class PlanAgent:
         Args:
             user_prompt: the user prompt.
         """
-        self.chat_history.append({"role": "user", "content": user_prompt})
-        text = self.model.query(
-            self.chat_history,
-            response_format={"type": "json_object"}
-        )
+        with self.console.status("Planner is planning the coding tasks..."):
+            self.chat_history.append({"role": "user", "content": user_prompt})
+            text = self.model.query(
+                self.chat_history,
+                response_format={"type": "json_object"}
+            )
 
-        self.chat_history.append({"role": "assistant", "content": text})
+            self.chat_history.append({"role": "assistant", "content": text})
+
         return json.loads(text)
+
+    def interact(self, user_prompt):
+        """
+        Handle the query from the model query response.
+        Args:
+            user_prompt: the user prompt.
+        """
+        self.plan_dict = self.plan(user_prompt)
+        print_in_box(process_plan(self.plan_dict), self.console, title="MLE Planner", color="purple")
+
+        while True:
+            suggestion = questionary.text(
+                "Suggestions to improve the plan? (empty answer or \"no\" to move to the next stage)").ask()
+
+            if not suggestion or suggestion.lower() in ["no"]:
+                break
+
+            if suggestion.lower() in ["exit"]:
+                sys.exit(0)
+
+            self.plan_dict = self.plan(suggestion)
+            print_in_box(process_plan(self.plan_dict), self.console, title="MLE Planner", color="purple")
+
+        return self.plan_dict

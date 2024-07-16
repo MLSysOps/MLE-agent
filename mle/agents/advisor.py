@@ -1,9 +1,9 @@
 import sys
 import json
+from rich.console import Console
 
 from mle.function import *
-from mle.utils import get_config
-from mle.utils import print_in_box
+from mle.utils import get_config, print_in_box
 
 
 def process_report(requirement: str, suggestions: dict):
@@ -22,7 +22,7 @@ def process_report(requirement: str, suggestions: dict):
 
 class AdviseAgent:
 
-    def __init__(self, model):
+    def __init__(self, model, console=None):
         """
         AdviseAgent: the agent to suggest which machine learning task/model/dataset to use based on the user's
         requirements. The return of the agent is an instruction to the user to modify the code based on the logs and
@@ -30,12 +30,16 @@ class AdviseAgent:
 
         Args:
             model: the model to use.
+            console: the console to use.
         """
         config_data = get_config()
         self.report = None
         self.model = model
         self.chat_history = []
         self.ask_history = []
+        self.console = console
+        if not self.console:
+            self.console = Console()
         self.sys_prompt = """
         You are an Machine learning expert tasked with advising on the best ML task/model/algorithm to use.
         
@@ -155,16 +159,18 @@ class AdviseAgent:
         Args:
             requirement: the user requirement.
         """
-        self.chat_history.append({"role": "user", "content": requirement})
-        text = self.model.query(
-            self.chat_history,
-            function_call='auto',
-            functions=self.functions,
-            response_format={"type": "json_object"}
-        )
+        with self.console.status("Advisor is thinking the suggestion for the requirements..."):
+            self.chat_history.append({"role": "user", "content": requirement})
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
 
-        self.chat_history.append({"role": "assistant", "content": text})
-        suggestions = json.loads(text)
+            self.chat_history.append({"role": "assistant", "content": text})
+            suggestions = json.loads(text)
+
         return process_report(requirement, suggestions)
 
     def interact(self, requirement):
@@ -185,14 +191,16 @@ class AdviseAgent:
             if question.lower() in ["exit"]:
                 sys.exit(0)
 
-            self.chat_history.append({"role": "user", "content": question})
-            suggestions = self.model.query(
-                self.chat_history,
-                function_call='auto',
-                functions=self.functions,
-                response_format={"type": "json_object"}
-            )
+            with self.console.status("Advisor is thinking the suggestion for the requirements..."):
+                self.chat_history.append({"role": "user", "content": question})
+                suggestions = self.model.query(
+                    self.chat_history,
+                    function_call='auto',
+                    functions=self.functions,
+                    response_format={"type": "json_object"}
+                )
 
-            self.report = process_report(requirement, json.loads(suggestions))
-            print_in_box(self.report, title="MLE Advisor", color="green")
+                self.report = process_report(requirement, json.loads(suggestions))
+                print_in_box(self.report, title="MLE Advisor", color="green")
+
         return self.report
