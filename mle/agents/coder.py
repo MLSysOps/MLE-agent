@@ -1,11 +1,31 @@
+import sys
 import json
+from rich.console import Console
+
 from mle.function import *
 from mle.utils import get_config
+from mle.utils import print_in_box
+
+
+def process_summary(summary_dict: dict):
+    """
+    Process the code summary.
+    Args:
+        summary_dict: the code summary in a dictionary format.
+    """
+    return textwrap.dedent(f"""
+        I have finish the task: {summary_dict.get('task')}.\n
+        The task description: {summary_dict.get('task_description')}\n
+        {summary_dict.get('message')}\n
+        The dependencies you are required to run the code: {summary_dict.get('dependency')}\n
+        The command to run the code: {summary_dict.get('command')}\n
+        Whether the code is required to execute and debug: {summary_dict.get('debug')}
+        """)
 
 
 class CodeAgent:
 
-    def __init__(self, model, working_dir='.'):
+    def __init__(self, model, working_dir='.', console=None):
         """
         CodeAgent: the agent to solve the given coding problems, by planning coding tasks, searching websites,
         and generating code snippets. It does not execute the code, only make use of built-in functions to provides
@@ -15,9 +35,15 @@ class CodeAgent:
             model: the model to use.
         """
         config_data = get_config()
+        self.code_summary = None
         self.model = model
         self.chat_history = []
         self.working_dir = working_dir
+
+        self.console = console
+        if not self.console:
+            self.console = Console()
+
         self.sys_prompt = f"""
         You are a programmer working on a Python project. You are currently working on: {self.working_dir}.
         
@@ -85,22 +111,96 @@ class CodeAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def code(self, user_prompt):
+    def code(self, task_dict: dict):
         """
         Handle the query from the model query response.
         Args:
-            user_prompt: the user prompt.
+            task_dict: the task dictionary.
         """
-        self.chat_history.append({"role": "user", "content": user_prompt})
-        text = self.model.query(
-            self.chat_history,
-            function_call='auto',
-            functions=self.functions,
-            response_format={"type": "json_object"}
-        )
+        task_prompt = textwrap.dedent(f"""
+            You are required to complete task: {task_dict.get('task')}.\n
+            You should: {task_dict.get('description')}
+            """)
 
-        self.chat_history.append({"role": "assistant", "content": text})
-        return json.loads(text)
+        with self.console.status(f"Coder is working on the task: {task_dict.get('task')}..."):
+            self.chat_history.append({"role": "user", "content": task_prompt})
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
+
+            self.chat_history.append({"role": "assistant", "content": text})
+            code_summary = json.loads(text)
+            code_summary.update({'task': task_dict.get('task'), 'task_description': task_dict.get('description')})
+        return code_summary
+
+    def debug(self, task_dict: dict, debug_report: dict):
+        """
+        Handle the query from the model query response.
+        :param task_dict: the task dictionary.
+        :param debug_report: the debug report from DebugAgent.
+        :return:
+        """
+        improve_prompt = textwrap.dedent(f"""
+        You are required improve the existing project.\n
+        The required changes: {debug_report.get("changes")}\n
+        The suggestion: {debug_report.get("suggestion")}
+
+        """)
+
+        with self.console.status(f"Coder is improving the code for task {task_dict.get('task')}..."):
+            self.chat_history.append({"role": "user", "content": improve_prompt})
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
+
+            self.chat_history.append({"role": "assistant", "content": text})
+            code_summary = json.loads(text)
+            code_summary.update({'task': task_dict.get('task'), 'task_description': task_dict.get('description')})
+        return code_summary
+
+    def interact(self, task_dict: dict):
+        """
+        Handle the query from the model query response.
+        Args:
+            task_dict: the task dictionary.
+        """
+        self.code_summary = self.code(task_dict)
+        print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
+        while True:
+            suggestion = questionary.text(
+                "Suggestions to improve the code? (empty answer or \"no\" to move to the next stage)").ask()
+
+            if not suggestion or suggestion.lower() in ["no"]:
+                break
+
+            if suggestion.lower() in ["exit"]:
+                sys.exit(0)
+
+            with self.console.status(f"Coder is working on the task: {task_dict.get('task')}..."):
+                self.chat_history.append({"role": "user", "content": suggestion})
+                text = self.model.query(
+                    self.chat_history,
+                    function_call='auto',
+                    functions=self.functions,
+                    response_format={"type": "json_object"}
+                )
+
+                self.chat_history.append({"role": "assistant", "content": text})
+                self.code_summary = json.loads(text)
+                self.code_summary.update(
+                    {
+                        'task': task_dict.get('task'),
+                        'task_description': task_dict.get('description')
+                    }
+                )
+            print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
+        return self.code_summary
 
     def chat(self, user_prompt):
         """

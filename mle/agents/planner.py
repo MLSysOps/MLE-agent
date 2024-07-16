@@ -49,6 +49,9 @@ class PlanAgent:
             script called 'data_loader.py' to download the dataset ImageNet from the official website."
         3. The coding plan should include multiple tasks, the task should be clear and specific, and the task should be
             completed in a reasonable order. Please avoid complex tasks in one task.
+        4. Each task should include all the required information to complete the task, you should provide them in the
+            task description. For example, if the task is "visualize the data", you should provide the data information
+            like the data format, the data samples, and the visualization method.
     
         """
         self.json_mode_prompt = """
