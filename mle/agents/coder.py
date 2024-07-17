@@ -166,7 +166,7 @@ class CodeAgent:
 
     def interact(self, task_dict: dict):
         """
-        Handle the query from the model query response.
+        Interact with the user to code the task.
         Args:
             task_dict: the task dictionary.
         """
@@ -174,7 +174,7 @@ class CodeAgent:
         print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
         while True:
             suggestion = questionary.text(
-                "Suggestions to improve the code? (empty answer or \"no\" to move to the next stage)").ask()
+                "Do you have any feedback to the MLE developer? (empty answer or \"no\" to move to the next task)").ask()
 
             if not suggestion or suggestion.lower() in ["no"]:
                 break

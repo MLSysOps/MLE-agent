@@ -5,7 +5,7 @@ import os
 import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.utils import print_in_box
+from mle.utils import print_in_box, text_box
 from mle.function import preview_csv_data
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
 
@@ -46,50 +46,52 @@ def baseline(work_dir: str, model='gpt-4o'):
     print_in_box(ml_requirement, console, title="User")
 
     # advisor agent gives suggestions in a report
-    advisor = AdviseAgent(model)
+    advisor = AdviseAgent(model, console)
     report = advisor.interact(ask_data(dataset) + "\n\n" + "User Requirement: " + ml_requirement)
     print_in_box(report, console, title="MLE Advisor", color="green")
 
     # plan agent generates the coding plan
-    planner = PlanAgent(model)
+    planner = PlanAgent(model, console)
     coding_plan = planner.interact(report)
 
     # code agent codes the tasks and debug with the debug agent
-    coder = CodeAgent(model, work_dir)
-    debugger = DebugAgent(model)
+    # coder = CodeAgent(model, work_dir, console)
+    # debugger = DebugAgent(model, console)
+    #
+    # is_manual_mode = questionary.confirm(
+    #     "The MLE developer is about to start the coding tasks. "
+    #     "Do you want to debug the tasks by yourself (If no, MLE agent will execute and debug the code automatically)"
+    # ).ask()
 
-    is_manual_mode = questionary.confirm(
-        "The MLE developers are about to start the coding tasks.\n"
-        "Do you want to debug the tasks by yourself (If no, MLE agent will execute and debug the code automatically)"
-    ).ask()
-
-    for current_task in coding_plan.get('tasks'):
-        code_report = coder.interact(current_task)
-        is_debugging = code_report.get('debug')
-
-        # debug the code with two different modes
-        if is_debugging == 'true' or is_debugging == 'True':
-            if is_manual_mode:
-                is_task_successful = questionary.confirm("Is the task successful?").ask()
-                if not is_task_successful:
-                    while True:
-                        error_message = questionary.text("Please provide the error message:").ask()
-                        code_report.update({'error_message': error_message})
-                        with console.status("Debugger is analysing the error message..."):
-                            debug_report = debugger.analyze(code_report)
-                            # TODO
-            else:
-                while True:
-                    is_debugging = code_report.get('debug')
-                    if is_debugging == 'true' or is_debugging == 'True':
-                        with console.status("Debugger is executing and debugging the code..."):
-                            debug_report = debugger.analyze(code_report)
-
-                        if debug_report.get('status') == 'success':
-                            print_in_box(f"debug with {debug_report.get('status')}", console, title="Debugger",
-                                         color="yellow")
-                            break
-                        else:
-                            code_report = coder.debug(current_task, debug_report)
-                    else:
-                        break
+    # for current_task in coding_plan.get('tasks'):
+    #     code_report = coder.interact(current_task)
+    #     is_debugging = code_report.get('debug')
+    #
+    #     # debug the code with two different modes
+    #     if is_debugging == 'true' or is_debugging == 'True':
+    #         if is_manual_mode:
+    #             while True:
+    #                 is_task_successful = questionary.confirm("Is the code execution successful?").ask()
+    #                 if not is_task_successful:
+    #                     error_message = questionary.text("Please provide the error message:").ask()
+    #                     if error_message:
+    #                         code_report.update({'error_message': error_message})
+    #
+    #                     debugger.analyze(code_report)
+    #                     is_code_debug = questionary.confirm(
+    #                         "Do you want MLE developer to improve the task? (if no, we will move to the next task)"
+    #                     ).ask()
+    #                     if not is_code_debug:
+    #                         break
+    #                     else:
+    #                         code_report = coder.debug(current_task, code_report)
+    #                 else:
+    #                     break
+    #         else:
+    #             while True:
+    #                 with console.status("Debugger is executing and debugging the code..."):
+    #                     debug_report = debugger.analyze(code_report)
+    #                 if debug_report.get('status') == 'success':
+    #                     break
+    #                 else:
+    #                     code_report = coder.debug(current_task, debug_report)

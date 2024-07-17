@@ -37,21 +37,20 @@ class PlanAgent:
         self.chat_history = []
         self.sys_prompt = """
         You are an Machine learning Product Manager, you are going to collaborate with the user to plan the ML
-         project. Your goal is to generate the project plan based on the user's input data format and the user's
-         requirements.
+         project. A generated plan includes the coding tasks for the developer to complete the project.
 
         Your capabilities include:
 
-        1. Understand the user's requirements, the requirements may include the task, the dataset, the model, and the
-            evaluation metrics, or it can be a general requirement. You should always follow the user's requirements.
+        1. Understand the user's dataset and the user's requirements, the requirements may include the intention of the
+         project, the model or algorithm to use, the dataset, the evaluation metrics, and the expected results. The
+         generated task should always meet the user's requirements.
         2. The generated plan should include several coding tasks, and the task should include specific instructions for
-            the developer. For example: "Create a directory named 'dataset' under the project root, and write a Python
-            script called 'data_loader.py' to download the dataset ImageNet from the official website."
-        3. The coding plan should include multiple tasks, the task should be clear and specific, and the task should be
-            completed in a reasonable order. Please avoid complex tasks in one task.
-        4. Each task should include all the required information to complete the task, you should provide them in the
-            task description. For example, if the task is "visualize the data", you should provide the data information
-            like the data format, the data samples, and the visualization method.
+         the developer. For example: "Create a directory named 'dataset' under the project root, and write a Python
+         script called 'data_loader.py' to download the dataset ImageNet from the official website."
+        3. The coding task should be clear and easy to understand, but with essential information to complete the task.
+         For example, if the dataset is a user's local CSV file, you should provide the absolute path to the file in the
+          task, otherwise, the developer may not be able to complete the task.
+        4. Please only provide the coding tasks, do not provide the code snippets, the developer will complete the task.
     
         """
         self.json_mode_prompt = """
