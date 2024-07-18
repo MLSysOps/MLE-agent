@@ -2,10 +2,9 @@
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
 import os
-import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.utils import print_in_box, text_box
+from mle.utils import print_in_box, ask_text
 from mle.function import preview_csv_data
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
 
@@ -33,13 +32,13 @@ def baseline(work_dir: str, model='gpt-4o'):
     model = load_model(work_dir, model)
 
     # ask for the data information
-    dataset = questionary.text("Dataset (public dataset name or a path to local .csv file):").ask()
+    dataset = ask_text("Please provide dataset information (the public dataset name or a path to your local .csv file)")
     if not dataset:
         print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
         return
 
     # ask for the user requirement
-    ml_requirement = questionary.text("User requirement:").ask()
+    ml_requirement = ask_text("Please provide the user requirement")
     if not ml_requirement:
         print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
         return

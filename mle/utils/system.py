@@ -2,11 +2,9 @@ import os
 import re
 import yaml
 import shutil
-import questionary
 
-from rich.text import Text
 from rich.panel import Panel
-from rich.layout import Layout
+from rich.prompt import Prompt
 from rich.console import Console
 
 
@@ -26,34 +24,21 @@ def print_in_box(text: str, console=None, title: str = "", color: str = "white")
     console.print(panel)
 
 
-def text_box(text: str, console=None, title: str = "You"):
+def ask_text(question: str, title: str = "User", console=None) -> str:
     """
-    Print the text in a chat box.
-    :param text: the text to print.
-    :param console: the console to print the text.
-    :param title: the title of the box.
-    :return: the user input.
+    Display a question in a panel and prompt the user for an answer.
+    :param question: the question to display.
+    :param title: the title of the panel.
+    :param console: the console to use.
+    :return: the user's answer.
     """
-    layout = Layout()
-    question_text = Text("Type something:", style="bold white")
-    question_panel = Panel(question_text, title=title, subtitle="Type 'exit' or 'quit' to stop", expand=False)
+    if console is None:
+        console = Console()
 
-    layout.split(Layout(question_panel, name="question"))
-    console.print(layout)
-
-    user_input = questionary.text(text).ask()
-
-    # Display the user's input
-    answer_text = Text(f"You typed: {user_input}", style="bold blue")
-    answer_panel = Panel(answer_text, title="Response", expand=False)
-
-    layout.split(
-        Layout(question_panel, name="question"),
-        Layout(answer_panel, name="answer")
-    )
-
-    console.print(layout)
-    return user_input
+    console.print(Panel(question, title="MLE Agent", border_style="purple"))
+    answer = Prompt.ask(f"Type your answer here")
+    console.print(Panel(answer, title=title))
+    return answer
 
 
 def get_config():
