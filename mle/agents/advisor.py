@@ -15,6 +15,7 @@ The model or algorithm: {suggestions.get('model_or_algorithm')},
 The training method: {suggestions.get('training_method')},
 The serving method: {suggestions.get('serving_method')},
 The reference: {suggestions.get('reference')},
+Frameworks to use: {suggestions.get('frameworks')},
 The evaluation metric: {suggestions.get('evaluation_metric')},
 The device: {suggestions.get('device')},
 The suggestion: {suggestions.get('suggestion')}
@@ -54,10 +55,12 @@ class AdviseAgent:
          state-of-the-art machine learning tasks/models/algorithms that can be used to solve the user's requirements,
           and stay up-to-date with the latest.
         4. If the user does not provide the details (task/model/algorithm/dataset/metric), you should always suggest.
-        5. You should provide the paper reference of the task/model/algorithm/metric you suggest. You use the search
-         results from the function `search_arxiv` or `search_papers_with_code` by generated search keywords.
+        5. You should provide the paper reference links of the task/model/algorithm/metric you suggest. You use the
+         search results from the function `search_arxiv` or `search_papers_with_code` by generated search keywords.
         6. The suggestion should be as detailed as possible, include the SOTA methods for data processing, feature
          extraction, model selection, training/sering methods and evaluation metrics. And the reasons why you suggest.
+        7. You should help user to decide which framework/tools to use for the project, such as PyTorch, TensorFlow,
+         MLFlow, W&B, etc.
         """
         self.search_prompt = """
         7. You should also use function `web_search` to search for articles, papers, or tutorials related to the
@@ -70,6 +73,7 @@ class AdviseAgent:
         {
             "task":"xxxxx",
             "model_or_algorithm":"xxxx",
+            "frameworks": ["xxxx", "xxxx"],
             "reference": ["xxxx", "xxxx"],
             "evaluation_metric": ["xxx", "xxx"],
             "training_method": "xxxx",
@@ -123,9 +127,10 @@ class AdviseAgent:
         print_in_box(self.report, title="MLE Advisor", color="green")
         while True:
             question = questionary.text(
-                "Suggestions to improve the report? (empty answer or \"no\" to move to the next stage)").ask()
+                "Suggestions to improve the report? (ENTER to move to the next stage, \"exit\" to exit the project)"
+            ).ask()
 
-            if not question or question.lower() in ["no"]:
+            if not question:
                 break
 
             if question.lower() in ["exit"]:

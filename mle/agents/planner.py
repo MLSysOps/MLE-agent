@@ -51,6 +51,8 @@ class PlanAgent:
          For example, if the dataset is a user's local CSV file, you should provide the absolute path to the file in the
           task, otherwise, the developer may not be able to complete the task.
         4. Please only provide the coding tasks, do not provide the code snippets, the developer will complete the task.
+        5. Do not generate task like "setup environment", "install dependencies", "run the code", etc. The developer
+         only focus on the coding tasks.
     
         """
         self.json_mode_prompt = """
@@ -108,7 +110,8 @@ class PlanAgent:
 
         while True:
             suggestion = questionary.text(
-                "Suggestions to improve the plan? (empty answer or \"no\" to move to the next stage)").ask()
+                "Suggestions to improve the plan? (ENTER to move to the next stage, \"exit\" to exit the project)"
+            ).ask()
 
             if not suggestion or suggestion.lower() in ["no"]:
                 break

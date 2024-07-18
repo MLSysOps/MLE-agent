@@ -14,13 +14,12 @@ def process_summary(summary_dict: dict):
         summary_dict: the code summary in a dictionary format.
     """
     return textwrap.dedent(f"""
-        I have finish the task: {summary_dict.get('task')}.\n
-        The task description: {summary_dict.get('task_description')}\n
-        {summary_dict.get('message')}\n
-        The dependencies you are required to run the code: {summary_dict.get('dependency')}\n
-        The command to run the code: {summary_dict.get('command')}\n
-        Whether the code is required to execute and debug: {summary_dict.get('debug')}
-        """)
+I have finish the task: {summary_dict.get('task')}.\n
+The task description: {summary_dict.get('task_description')}\n
+{summary_dict.get('message')}\n
+The dependencies you are required to run the code: {summary_dict.get('dependency')}\n
+The command to run the code: {summary_dict.get('command')}\n
+Whether the code is required to execute and debug: {summary_dict.get('debug')}""")
 
 
 class CodeAgent:
@@ -45,39 +44,38 @@ class CodeAgent:
             self.console = Console()
 
         self.sys_prompt = f"""
-        You are a programmer working on a Python project. You are currently working on: {self.working_dir}.
+        You are a programmer working on an Machine Learning task using Python.
+        You are currently working on: {self.working_dir}.
         
         Your capabilities include:
         
-        1. Creating project structures based on the user requirement using function `create_directory`
-        2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`
-        3. Listing files in the project to understand the project structure with function `list_files`
-        4. Exam the source code make re-use the existing code snippets using function `read_file`, or
-            modify the code to meet the requirements using the function `write_file`
-        5. Writing the code into the file when creating new files, do not create empty files
-        7. For the ML training and serving scripts, you should write log/print functions to give feedback to the user
-        8. Decide whether the task requires execution and debugging before moving to the next or not
-        9. You only write Python scripts, don't write Jupiter notebooks which require interactive execution
+        1. Creating project structures based on the user requirement using function `create_directory`.
+        2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`.
+        3. Exam the project to re-use the existing code snippets as much as possible, you may need to use
+         functions like `list_files`, `read_file` and `write_file`.
+        4. Writing the code into the file when creating new files, do not create empty files.
+        5. Use function `preview_csv_data` to preview the CSV data if the task include CSV data processing.
+        6. Decide whether the task requires execution and debugging before moving to the next or not.
+        7. Generate the commands to run and test the current task, and the dependencies list for this task.
+        8. You only write Python scripts, don't write Jupiter notebooks which require interactive execution.
         """
         self.search_prompt = """
-        10. Performing web searches use function `web_search` to get up-to-date information or additional context
+        9. Performing web searches use function `web_search` to get up-to-date information or additional context.
         """
         self.json_mode_prompt = """
 
         The output format should be in JSON format, include:
         
-        1. the coding status (completed or failed)
-        2. the dependency list that the project needs to run
-        3. and the command to run and test the project
-        4. the reason why failed if the status is failed, put it in the "message" field
-        5. whether the task requires debugging or not -- If the task only create new directories or files, it is "false"
-        . If the task requires modifying existing code or generating new code, it is "true". If the "command" is empty,
+        1. The dependency list that the project needs to run.
+        2. And the command to run and test the project.
+        3. The reason why failed if the status is failed, put it in the "message" field.
+        4. Whether the task requires execution and debug or not (it is "false" when create new directories or files).
+         If the task requires modifying existing code or generating new code, it is "true". If the "command" is empty,
          the "debug" should be "false".
         
-        Two examples of JSON output:
+        Example JSON output:
         
         {
-           "status":"completed",
            "dependency":[
               "torch",
               "scikit-learn"
@@ -86,14 +84,6 @@ class CodeAgent:
            "message":"the project-related has been generated in the project.py.",
            "debug":"true"
         }
-            
-        {
-           "status":"failed",
-           "dependency":[],
-           "command":"",
-           "message":"error messages",
-           "debug":"false"
-        }
         
         """
         self.functions = [
@@ -101,7 +91,8 @@ class CodeAgent:
             schema_create_file,
             schema_write_file,
             schema_list_files,
-            schema_create_directory
+            schema_create_directory,
+            schema_preview_csv_data
         ]
 
         if config_data.get('search_key'):
@@ -110,6 +101,18 @@ class CodeAgent:
 
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
+
+    def read_requirement(self, advisor_report: str):
+        """
+        Read the user requirement and the advisor report.
+        :param advisor_report:
+        :return:
+        """
+        req_details = f"""
+        The overall project information:\n
+        {advisor_report}
+        """
+        self.chat_history.append({"role": "system", "content": req_details})
 
     def code(self, task_dict: dict):
         """
@@ -174,9 +177,10 @@ class CodeAgent:
         print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
         while True:
             suggestion = questionary.text(
-                "Do you have any feedback to the MLE developer? (empty answer or \"no\" to move to the next task)").ask()
+                "Any feedback to the MLE developer? (ENTER to move to the next stage, \"exit\" to exit the project)"
+            ).ask()
 
-            if not suggestion or suggestion.lower() in ["no"]:
+            if not suggestion:
                 break
 
             if suggestion.lower() in ["exit"]:
@@ -225,6 +229,7 @@ class CodeAgent:
                     schema_search_papers_with_code,
                     schema_web_search,
                     schema_execute_command,
+                    schema_preview_csv_data
                 ]
         ):
             if content:
