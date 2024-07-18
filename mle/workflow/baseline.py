@@ -1,12 +1,25 @@
 """
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
-import textwrap
+import os
 import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.utils import print_in_box
+from mle.utils import print_in_box, ask_text
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
+
+
+def ask_data(data_str: str):
+    """
+    Ask the user to provide the data information.
+    :param data_str: the input data string. Now, it should be the name of the public dataset or
+     the path to the local CSV file.
+    :return: the formated data information.
+    """
+    if os.path.isfile(data_str) and data_str.lower().endswith('.csv'):
+        return f"CSV dataset location: {data_str}"
+    else:
+        return f"Dataset: {data_str}"
 
 
 def baseline(work_dir: str, model='gpt-4o'):
@@ -16,80 +29,51 @@ def baseline(work_dir: str, model='gpt-4o'):
     """
 
     console = Console()
-    ml_requirement = questionary.text("Your requirement:").ask()
+    model = load_model(work_dir, model)
+
+    # ask for the data information
+    dataset = ask_text("Please provide dataset information (the public dataset name or a path to your local .csv file)")
+    if not dataset:
+        print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
+        return
+
+    # ask for the user requirement
+    ml_requirement = ask_text("Please provide the user requirement")
     if not ml_requirement:
         print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
         return
 
-    print_in_box(ml_requirement, console, title="User")
-    model = load_model(work_dir, model)
+    # advisor agent gives suggestions in a report
+    advisor = AdviseAgent(model, console)
+    advisor_report = advisor.interact("User requirement: " + ml_requirement + "\n" + ask_data(dataset))
 
-    print_in_box("I am going to ask your several questions to understand your requirements better, "
-                 "if you don't want to answer or have no idea, you can reply \"no\" or \"I don't know\"."
-                 " To end the question, you can reply \"end\" or \"exit\".",
-                 console, title="MLE Advisor", color="green")
+    # plan agent generates the coding plan
+    planner = PlanAgent(model, console)
+    coding_plan = planner.interact(advisor_report)
 
-    advisor = AdviseAgent(model)
-    requirement_with_qa = advisor.ask(ml_requirement)
+    # code agent codes the tasks and debug with the debug agent
+    coder = CodeAgent(model, work_dir, console)
+    coder.read_requirement(advisor_report)
+    debugger = DebugAgent(model, console)
 
-    with console.status("Advisor is thinking the suggestion for the requirements..."):
-        suggestion = advisor.suggest(requirement_with_qa)
-        enhanced_requirement = textwrap.dedent(f"""
-        The user's requirement: {ml_requirement}\n
-        The ML task: {suggestion.get('task')},
-        The model: {suggestion.get('model')},
-        The dataset: {suggestion.get('dataset')},
-        The reference: {suggestion.get('reference')},
-        The evaluation metric: {suggestion.get('evaluation_metric')},
-        The suggestion: {suggestion.get('suggestion')}
-        """)
-        print_in_box(enhanced_requirement, console, title="MLE Advisor", color="green")
-
-    with console.status("Planner is planning the coding tasks..."):
-        planner = PlanAgent(model)
-        coding_plan = planner.plan(enhanced_requirement)
-        plan_str = ""
-        for task in coding_plan.get('tasks'):
-            plan_str += f"[Task]: {task.get('task')}\n[Description]: {task.get('description')}\n\n"
-        print_in_box(plan_str, console, title="MLE Planner", color="purple")
-
-    coder = CodeAgent(model, work_dir)
-    debugger = DebugAgent(model)
+    is_auto_mode = questionary.confirm(
+        "The MLE developer is about to start the coding tasks. "
+        "Do you want to debug the tasks automatically (If no, MLE agent will only focus on the coding tasks,"
+        " and you have to run and debug the task code by yourself)?"
+    ).ask()
 
     for current_task in coding_plan.get('tasks'):
-        with console.status(f"Coder is coding the tasks: {current_task.get('task')}"):
-            task_requirement = textwrap.dedent(f"""
-            You are required to complete task: {current_task.get('task')}.\n
-            You should: {current_task.get('description')}
-            """)
+        code_report = coder.interact(current_task)
+        is_debugging = code_report.get('debug')
 
-            code_report = coder.code(task_requirement)
-            code_prompt = textwrap.dedent(f"""
-            I have finish the task: {current_task.get('task')}. {code_report.get('message')}\n
-            The dependencies required to run the code: {code_report.get('dependency')}\n
-            The command to run the code: {code_report.get('command')}\n
-            Whether the code is required to execute and debug: {code_report.get('debug')}
-            """)
-            print_in_box(code_prompt, console, title="MLE Developer", color="cyan")
-
-        while True:
-            is_debugging = code_report.get('debug')
-            if is_debugging == 'true' or is_debugging == 'True':
-                with console.status("Debugger is executing and debugging the code..."):
-                    debug_report = debugger.analyze(code_prompt)
-
-                if debug_report.get('status') == 'success':
-                    print_in_box(f"debug with {debug_report.get('status')}", console, title="Debugger", color="yellow")
-                    break
+        if is_auto_mode:
+            while True:
+                if is_debugging == 'true' or is_debugging == 'True':
+                    with console.status("Debugger is executing and debugging the code..."):
+                        debug_report = debugger.analyze(code_report)
+                    if debug_report.get('status') == 'success':
+                        break
+                    else:
+                        code_report = coder.debug(current_task, debug_report)
                 else:
-                    improve_prompt = textwrap.dedent(f"""
-                    You are required improve the existing project.\n
-                    The required changes: {debug_report.get("changes")}\n
-                    The suggestion: {debug_report.get("suggestion")}
-                    
-                    """)
-                    print_in_box(improve_prompt, console, title="MLE Debugger", color="yellow")
-                    with console.status("Coder is improving the code..."):
-                        code_report = coder.code(improve_prompt)
-            else:
-                break
+                    break

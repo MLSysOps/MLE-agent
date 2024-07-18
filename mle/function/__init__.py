@@ -1,3 +1,4 @@
+from .data import *
 from .files import *
 from .search import *
 from .execution import *
@@ -212,6 +213,26 @@ schema_ask_choices = {
     }
 }
 
+# Data preview related function schema
+schema_preview_csv_data = {
+    'name': 'preview_csv_data',
+    'description': 'Preview the contents of a CSV file and return the first few rows. '
+                   'Use this function when there is a need to preview the data in a CSV file.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'path': {
+                'type': 'string',
+                'description': 'The path of the CSV file to preview'
+            },
+            'limit_rows': {
+                'type': 'integer',
+                'description': 'The number of rows to preview, should not be a very large number. Default is 3.'
+            }
+        }
+    }
+}
+
 # Mapping of function names to function schemas
 FUNCTION_NAMES = [
     'read_file',
@@ -225,7 +246,8 @@ FUNCTION_NAMES = [
     'execute_command',
     'ask_question',
     'ask_yes_no',
-    'ask_choices'
+    'ask_choices',
+    'preview_csv_data'
 ]
 
 FUNCTIONS = [
@@ -240,7 +262,8 @@ FUNCTIONS = [
     execute_command,
     ask_question,
     ask_yes_no,
-    ask_choices
+    ask_choices,
+    preview_csv_data
 ]
 
 

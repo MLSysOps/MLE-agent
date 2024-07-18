@@ -21,7 +21,7 @@ def web_search(query: str):
         return f"Error performing web search: {str(e)}"
 
 
-def search_arxiv(query, max_results=5):
+def search_arxiv(query, max_results=8):
     url = 'https://export.arxiv.org/api/query'
     params = {
         'search_query': query,
@@ -53,7 +53,7 @@ def search_arxiv(query, max_results=5):
     return output
 
 
-def search_papers_with_code(query: str, k: int = 5) -> str:
+def search_papers_with_code(query: str, k: int = 8) -> str:
     url = f"https://paperswithcode.com/api/v1/search/"
     response = requests.get(url, params={'page': 1, 'q': query})
     if response.status_code != 200:

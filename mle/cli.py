@@ -59,7 +59,7 @@ def start(mode, model):
     if mode == 'kaggle':
         # Kaggle mode
         console.log("Kaggle mode is not supported yet. Aborted.")
-        return kaggle()
+        return kaggle(os.getcwd(), model)
     else:
         # Baseline mode
         return baseline(os.getcwd(), model)

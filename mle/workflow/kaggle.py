@@ -1,9 +1,7 @@
 """
 Kaggle Mode: the mode to run the kaggle competition automatically.
-
-TODO: @Huaizheng - Write the workflow and use the agents to run the kaggle competition automatically.
 """
 
 
-def kaggle():
+def kaggle(work_dir: str, model='gpt-4o'):
     pass

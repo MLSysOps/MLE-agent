@@ -4,6 +4,7 @@ import yaml
 import shutil
 
 from rich.panel import Panel
+from rich.prompt import Prompt
 from rich.console import Console
 
 
@@ -21,6 +22,23 @@ def print_in_box(text: str, console=None, title: str = "", color: str = "white")
 
     panel = Panel(text, title=title, border_style=color, expand=False)
     console.print(panel)
+
+
+def ask_text(question: str, title: str = "User", console=None) -> str:
+    """
+    Display a question in a panel and prompt the user for an answer.
+    :param question: the question to display.
+    :param title: the title of the panel.
+    :param console: the console to use.
+    :return: the user's answer.
+    """
+    if console is None:
+        console = Console()
+
+    console.print(Panel(question, title="MLE Agent", border_style="purple"))
+    answer = Prompt.ask(f"Type your answer here")
+    console.print(Panel(answer, title=title))
+    return answer
 
 
 def get_config():

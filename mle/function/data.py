@@ -1,16 +1,21 @@
-import os
+import textwrap
 import pandas as pd
 
 
-def csv_sample_dataset(project_data_path):
+def preview_csv_data(path: str, limit_rows: int = 1) -> str:
     """
-    Load a sample dataset from the project data path.
-    :param project_data_path:
-    :return: the sample dataset.
+    Preview the sample dataset from the project data path and include metadata.
+    :param path: the path to a local CSV file.
+    :param limit_rows: the number of rows to preview.
+    :return: the sample dataset with metadata as a string.
     """
-    csv_files = [f for f in os.listdir(project_data_path) if f.endswith('.csv')]
-    sample_data = None
-    if csv_files:
-        sample_file = csv_files[0]
-        sample_data = pd.read_csv(os.path.join(project_data_path, sample_file)).head()
-    return sample_data
+    df = pd.read_csv(path)
+    num_rows = len(df)
+    columns = ', '.join(df.columns)
+    df_limited = df.head(limit_rows)
+    data_dict_list = df_limited.to_dict(orient='records')
+    data_dict_str = "\n".join([str(record) for record in data_dict_list])
+
+    return textwrap.dedent(f"""
+    Data file: {path}\nNumber of all rows: {num_rows}\nAll columns: {columns}\nData example:\n{data_dict_str}
+    """).strip()
