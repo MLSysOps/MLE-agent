@@ -9,7 +9,7 @@ from mle.utils import print_in_box
 def process_plan(plan_dict: dict):
     plan_str = ""
     for task in plan_dict.get('tasks'):
-        plan_str += f"[Task]: {task.get('task')}\n[Description]: {task.get('description')}\n\n"
+        plan_str += f"[green][Task]:[/green] {task.get('task')}\n[green][Description]:[/green] {task.get('description')}\n\n"
 
     return plan_str
 
@@ -88,7 +88,7 @@ class PlanAgent:
         Args:
             user_prompt: the user prompt.
         """
-        with self.console.status("Planner is planning the coding tasks..."):
+        with self.console.status("MLE Planner is planning the coding tasks..."):
             self.chat_history.append({"role": "user", "content": user_prompt})
             text = self.model.query(
                 self.chat_history,

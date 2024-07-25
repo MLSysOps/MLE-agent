@@ -57,9 +57,9 @@ def baseline(work_dir: str, model='gpt-4o'):
     debugger = DebugAgent(model, console)
 
     is_auto_mode = questionary.confirm(
-        "The MLE developer is about to start the coding tasks. "
-        "Do you want to debug the tasks automatically (If no, MLE agent will only focus on the coding tasks,"
-        " and you have to run and debug the task code by yourself)?"
+        "MLE developer is about to start to code.\n"
+        "Choose to debug or not (If no, MLE agent will only focus on coding tasks,"
+        " and you have to run and debug the code yourself)?"
     ).ask()
 
     for current_task in coding_plan.get('tasks'):
