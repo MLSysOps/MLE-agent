@@ -9,16 +9,21 @@ from mle.utils import get_config, print_in_box
 def process_report(requirement: str, suggestions: dict):
     return textwrap.dedent(f"""
 {requirement}
-Dataset summary: {suggestions.get('data_summary')}
-The ML task: {suggestions.get('task')}
-The model or algorithm: {suggestions.get('model_or_algorithm')},
-The training method: {suggestions.get('training_method')},
-The serving method: {suggestions.get('serving_method')},
-The reference: {suggestions.get('reference')},
-Frameworks to use: {suggestions.get('frameworks')},
-The evaluation metric: {suggestions.get('evaluation_metric')},
-The device: {suggestions.get('device')},
-The suggestion: {suggestions.get('suggestion')}
+
+[green]Dataset Summary:[/green] {suggestions.get('data_summary')}
+
+[green]Suggestion Summary:[/green] {suggestions.get('suggestion')}
+
+[green]Task:[/green] {suggestions.get('task')}
+[green]Model:[/green] {suggestions.get('model_or_algorithm')}
+[green]Training Strategy:[/green] {suggestions.get('training_method')}
+[green]Evaluation Metric:[/green] {suggestions.get('evaluation_metric')}
+[green]Training Device:[/green] {suggestions.get('device')}
+
+[green]Serving Strategy:[/green] {suggestions.get('serving_method')}
+
+[green]Reference:[/green] {suggestions.get('reference')}
+[green]Dependency:[/green] {suggestions.get('frameworks')}
 """).strip()
 
 
@@ -103,7 +108,7 @@ class AdviseAgent:
         Args:
             requirement: the user requirement.
         """
-        with self.console.status("Advisor is thinking the suggestion for the requirements..."):
+        with self.console.status("MLE Advisor is thinking the best strategy to help you..."):
             self.chat_history.append({"role": "user", "content": requirement})
             text = self.model.query(
                 self.chat_history,

@@ -17,9 +17,9 @@ def ask_data(data_str: str):
     :return: the formated data information.
     """
     if os.path.isfile(data_str) and data_str.lower().endswith('.csv'):
-        return f"CSV dataset location: {data_str}"
+        return f"[green]CSV Dataset Location:[/green] {data_str}"
     else:
-        return f"Dataset: {data_str}"
+        return f"[green]Dataset:[/green] {data_str}"
 
 
 def baseline(work_dir: str, model='gpt-4o'):
@@ -32,7 +32,7 @@ def baseline(work_dir: str, model='gpt-4o'):
     model = load_model(work_dir, model)
 
     # ask for the data information
-    dataset = ask_text("Please provide dataset information (the public dataset name or a path to your local .csv file)")
+    dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
     if not dataset:
         print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
         return
@@ -45,7 +45,7 @@ def baseline(work_dir: str, model='gpt-4o'):
 
     # advisor agent gives suggestions in a report
     advisor = AdviseAgent(model, console)
-    advisor_report = advisor.interact("User requirement: " + ml_requirement + "\n" + ask_data(dataset))
+    advisor_report = advisor.interact("[green]User Requirement:[/green] " + ml_requirement + "\n" + ask_data(dataset))
 
     # plan agent generates the coding plan
     planner = PlanAgent(model, console)
