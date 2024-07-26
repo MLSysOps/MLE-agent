@@ -14,11 +14,11 @@ def process_summary(summary_dict: dict):
         summary_dict: the code summary in a dictionary format.
     """
     return textwrap.dedent(f"""
-I have finish the task: {summary_dict.get('task')}.\n
-The task description: {summary_dict.get('task_description')}\n
+MLE Developer has finished the task: {summary_dict.get('task')}.\n
+Task description: {summary_dict.get('task_description')}\n
 {summary_dict.get('message')}\n
-The dependencies you are required to run the code: {summary_dict.get('dependency')}\n
-The command to run the code: {summary_dict.get('command')}\n
+Dependencies you are required to run the code: {summary_dict.get('dependency')}\n
+Command to run the code: {summary_dict.get('command')}\n
 Whether the code is required to execute and debug: {summary_dict.get('debug')}""")
 
 
@@ -177,7 +177,7 @@ class CodeAgent:
         print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
         while True:
             suggestion = questionary.text(
-                "Any feedback to the MLE developer? (ENTER to move to the next stage, \"exit\" to exit the project)"
+                "Any feedback to MLE developer? (ENTER to move to the next stage, \"exit\" to exit the project)"
             ).ask()
 
             if not suggestion:
@@ -186,7 +186,7 @@ class CodeAgent:
             if suggestion.lower() in ["exit"]:
                 sys.exit(0)
 
-            with self.console.status(f"Coder is working on the task: {task_dict.get('task')}..."):
+            with self.console.status(f"MLE Developer is working on the task: {task_dict.get('task')}..."):
                 self.chat_history.append({"role": "user", "content": suggestion})
                 text = self.model.query(
                     self.chat_history,

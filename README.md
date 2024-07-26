@@ -1,5 +1,5 @@
 <div align="center">
-<h1 align="center">A Pair Coding Agent for AI Engineer and Data Scientist</h1>
+<h1 align="center">MLE-Agent: Your intelligent companion for seamless AI engineering and research.</h1>
 <img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
 <p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
 
@@ -17,12 +17,12 @@
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
 
-- 🤖 Autonomous agent for building an ML/AI baseline
-- :coffee: Interactive chat interface in the CLI to improve existing projects
-- 📂 File system integration to build a well-organized project structure
-- 🔍 Integration with [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) for best practice and SOTA methods
-- 🐛 Automatic debugger-coder interaction for high-quality code generation
-- 🧰 AI/ML functions and MLOps tools integration
+- 🤖 Autonomous Baseline Creation: Automatically builds ML/AI baselines.
+- 🔍 [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) Integration: Access best practices and state-of-the-art methods.
+- 🐛 Smart Debugging: Ensures high-quality code through automatic debugger-coder interactions.
+- 📂 File System Integration: Organizes your project structure efficiently.
+- 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
+- ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
 
 
 
@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/885c0fd4-b628-48b2-a811-98ff2b238bba
 ### Installation
 
 ```bash
-pip install mle-agent
+pip install mle-agent -U
 ```
 
 ### Usage
