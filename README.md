@@ -27,8 +27,11 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 
 https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
+## Milestones
 
-
+- :rocket: 25 July 2024: Release the `0.3.0` with huge refactoring, many integrations, etc (v0.3.0)
+- :rocket: 11 July 2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- :rocket: June 1st, 2024: Release the first rule-based version of MLE agent (v0.1.0)
 
 ## Get started
 
@@ -36,6 +39,9 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ```bash
 pip install mle-agent -U
+# or from source
+git clone git@github.com:MLSysOps/MLE-agent.git
+pip install -e .
 ```
 
 ### Usage
@@ -56,28 +62,6 @@ You can also start an interactive chat in the terminal under the project directo
 ```bash
 mle chat
 ```
-
-### Examples
-
-Here are some example user requirements you can try:
-
-```
-I want to train an image classification model using CIFAR-10 dataset
-```
-```
-I want to implement a SOTA continue learning algorithm for my sentiment analysis task
-```
-```
-I want to build a text feature extraction model on my dataset located in /home/desktop/data/text.csv
-```
-
-And more...
-
-
-## Milestones
-
-- :rocket: 11 July 2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
-- :rocket: June 1st, 2024: Release the first rule-based version of MLE agent (v0.1.0)
 
 ## Roadmap
 
