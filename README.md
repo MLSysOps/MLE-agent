@@ -25,8 +25,8 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 - ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
 
 
+https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
-https://github.com/user-attachments/assets/885c0fd4-b628-48b2-a811-98ff2b238bba
 
 
 
