@@ -53,6 +53,14 @@ def get_config():
     with open(config_path, 'r') as file:
         return yaml.safe_load(file)
 
+def write_config(value):
+    """
+    Write the configuration file.
+    """
+    config_path = os.path.join(os.getcwd(), 'project.yml')
+    with open(config_path, 'w+') as file:
+        yaml.dump(value, file, default_flow_style=False)
+
 
 def delete_directory(path):
     """
