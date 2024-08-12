@@ -137,6 +137,9 @@ If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRI
 - [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please feel free to ask in the Discord community.
 - [Twitter](https://twitter.com/MLE_Agent). Follow us on Twitter to get the latest updates.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
 
 ## License
 
