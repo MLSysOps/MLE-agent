@@ -2,11 +2,10 @@
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
 import os
-import questionary
 from rich.console import Console
 from mle.model import load_model
 from mle.utils import print_in_box, ask_text, WorkflowCache
-from mle.agents import AdviseAgent
+from mle.agents import ReportAgent
 
 
 def ask_data(data_str: str):
@@ -64,7 +63,7 @@ def report(work_dir: str, model='gpt-4o'):
     with cache(step=3, name="advisor agent gives suggestions in a report") as ca:
         advisor_report = ca.resume("advisor_report")
         if advisor_report is None:
-            advisor = AdviseAgent(model, console)
+            advisor = ReportAgent(model, console)
             advisor_report = advisor.interact(
                 "[green]User Requirement:[/green] " + ml_requirement + "\n" + ask_data(dataset))
         ca.store("advisor_report", advisor_report)
