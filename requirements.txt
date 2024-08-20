@@ -1,6 +1,7 @@
 rich
 click
 openai~=1.34.0
+github
 pyyaml
 requests
 questionary
