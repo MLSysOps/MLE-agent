@@ -1,10 +1,12 @@
 import os
 import base64
-import numpy as np
-from github import Github
+import requests
+from datetime import datetime
+from fnmatch import fnmatch
 
 
 class GithubInte:
+    BASE_URL = "https://api.github.com"
 
     def __init__(self, github_repo: str, github_token=None):
         """
@@ -12,54 +14,84 @@ class GithubInte:
         :param github_repo: the Github repository to process, in the format of <owner>/<repo>.
         :param github_token: the Github token.
         """
+        self.github_repo = github_repo
         if not github_token:
             github_token = os.getenv("GITHUB_TOKEN")
-        self.github = Github(github_token)
-        self.repo = self.github.get_repo(github_repo)
+        self.headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
 
-    def process_source_code(self):
-        contents = self.repo.get_contents("")
+    def _make_request(self, endpoint, params=None):
+        """Make a GET request to the GitHub API."""
+        url = f"{self.BASE_URL}/repos/{self.github_repo}/{endpoint}"
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def process_source_code(self, file_pattern="*"):
+        """
+        Process source code files in the repository.
+        :param file_pattern: Wildcard pattern to filter files (e.g., "*.py" for Python files)
+        :return: Dictionary with file paths as keys and file contents as values
+        """
+
+        def get_contents(path=""):
+            contents = self._make_request(f"contents/{path}")
+            if isinstance(contents, list):
+                for item in contents:
+                    if item['type'] == 'dir':
+                        yield from get_contents(item['path'])
+                    elif fnmatch(item['name'], file_pattern):
+                        yield item
+            elif fnmatch(contents['name'], file_pattern):
+                yield contents
+
         source_code = {}
-        while contents:
-            file_content = contents.pop(0)
-            if file_content.type == "dir":
-                contents.extend(self.repo.get_contents(file_content.path))
-            else:
-                try:
-                    if file_content.encoding == 'base64':
-                        file_text = base64.b64decode(file_content.content).decode('utf-8')
-                    else:
-                        file_text = file_content.decoded_content.decode('utf-8')
-                    source_code[file_content.path] = file_text
-                except Exception as e:
-                    print(f"Error processing file {file_content.path}: {str(e)}")
-                    source_code[file_content.path] = "Unable to process content"
+        for item in get_contents():
+            try:
+                if 'content' in item and item.get('encoding') == 'base64':
+                    content = base64.b64decode(item['content']).decode('utf-8')
+                elif 'download_url' in item:
+                    response = requests.get(item['download_url'], headers=self.headers)
+                    response.raise_for_status()
+                    content = response.text
+                else:
+                    content = f"File too large to process directly. Size: {item.get('size', 'unknown')} bytes"
+                source_code[item['path']] = content
+            except Exception as e:
+                error_message = f"Error: {str(e)}"
+                if isinstance(e, requests.exceptions.RequestException):
+                    error_message += f" (Status code: {e.response.status_code})"
+                print(f"Error processing file {item['path']}: {error_message}")
+                source_code[item['path']] = f"Unable to process content: {error_message}"
         return source_code
 
     def process_commit_history(self, limit=10):
-        commits = self.repo.get_commits()
+        commits = self._make_request("commits", params={"per_page": limit})
         commit_history = {}
-        for i, commit in enumerate(commits[:limit]):
-            commit_history[commit.sha] = {
-                "author": commit.commit.author.name,
-                "date": commit.commit.author.date.isoformat(),
-                "message": commit.commit.message
+        for commit in commits:
+            commit_history[commit['sha']] = {
+                "author": commit['commit']['author']['name'],
+                "date": commit['commit']['author']['date'],
+                "message": commit['commit']['message']
             }
         return commit_history
 
     def process_issues_and_prs(self, limit=10):
-        issues = self.repo.get_issues(state="all")
-        prs = self.repo.get_pulls(state="all")
+        issues = self._make_request("issues", params={"state": "all", "per_page": limit})
+        prs = self._make_request("pulls", params={"state": "all", "per_page": limit})
         issues_prs = {}
-        for item in list(issues)[:limit] + list(prs)[:limit]:
-            item_type = 'Issue' if hasattr(item, 'issue') else 'PR'
-            issues_prs[f"{item_type}-{item.number}"] = {
+
+        for item in issues + prs:
+            item_type = 'PR' if 'pull_request' in item else 'Issue'
+            issues_prs[f"{item_type}-{item['number']}"] = {
                 "type": item_type,
-                "number": item.number,
-                "title": item.title,
-                "state": item.state,
-                "created": item.created_at.isoformat(),
-                "author": item.user.login,
-                "body": item.body[:200] + "..." if item.body else ""
+                "number": item['number'],
+                "title": item['title'],
+                "state": item['state'],
+                "created": item['created_at'],
+                "author": item['user']['login'],
+                "body": (item['body'][:200] + "...") if item['body'] else ""
             }
         return issues_prs
