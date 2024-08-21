@@ -1,7 +1,7 @@
 import os
 import base64
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from fnmatch import fnmatch
 
 
@@ -23,13 +23,73 @@ class GithubInte:
         }
 
     def _make_request(self, endpoint, params=None):
-        """Make a GET request to the GitHub API."""
+        """
+        Make a GET request to the GitHub API.
+        :param endpoint: The endpoint to request.
+        :param params: The parameters to include in the request.
+        :return: The JSON response from the request.
+        """
         url = f"{self.BASE_URL}/repos/{self.github_repo}/{endpoint}"
         response = requests.get(url, headers=self.headers, params=params)
         response.raise_for_status()
         return response.json()
 
-    def process_source_code(self, file_pattern="*"):
+    def _process_items(self, endpoint, start_date=None, end_date=None, username=None, limit=None):
+        """
+        Helper method to process issues or pull requests.
+        :param endpoint: The endpoint to process (e.g., 'issues' or 'pulls')
+        :param start_date: Start date for issue/PR range (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for issue/PR range (inclusive), in 'YYYY-MM-DD' format
+        :param username: GitHub username to filter issues/PRs (optional)
+        :param limit: Maximum number of issues/PRs to retrieve (default is None, which retrieves all in range)
+        :return: Dictionary of issues and pull requests
+        """
+        params = {
+            "state": "all",
+            "per_page": 100,  # GitHub API max per page
+            "sort": "created",
+            "direction": "desc"
+        }
+        if username:
+            params["creator"] = username
+        if start_date:
+            params["since"] = f"{start_date}T00:00:00Z"
+
+        items = {}
+        page = 1
+        while True:
+            params["page"] = page
+            page_items = self._make_request(endpoint, params=params)
+            if not page_items:
+                break
+
+            for item in page_items:
+                created_at = datetime.strptime(item['created_at'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+                if end_date and created_at > datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59,
+                                                                                             second=59,
+                                                                                             tzinfo=timezone.utc):
+                    continue
+                if start_date and created_at < datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc):
+                    return items  # Stop if we've passed the start date
+
+                items[item['number']] = {
+                    "number": item['number'],
+                    "title": item['title'],
+                    "state": item['state'],
+                    "created_at": item['created_at'],
+                    "author": item['user']['login'],
+                    "body": item['body']
+                }
+
+                if limit and len(items) >= limit:
+                    return items
+
+            page += 1
+
+        return items
+
+    def get_source_code(self, file_pattern="*"):
         """
         Process source code files in the repository.
         :param file_pattern: Wildcard pattern to filter files (e.g., "*.py" for Python files)
@@ -67,44 +127,77 @@ class GithubInte:
                 source_code[item['path']] = f"Unable to process content: {error_message}"
         return source_code
 
-    def process_commit_history(self, limit=10):
+    def get_commit_history(self, start_date=None, end_date=None, username=None, limit=None):
         """
-        Process the commit history of the repository.
-        :param limit: the number of commits to retrieve.
-        :return: the commit history as a dictionary with commit SHAs as keys.
+        Process commit history within a specified date range and for a specific user.
+        :param start_date: Start date for commit range (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for commit range (inclusive), in 'YYYY-MM-DD' format
+        :param username: GitHub username to filter commits (optional)
+        :param limit: Maximum number of commits to retrieve (default is None, which retrieves all commits in range)
+        :return: Dictionary of commits
         """
-        commits = self._make_request("commits", params={"per_page": limit})
+        params = {"per_page": 100}  # GitHub API max per page
+        if start_date:
+            params["since"] = f"{start_date}T00:00:00Z"
+        if end_date:
+            params["until"] = f"{end_date}T23:59:59Z"
+        if username:
+            params["author"] = username
+
+        commits = []
+        page = 1
+        while True:
+            params["page"] = page
+            page_commits = self._make_request("commits", params=params)
+            if not page_commits:
+                break
+            commits.extend(page_commits)
+            if limit and len(commits) >= limit:
+                commits = commits[:limit]
+                break
+            page += 1
+
         commit_history = {}
         for commit in commits:
-            commit_history[commit['sha']] = {
-                "author": commit['commit']['author']['name'],
-                "date": commit['commit']['author']['date'],
-                "message": commit['commit']['message']
-            }
+            commit_date = datetime.strptime(commit['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
+            commit_date = commit_date.replace(tzinfo=timezone.utc)
+
+            if (not start_date or commit_date >= datetime.strptime(start_date, "%Y-%m-%d").replace(
+                    tzinfo=timezone.utc)) and \
+                    (not end_date or commit_date <= datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59,
+                                                                                                    second=59,
+                                                                                                    tzinfo=timezone.utc)) and \
+                    (not username or commit['author']['login'] == username):
+                commit_history[commit['sha']] = {
+                    "author": commit['commit']['author']['name'],
+                    "username": commit['author']['login'] if commit['author'] else None,
+                    "date": commit['commit']['author']['date'],
+                    "message": commit['commit']['message']
+                }
+
         return commit_history
 
-    def process_issues_and_prs(self, limit=10):
+    def get_issues(self, start_date=None, end_date=None, username=None, limit=None):
         """
-        Process the issues and pull requests in the repository.
-        :param limit: the number of issues and pull requests to retrieve.
-        :return: the issues and pull requests as a dictionary with issue/PR numbers as keys.
+        Process issues within a specified date range and for a specific user.
+        :param start_date: Start date for issue range (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for issue range (inclusive), in 'YYYY-MM-DD' format
+        :param username: GitHub username to filter issues (optional)
+        :param limit: Maximum number of issues to retrieve (default is None, which retrieves all in range)
+        :return: Dictionary of issues
         """
-        issues = self._make_request("issues", params={"state": "all", "per_page": limit})
-        prs = self._make_request("pulls", params={"state": "all", "per_page": limit})
-        issues_prs = {}
+        return self._process_items("issues", start_date, end_date, username, limit)
 
-        for item in issues + prs:
-            item_type = 'PR' if 'pull_request' in item else 'Issue'
-            issues_prs[f"{item_type}-{item['number']}"] = {
-                "type": item_type,
-                "number": item['number'],
-                "title": item['title'],
-                "state": item['state'],
-                "created": item['created_at'],
-                "author": item['user']['login'],
-                "body": (item['body'][:200] + "...") if item['body'] else ""
-            }
-        return issues_prs
+    def get_pull_requests(self, start_date=None, end_date=None, username=None, limit=None):
+        """
+        Process pull requests within a specified date range and for a specific user.
+        :param start_date: Start date for PR range (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for PR range (inclusive), in 'YYYY-MM-DD' format
+        :param username: GitHub username to filter PRs (optional)
+        :param limit: Maximum number of PRs to retrieve (default is None, which retrieves all in range)
+        :return: Dictionary of pull requests
+        """
+        return self._process_items("pulls", start_date, end_date, username, limit)
 
     def get_pull_request_diff(self, pr_number):
         """
@@ -121,3 +214,9 @@ class GithubInte:
                 error_message += f" (Status code: {e.response.status_code})"
             print(error_message)
             return f"Unable to fetch diff: {error_message}"
+
+
+if __name__ == '__main__':
+    # Example usage of the GithubInte class
+    github = GithubInte("huangyz0918/termax")
+    print(github.get_pull_requests(limit=10, username='SilinMeng0510'))
