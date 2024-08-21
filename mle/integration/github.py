@@ -68,6 +68,11 @@ class GithubInte:
         return source_code
 
     def process_commit_history(self, limit=10):
+        """
+        Process the commit history of the repository.
+        :param limit: the number of commits to retrieve.
+        :return: the commit history as a dictionary with commit SHAs as keys.
+        """
         commits = self._make_request("commits", params={"per_page": limit})
         commit_history = {}
         for commit in commits:
@@ -79,6 +84,11 @@ class GithubInte:
         return commit_history
 
     def process_issues_and_prs(self, limit=10):
+        """
+        Process the issues and pull requests in the repository.
+        :param limit: the number of issues and pull requests to retrieve.
+        :return: the issues and pull requests as a dictionary with issue/PR numbers as keys.
+        """
         issues = self._make_request("issues", params={"state": "all", "per_page": limit})
         prs = self._make_request("pulls", params={"state": "all", "per_page": limit})
         issues_prs = {}
@@ -95,3 +105,19 @@ class GithubInte:
                 "body": (item['body'][:200] + "...") if item['body'] else ""
             }
         return issues_prs
+
+    def get_pull_request_diff(self, pr_number):
+        """
+        Get the git commit diff of a specific pull request.
+        :param pr_number: The number of the pull request.
+        :return: A string containing the diff content of the pull request.
+        """
+        try:
+            response = self._make_request(f"pulls/{pr_number}")
+            return response
+        except requests.exceptions.RequestException as e:
+            error_message = f"Error fetching PR #{pr_number} diff: {str(e)}"
+            if e.response is not None:
+                error_message += f" (Status code: {e.response.status_code})"
+            print(error_message)
+            return f"Unable to fetch diff: {error_message}"
