@@ -1,1 +1,1 @@
-from .github import GithubInte
+from .github import GitHubIntegration

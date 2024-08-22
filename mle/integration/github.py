@@ -5,7 +5,7 @@ from fnmatch import fnmatch
 from datetime import datetime, timezone, timedelta
 
 
-class GithubInte:
+class GitHubIntegration:
     BASE_URL = "https://api.github.com"
 
     def __init__(self, github_repo: str, github_token=None):
@@ -307,5 +307,6 @@ class GithubInte:
 
 if __name__ == '__main__':
     # Example usage of the GithubInte class
-    github = GithubInte("MLSysOps/MLE-agent")
+    # Noted: please add the environment variable GITHUB_TOKEN with your Github token to run this example
+    github = GitHubIntegration("MLSysOps/MLE-agent")
     print(github.get_user_activity("huangyz0918"))
