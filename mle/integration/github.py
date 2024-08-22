@@ -1,8 +1,8 @@
 import os
 import base64
 import requests
-from datetime import datetime, timezone
 from fnmatch import fnmatch
+from datetime import datetime, timezone, timedelta
 
 
 class GithubInte:
@@ -199,6 +199,14 @@ class GithubInte:
         """
         return self._process_items("pulls", start_date, end_date, username, limit)
 
+    def get_pull_request_commits(self, pr_number):
+        """
+        Get commits for a specific pull request.
+        :param pr_number: The number of the pull request
+        :return: List of commits in the pull request
+        """
+        return self._make_request(f"pulls/{pr_number}/commits")
+
     def get_pull_request_diff(self, pr_number):
         """
         Get the git commit diff of a specific pull request.
@@ -215,8 +223,89 @@ class GithubInte:
             print(error_message)
             return f"Unable to fetch diff: {error_message}"
 
+    def get_user_activity(self, username, start_date=None, end_date=None):
+        """
+        Aggregate information about a user's activity within a specific time period.
+        :param username: GitHub username to analyze
+        :param start_date: Start date for the analysis period, in 'YYYY-MM-DD' format
+        :param end_date: End date for the analysis period, in 'YYYY-MM-DD' format
+        :return: Dictionary containing aggregated user activity information, if the
+        start and end dates are not provided, the default period is the last 7 days.
+        """
+        if end_date is None:
+            end_datetime = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=0)
+            end_date = end_datetime.strftime("%Y-%m-%d")
+        else:
+            end_datetime = (datetime.strptime(end_date, "%Y-%m-%d")
+                            .replace(hour=23, minute=59, second=59, zinfo=timezone.utc))
+
+        if start_date is None:
+            start_datetime = end_datetime - timedelta(days=6)
+            start_date = start_datetime.strftime("%Y-%m-%d")
+        else:
+            start_datetime = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+        # Fetch data
+        commits = self.get_commit_history(start_date, end_date, username)
+        pull_requests = self.get_pull_requests(start_date, end_date, username)
+        issues = self.get_issues(start_date, end_date, username)
+
+        # Aggregate commit information
+        commit_count = len(commits)
+        commit_messages = [commit['message'] for commit in commits.values()]
+
+        # Aggregate pull request information
+        pr_count = len(pull_requests)
+        pr_details = []
+        for pr in pull_requests.values():
+            pr_commits = self.get_pull_request_commits(pr['number'])
+            pr_details.append({
+                'number': pr['number'],
+                'title': pr['title'],
+                'description': pr['body'],
+                'status': pr['state'],
+                'commit_count': len(pr_commits),
+                'commit_messages': [commit['commit']['message'] for commit in pr_commits]
+            })
+
+        # Aggregate issue information
+        issue_count = len(issues)
+        issue_details = [{
+            'number': issue['number'],
+            'title': issue['title'],
+            'description': issue['body']
+        } for issue in issues.values()]
+
+        # Compile the report
+        report = {
+            'username': username,
+            'period': {
+                'start': start_date,
+                'end': end_date
+            },
+            'summary': {
+                'total_commits': commit_count,
+                'total_pull_requests': pr_count,
+                'total_issues': issue_count
+            },
+            'commits': {
+                'count': commit_count,
+                'messages': commit_messages
+            },
+            'pull_requests': {
+                'count': pr_count,
+                'details': pr_details
+            },
+            'issues': {
+                'count': issue_count,
+                'details': issue_details
+            }
+        }
+
+        return report
+
 
 if __name__ == '__main__':
     # Example usage of the GithubInte class
-    github = GithubInte("huangyz0918/termax")
-    print(github.get_pull_requests(limit=10, username='SilinMeng0510'))
+    github = GithubInte("MLSysOps/MLE-agent")
+    print(github.get_user_activity("huangyz0918"))
