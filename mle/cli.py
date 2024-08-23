@@ -131,11 +131,4 @@ def new(name):
         }, outfile, default_flow_style=False)
 
     # init the memory
-    memory = Memory(project_dir)
-    memory.add_query(
-        [
-            {"query": "What is machine learning?",
-             "response": "Machine learning is a subset of artificial intelligence."},
-            {"query": "What is deep learning?", "response": "Deep learning is a subset of machine learning."}
-        ]
-    )
+    Memory(project_dir)
