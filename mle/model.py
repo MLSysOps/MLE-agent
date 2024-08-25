@@ -1,6 +1,8 @@
+import io
 import os
 import yaml
 import json
+import time
 import importlib.util
 from abc import ABC, abstractmethod
 
@@ -71,6 +73,15 @@ class OllamaModel(Model):
                 stream=True
         ):
             yield chunk['message']['content']
+
+
+    def batch(self, chat_histories, **kwargs):
+        """
+        Batch query the LLM model.
+        Args:
+            chat_histories: The context list (chat history).
+        """
+        raise NotImplementedError("ollama does not support batch query")
 
 
 class OpenAIModel(Model):
@@ -155,6 +166,47 @@ class OpenAIModel(Model):
             else:
                 yield delta.content
 
+    def batch(self, chat_histories, **kwargs):
+        """
+        Batch query the LLM model.
+        Args:
+            chat_histories: The context list (chat history).
+        """
+        chat_histories = [
+            {
+                "custom_id": f"request-{idx}",
+                "method": "POST",
+                "url": "/v1/chat/completions",
+                "body": {"model": self.model, "messages": message},
+            }
+            for idx, message in enumerate(chat_histories)
+        ]
+
+        file = io.BytesIO()
+        for chat_history in chat_histories:
+            file.write((json.dumps(chat_history) + "\n").encode("utf-8"))
+
+        batch_file = self.client.files.create(file=file, purpose="batch")
+        batch_id = self.client.batches.create(
+            input_file_id=batch_file.id,
+            endpoint="/v1/chat/completions",
+            completion_window="24h",
+            **kwargs,
+        ).id
+
+        get_status = lambda batch_id: self.client.batches.retrieve(batch_id).status
+        while get_status(batch_id) != "completed":
+            if get_status(batch_id) in ("failed", "expired", "cancelling", "cancelled"):
+                raise RuntimeError("Batch query failed")
+            time.sleep(1)
+
+        response_id = self.client.batches.retrieve(batch_id).output_file_id
+        response = self.client.files.content(response_id).text
+
+        return tuple([
+            json.loads(text)["response"]["body"]["choices"][-1]["message"]["content"]
+            for text in response.splitlines()
+        ])
 
 def load_model(project_dir: str, model_name: str):
     """
