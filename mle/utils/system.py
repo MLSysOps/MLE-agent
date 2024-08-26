@@ -2,13 +2,13 @@ import os
 import re
 import yaml
 import shutil
-
+from typing import Dict, Any, Optional
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.console import Console
 
 
-def dict_to_markdown(data: dict, file_path: str):
+def dict_to_markdown(data: Dict[str, Any], file_path: str) -> None:
     """
     Write a dictionary to a markdown file.
     :param data: the dictionary to write.
@@ -35,7 +35,7 @@ def dict_to_markdown(data: dict, file_path: str):
             md_file.write("\n")
 
 
-def print_in_box(text: str, console=None, title: str = "", color: str = "white"):
+def print_in_box(text: str, console: Optional[Console] = None, title: str = "", color: str = "white") -> None:
     """
     Print the text in a box.
     :param text: the text to print.
@@ -44,14 +44,13 @@ def print_in_box(text: str, console=None, title: str = "", color: str = "white")
     :param color: the border color.
     :return:
     """
-    if console is None:
-        console = Console()
+    console = console or Console()
 
     panel = Panel(text, title=title, border_style=color, expand=False)
     console.print(panel)
 
 
-def ask_text(question: str, title: str = "User", console=None) -> str:
+def ask_text(question: str, title: str = "User", console: Optional[Console] = None) -> str:
     """
     Display a question in a panel and prompt the user for an answer.
     :param question: the question to display.
@@ -59,8 +58,7 @@ def ask_text(question: str, title: str = "User", console=None) -> str:
     :param console: the console to use.
     :return: the user's answer.
     """
-    if console is None:
-        console = Console()
+    console = console or Console()
 
     console.print(Panel(question, title="MLE Agent", border_style="purple"))
     answer = Prompt.ask(f"Type your answer here")
@@ -68,7 +66,7 @@ def ask_text(question: str, title: str = "User", console=None) -> str:
     return answer
 
 
-def get_config():
+def get_config() -> Optional[Dict[str, Any]]:
     """
     Get the configuration file.
     :return: the configuration file.
@@ -81,16 +79,16 @@ def get_config():
         return yaml.safe_load(file)
 
 
-def write_config(value):
+def write_config(value: Dict[str, Any]) -> None:
     """
     Write the configuration file.
     """
     config_path = os.path.join(os.getcwd(), 'project.yml')
-    with open(config_path, 'w+') as file:
+    with open(config_path, 'w') as file:
         yaml.dump(value, file, default_flow_style=False)
 
 
-def delete_directory(path):
+def delete_directory(path: str) -> bool:
     """
     delete_directory: delete a directory and all its contents.
 
@@ -104,7 +102,7 @@ def delete_directory(path):
         return False
 
 
-def get_directory_name(path):
+def get_directory_name(path: str) -> Optional[str]:
     """
     Get the directory name if the path is a directory.
     :param path: the path to check.
@@ -116,7 +114,7 @@ def get_directory_name(path):
         return None
 
 
-def extract_file_name(text: str):
+def extract_file_name(text: str) -> Optional[str]:
     """
     Extracts the file name from a given text string.
 
@@ -133,7 +131,7 @@ def extract_file_name(text: str):
         return None
 
 
-def list_dir_structure(start_path):
+def list_dir_structure(start_path: str) -> str:
     """
     List all files and directories under the given path.
     :param start_path: the path to start listing from.
