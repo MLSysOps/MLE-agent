@@ -165,3 +165,5 @@ cython_debug/
 # cache
 .rich-chat.history
 
+poc/
+
