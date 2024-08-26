@@ -129,12 +129,16 @@ class DebugAgent:
             debug_prompt += f"Error message: {error_msg}\n"
 
         self.chat_history.append({"role": "user", "content": debug_prompt})
-        text = self.model.query(
-            self.chat_history,
-            function_call='auto',
-            functions=self.functions,
-            response_format={"type": "json_object"}
-        )
+        try:
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
+        except Exception as e:
+            print(f"Error occurred while querying the model: {e}")
+            return {}
 
         self.chat_history.append({"role": "assistant", "content": text})
         report_dict = json.loads(text)
