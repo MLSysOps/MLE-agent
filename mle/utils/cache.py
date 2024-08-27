@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from mle.utils.system import get_config, write_config
@@ -10,7 +10,7 @@ class WorkflowCacheOperator:
     WorkflowCacheOperator handles the storing and resuming of cache content.
     """
 
-    def __init__(self, cache, cache_content: Dict[str, object]):
+    def __init__(self, cache: 'WorkflowCache', cache_content: Dict[str, Any]):
         """
         Args:
             cache: The cache instance to which this operator belongs.
@@ -19,7 +19,7 @@ class WorkflowCacheOperator:
         self.cache = cache
         self.cache_content = cache_content
 
-    def store(self, key: str, value: object):
+    def store(self, key: str, value: Any) -> None:
         """
         Store a value into the cache content.
 
@@ -29,7 +29,7 @@ class WorkflowCacheOperator:
         """
         self.cache_content[key] = pickle.dumps(value, fix_imports=False)
 
-    def resume(self, key: str):
+    def resume(self, key: str) -> Any:
         """
         Resume a value from the cache content.
 
@@ -39,7 +39,7 @@ class WorkflowCacheOperator:
         Returns:
             object: The resumed value, or None if the key does not exist.
         """
-        if self.cache_content.get(key) is not None:
+        if key in self.cache_content:
             return pickle.loads(self.cache_content[key])
         return None
 
@@ -80,56 +80,55 @@ class WorkflowCache:
         """
         self.project_dir = project_dir
         self.buffer = self._load_cache_buffer()
-        self.cache = self.buffer["cache"]
+        self.cache: Dict[int, Dict[str, Any]] = self.buffer["cache"]
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """
         Check if the cache is empty.
 
         Returns:
             bool: True if the cache is empty, False otherwise.
         """
-        return len(self.cache.keys()) == 0
+        return len(self.cache) == 0
 
-    def remove(self, step: int):
+    def remove(self, step: int) -> None:
         """
         Remove a step from the cache.
 
         Args:
             step (int): The step index to be removed.
         """
-        if step in self.cache.keys():
-            del self.cache[step]
+        self.cache.pop(step, None)
         self._store_cache_buffer()
 
-    def current_step(self):
+    def current_step(self) -> int:
         """
         Get the current step from the cache.
 
         Returns:
             int: The current step.
         """
-        return max(self.cache.keys())
+        return max(self.cache.keys()) if self.cache else 0
 
-    def _load_cache_buffer(self):
+    def _load_cache_buffer(self) -> Dict[str, Any]:
         """
         Load the cache buffer from the configuration.
 
         Returns:
             dict: The buffer loaded from the configuration.
         """
-        buffer = get_config()
-        if buffer.get("cache") is None:
+        buffer = get_config() or {}
+        if "cache" not in buffer:
             buffer["cache"] = {}
         return buffer
 
-    def _store_cache_buffer(self):
+    def _store_cache_buffer(self) -> None:
         """
         Store the cache buffer to the configuration.
         """
         write_config(self.buffer)
 
-    def __call__(self, step: int, name: str):
+    def __call__(self, step: int, name: str) -> WorkflowCacheOperator:
         """
         Initialize the cache content for a given step and name.
 
@@ -140,25 +139,22 @@ class WorkflowCache:
         Returns:
             WorkflowCacheOperator: An instance of WorkflowCacheOperator.
         """
-        if step not in self.cache.keys():
+        if step not in self.cache:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.cache[step] = {
                 "step": step,
                 "name": name,
                 "time": timestamp,
-                "content": dict(),
+                "content": {},
             }
         cache_content = self.cache[step]["content"]
         return WorkflowCacheOperator(self, cache_content)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return a string representation of the step cache list.
 
         Returns:
             str: The string representation of the cache.
         """
-        str = ""
-        for k, v in self.cache.items():
-            str += f"[{k}] {v['name']} ({v['time']}) \n"
-        return str
+        return "\n".join(f"[{k}] {v['name']} ({v['time']})" for k, v in self.cache.items())
