@@ -30,8 +30,8 @@ class SummaryAgent:
         Your capabilities include:
 
         1. You need to summarize the basic project information, including the project name, the project description,
-            the programming language, etc. 
-        2. You need to further analyze the project structure and the README file to understand the project purpose. And 
+            the programming language, etc.
+        2. You need to further analyze the project structure and the README file to understand the project purpose. And
          give a deep understanding of the project description.
         3. You need to analyze the issue list, summarize and infer the project goal and target, and roadmap.
         4. You should read the source code and understand the code structure, and the main functions if necessary. For
