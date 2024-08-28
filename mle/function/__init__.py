@@ -233,6 +233,22 @@ schema_preview_csv_data = {
     }
 }
 
+# Github Integration
+# schema_read_project_structure = {
+#     'name': 'read_project_structure',
+#     'description': 'Read the project structure and filenames. '
+#                    'Use this function when there is a need to understand the project structure.',
+#     'parameters': {
+#         'type': 'object',
+#         'properties': {
+#             'path': {
+#                 'type': 'string',
+#                 'description': 'The path to the project directory'
+#             }
+#         }
+#     }
+# }
+
 # Mapping of function names to function schemas
 FUNCTION_NAMES = [
     'read_file',
