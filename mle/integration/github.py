@@ -22,14 +22,14 @@ class GitHubIntegration:
             "Accept": "application/vnd.github.v3+json"
         }
 
-    def _make_request(self, endpoint, params=None):
+    def _make_request(self, endpoint=None, params=None):
         """
         Make a GET request to the GitHub API.
         :param endpoint: The endpoint to request.
         :param params: The parameters to include in the request.
         :return: The JSON response from the request.
         """
-        url = f"{self.BASE_URL}/repos/{self.github_repo}/{endpoint}"
+        url = f"{self.BASE_URL}/repos/{self.github_repo}" + (f"/{endpoint}" if endpoint else "")
         response = requests.get(url, headers=self.headers, params=params)
         response.raise_for_status()
         return response.json()
@@ -88,6 +88,41 @@ class GitHubIntegration:
             page += 1
 
         return items
+
+    def get_readme(self):
+        """
+        Get readme content of the repository.
+        :return: The readme content
+        """
+        content = self.get_source_code("README.md")
+        if len(content):
+            return list(content.values())[0]
+        return None
+
+    def get_license(self):
+        """
+        Get license of the repository.
+        :return: The license
+        """
+        metadata = self._make_request().get("license", {})
+        return {
+            "name": metadata.get("name"),
+            "url": metadata.get("url"),
+        }
+
+    def get_contributors(self):
+        """
+        Get the contributors of the repository.
+        :return: The list of the contributors' information
+        """
+        return [
+            {
+                "user": contributor["login"],
+                "avatar": contributor["avatar_url"],
+                "contributions": contributor["contributions"],
+            }
+            for contributor in self._make_request("contributors")
+        ]
 
     def get_source_code(self, file_pattern="*"):
         """
@@ -222,6 +257,24 @@ class GitHubIntegration:
                 error_message += f" (Status code: {e.response.status_code})"
             print(error_message)
             return f"Unable to fetch diff: {error_message}"
+
+    def get_releases(self, limit=100):
+        """
+        Get the releases of the repository.
+        :return: The list of the releases
+        """
+        return [
+            {
+                "name": release["name"],
+                "version": release["tag_name"],
+                "body": release["body"],
+                "draft": release["draft"],
+                "prerelease": release["prerelease"],
+                "created_at": datetime.strptime(release["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
+                "published_at": datetime.strptime(release["published_at"], "%Y-%m-%dT%H:%M:%SZ"),
+            }
+            for release in self._make_request("releases", params={"per_page": limit})
+        ]
 
     def get_user_activity(self, username, start_date=None, end_date=None):
         """
