@@ -10,6 +10,6 @@ instructor
 setuptools
 numexpr~=2.10.1
 bottleneck~=1.4.0
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
+google-api-python-client~=2.143.0
+google-auth-httplib2~=0.2.0
+google-auth-oauthlib~=1.2.1
