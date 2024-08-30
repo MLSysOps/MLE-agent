@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 import mle
+from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
 from mle.workflow import baseline, kaggle, report
@@ -128,3 +129,6 @@ def new(name):
             'api_key': api_key,
             'search_key': search_api_key
         }, outfile, default_flow_style=False)
+
+    # init the memory
+    Memory(project_dir)

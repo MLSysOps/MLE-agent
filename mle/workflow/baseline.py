@@ -33,7 +33,9 @@ def baseline(work_dir: str, model='gpt-4o'):
     model = load_model(work_dir, model)
 
     if not cache.is_empty():
-        step = ask_text(f"MLE has already pass through the following steps: \n{cache}\n Pick a step for resume (ENTER to continue the workflow)")
+        step = ask_text(f"MLE has finished the following steps: \n{cache}\n"
+                        "You can pick a step from 1 to {cache} to resume\n"
+                        "(or ENTER to continue the workflow)")
         if step:
             step = int(step)
             for i in range(step, cache.current_step() + 1):
@@ -53,14 +55,14 @@ def baseline(work_dir: str, model='gpt-4o'):
     with cache(step=2, name="ask for the user requirement") as ca:
         ml_requirement = ca.resume("ml_requirement")
         if ml_requirement is None:
-            ml_requirement = ask_text("Please provide the user requirement")
+            ml_requirement = ask_text("Please provide your requirement")
             if not ml_requirement:
                 print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
                 return
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report
-    with cache(step=3, name="advisor agent gives suggestions in a report") as ca:
+    with cache(step=3, name="MLE advisor agent provides a high-level report") as ca:
         advisor_report = ca.resume("advisor_report")
         if advisor_report is None:
             advisor = AdviseAgent(model, console)
@@ -68,7 +70,7 @@ def baseline(work_dir: str, model='gpt-4o'):
         ca.store("advisor_report", advisor_report)
 
     # plan agent generates the coding plan
-    with cache(step=4, name="plan agent generates the coding plan") as ca:
+    with cache(step=4, name="MLE plan agent generates a dev plan") as ca:
         coding_plan = ca.resume("coding_plan")
         if coding_plan is None:
             planner = PlanAgent(model, console)
@@ -76,7 +78,7 @@ def baseline(work_dir: str, model='gpt-4o'):
         ca.store("coding_plan", coding_plan)
 
     # code agent codes the tasks and debug with the debug agent
-    with cache(step=5, name="code agent codes the tasks and debug with the debug agent") as ca:
+    with cache(step=5, name="MLE code&debug agents start to work") as ca:
         coder = CodeAgent(model, work_dir, console)
         coder.read_requirement(advisor_report)
         debugger = DebugAgent(model, console)
@@ -94,7 +96,7 @@ def baseline(work_dir: str, model='gpt-4o'):
             if is_auto_mode:
                 while True:
                     if is_debugging == 'true' or is_debugging == 'True':
-                        with console.status("Debugger is executing and debugging the code..."):
+                        with console.status("MLE Debug Agent is executing and debugging the code..."):
                             debug_report = debugger.analyze(code_report)
                         if debug_report.get('status') == 'success':
                             break

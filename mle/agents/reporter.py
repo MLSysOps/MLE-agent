@@ -150,7 +150,7 @@ class ReportAgent:
                     )
                     break
 
-            if question.lower() in ["exit"]:
+            if question.lower() == "exit":
                 sys.exit(0)
 
             self.chat_history.append({"role": "user", "content": question})

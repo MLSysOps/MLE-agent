@@ -97,7 +97,11 @@ class PlanAgent:
 
             self.chat_history.append({"role": "assistant", "content": text})
 
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {e}")
+            sys.exit(1)
 
     def interact(self, user_prompt):
         """
@@ -113,10 +117,10 @@ class PlanAgent:
                 "Suggestions to improve the plan? (ENTER to move to the next stage, \"exit\" to exit the project)"
             ).ask()
 
-            if not suggestion or suggestion.lower() in ["no"]:
+            if not suggestion or suggestion.lower() == "no":
                 break
 
-            if suggestion.lower() in ["exit"]:
+            if suggestion.lower() == "exit":
                 sys.exit(0)
 
             self.plan_dict = self.plan(suggestion)
