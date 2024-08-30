@@ -43,24 +43,40 @@ class GoogleCalendarIntegration:
     def __init__(self, token=None):
         self.token = token
 
-    def get_events(self, limit=10):
+    def get_events(self, start_date=None, end_date=None, limit=100):
         """
         Fetch upcoming calendar events.
-
+        :param start_date: Start date for calender events (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for calender events (inclusive), in 'YYYY-MM-DD' format
         :param limit: The maximum number of events to return.
         :return: A list of events with details or None if an error occurs.
         """
         try:
             # Build the service object for interacting with the Google Calendar API
             service = build("calendar", "v3", credentials=self.token)
-            now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+
+            if start_date is None:
+                start_date = (
+                    datetime.datetime.utcnow().isoformat() + "Z"
+                )  # 'Z' indicates UTC time
+            else:
+                start_date = f"{start_date}T00:00:00Z"
+
+            if end_date is not None:
+                end_date = f"{end_date}T00:00:00Z"
+
+                start_dt = datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%S%z")
+                end_dt = datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%S%z")
+                if start_dt >= end_dt:
+                    raise ValueError("start_date must be less than end_date")
 
             # Retrieve the events from the primary calendar
             events_result = (
                 service.events()
                 .list(
                     calendarId="primary",
-                    timeMin=now,
+                    timeMin=start_date,
+                    timeMax=end_date,
                     maxResults=limit,
                     singleEvents=True,
                     orderBy="startTime",
