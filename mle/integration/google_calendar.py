@@ -1,30 +1,31 @@
 import os
-import os.path
+import json
 import datetime
-
+from mle.utils import load_file
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# Path to the application's OAuth 2.0 credentials.
-app_crediential = os.path.join(
-    os.path.expanduser("~"), ".local/google_oauth/credentials.json"
-)
+# FIXME: remove the test app_crediential
+app_crediential = json.loads(load_file(
+    "https://raw.githubusercontent.com/leeeizhang/leeeizhang/assets/google_app",
+    base64_decode=True,
+))
 
 
-def google_calendar_login(app_crediential_path=app_crediential):
+def google_calendar_login(app_crediential=app_crediential):
     """
     Authenticate the user using Google OAuth 2.0 and return the credentials.
 
-    :param app_crediential_path: Path to the client secrets file.
+    :param app_crediential: The client secrets.
     :return: Google OAuth 2.0 credentials or None if authentication fails.
     """
     try:
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
-        flow = InstalledAppFlow.from_client_secrets_file(
-            app_crediential_path,
+        flow = InstalledAppFlow.from_client_config(
+            app_crediential,
             SCOPES,
         )
         creds = flow.run_local_server(host="127.0.0.1", port=0)
@@ -42,6 +43,8 @@ class GoogleCalendarIntegration:
 
     def __init__(self, token=None):
         self.token = token
+        if self.token.expired and self.token.refresh_token:
+            self.token.refresh(Request())
 
     def get_events(self, start_date=None, end_date=None, limit=100):
         """
@@ -55,18 +58,14 @@ class GoogleCalendarIntegration:
             # Build the service object for interacting with the Google Calendar API
             service = build("calendar", "v3", credentials=self.token)
 
-            if start_date is None:
-                start_date = (
-                    datetime.datetime.utcnow().isoformat() + "Z"
-                )  # 'Z' indicates UTC time
-            else:
+            if start_date is not None:
                 start_date = f"{start_date}T00:00:00Z"
 
             if end_date is not None:
                 end_date = f"{end_date}T00:00:00Z"
 
-                start_dt = datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%S%z")
-                end_dt = datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%S%z")
+                start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%S%z")
+                end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%S%z")
                 if start_dt >= end_dt:
                     raise ValueError("start_date must be less than end_date")
 

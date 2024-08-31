@@ -1,7 +1,9 @@
 import os
 import re
 import yaml
+import base64
 import shutil
+import requests
 from typing import Dict, Any, Optional
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -147,3 +149,25 @@ def list_dir_structure(start_path: str) -> str:
             return_str += f'{subindent}{f}\n'
 
     return return_str
+
+
+def load_file(filepath: str, base64_decode: bool = False) -> str:
+    """
+    Load content from a file or URL.
+    :param filepath: The path to the file or a URL.
+    :param base64_decode: Whether to decode the content from Base64 format.
+    :return: The content of the file or URL as a decoded text string.
+    """
+    text = None
+    if filepath.startswith('http://') or filepath.startswith('https://'):
+        response = requests.get(filepath)
+        response.raise_for_status()
+        text = response.text
+    else:
+        filepath = filepath.replace("file://", "")
+        with open(filepath, 'r', encoding='utf-8') as file:
+            text = file.read()
+
+    if base64_decode:
+        text = base64.b64decode(text).decode('utf-8')
+    return text
