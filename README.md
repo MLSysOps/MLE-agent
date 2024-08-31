@@ -29,9 +29,10 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ## Milestones
 
-- :rocket: 25 July 2024: Release the `0.3.0` with huge refactoring, many integrations, etc (v0.3.0)
-- :rocket: 11 July 2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
-- :rocket: June 1st, 2024: Release the first rule-based version of MLE agent (v0.1.0)
+- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc (v0.3.0)
+- :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
+- 👨‍🍼 **07/03/2024: Kaia is born**
+- :rocket: 06/01/2024: Release the first rule-based version of MLE agent (v0.1.0)
 
 ## Get started
 
@@ -130,12 +131,11 @@ We welcome contributions from the community. We are looking for contributors to 
 - Improve the documentation
 - Write tests
 
-If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribute.
 
 ## Support and Community
 
-- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please feel free to ask in the Discord community.
-- [Twitter](https://twitter.com/MLE_Agent). Follow us on Twitter to get the latest updates.
+- [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please ask in the Discord community.
 
 ## Star History
 
@@ -143,4 +143,4 @@ If you are interested in contributing, please check the [CONTRIBUTING.md](CONTRI
 
 ## License
 
-Check [LICENSE](LICENSE) file for more information.
+Check [MIT License](LICENSE) file for more information.
