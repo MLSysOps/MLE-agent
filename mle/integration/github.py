@@ -89,6 +89,15 @@ class GitHubIntegration:
 
         return items
 
+    def get_user_info(self):
+        """
+        Get user information by the given token.
+        :return: The user information dictionary
+        """
+        response = requests.get(f"{self.BASE_URL}/user", headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+
     def get_readme(self):
         """
         Get readme content of the repository.
