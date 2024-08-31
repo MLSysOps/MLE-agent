@@ -122,7 +122,8 @@ def new(name):
     # make a directory for the project
     project_dir = os.path.join(os.getcwd(), name)
     Path(project_dir).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(project_dir, CONFIG_FILE), 'w') as outfile:
+    config_path = os.path.join(project_dir, CONFIG_FILE)
+    with open(config_path, 'w') as outfile:
         yaml.dump({
             'platform': platform,
             'api_key': api_key,
