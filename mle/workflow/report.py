@@ -2,10 +2,12 @@
 Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
 """
 import os
+import pickle
+import datetime
 from rich.console import Console
 from mle.model import load_model
-from mle.utils import print_in_box, ask_text, WorkflowCache
 from mle.agents import ReportAgent
+from mle.utils import print_in_box, ask_text, WorkflowCache, get_config, write_config
 
 
 def ask_data(data_str: str):
@@ -21,6 +23,56 @@ def ask_data(data_str: str):
         return f"[green]Dataset:[/green] {data_str}"
 
 
+def get_current_week_github_activities():
+    """
+    Get user's github activities on this week.
+    """
+    config = get_config()
+    if not (config.get("integration") and config["integration"].get("github")):
+        return None
+
+    # refresh github activities
+    token = config["integration"]["github"]["token"]
+    repos = config["integration"]["github"]["repositories"]
+    current_date = datetime.date.today()
+
+    from mle.integration.github import GitHubIntegration
+    activities = {}
+    for repo in repos:
+        github = GitHubIntegration(repo, token)
+        start_date = current_date - datetime.timedelta(days=current_date.weekday())
+        end_date = start_date + datetime.timedelta(days=6)
+        activities[repo] = github.get_user_activity(
+            username=github.get_user_info()["login"],
+            start_date=start_date.strftime('%Y-%m-%d'),
+        )
+    return activities
+
+
+def get_current_week_google_calendar_activities():
+    """
+    Get user's google calendar events on this week.
+    """
+    config = get_config()
+    if not (config.get("integration") and config["integration"].get("google_calendar")):
+        return None
+
+    # refresh google calendar activities
+    token = pickle.loads(config["integration"]["google_calendar"]["token"])
+    current_date = datetime.date.today()
+
+    from mle.integration.google_calendar import GoogleCalendarIntegration
+    activity = {}
+    google_calendar = GoogleCalendarIntegration(token)
+    start_date = current_date - datetime.timedelta(days=current_date.weekday())
+    end_date = start_date + datetime.timedelta(days=6)
+    activity = google_calendar.get_events(
+        start_date=start_date.strftime('%Y-%m-%d'),
+        end_date=end_date.strftime('%Y-%m-%d'),
+    )
+    return activity
+
+
 def report(work_dir: str, model='gpt-4o'):
     """
     The workflow of the baseline mode.
@@ -30,6 +82,10 @@ def report(work_dir: str, model='gpt-4o'):
     console = Console()
     cache = WorkflowCache(work_dir)
     model = load_model(work_dir, model)
+
+    # fetch activities
+    github_activities = get_current_week_github_activities()
+    google_calendar_activities = get_current_week_google_calendar_activities()
 
     if not cache.is_empty():
         step = ask_text(

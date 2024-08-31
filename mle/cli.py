@@ -1,6 +1,9 @@
 import os
 import yaml
 import click
+import pickle
+import calendar
+import datetime
 import questionary
 from pathlib import Path
 from rich.live import Live
@@ -13,6 +16,7 @@ from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
 from mle.workflow import baseline, kaggle, report
+from mle.utils.system import get_config, write_config
 
 console = Console()
 CONFIG_FILE = 'project.yml'
@@ -132,3 +136,44 @@ def new(name):
 
     # init the memory
     Memory(project_dir)
+
+
+@cli.command()
+def integrate():
+    """
+    integrate: integrate the third-party extensions.
+    """
+    if not check_config():
+        return
+
+    config = get_config()
+    if "integration" not in config.keys():
+        config["integration"] = {}
+
+    platform = questionary.select(
+        "Which platform do you want to integrate?",
+        choices=['GitHub', 'Google Calendar']
+    ).ask()
+
+    if platform == "GitHub":
+        token = questionary.password(
+            "What is your GitHub token? (https://github.com/settings/tokens)"
+        ).ask()
+        repos = questionary.text(
+            "What are your working repositories? (e.g., MLSysOps/MLE-agent)"
+        ).ask()
+
+        config["integration"]["github"] = {
+            "token": token,
+            "repositories": repos.split(","),
+        }
+        write_config(config)
+
+    elif platform == "Google Calendar":
+        from mle.integration.google_calendar import google_calendar_login
+        token = google_calendar_login()
+
+        config["integration"]["google_calendar"] = {
+            "token": pickle.dumps(token, fix_imports=False),
+        }
+        write_config(config)
