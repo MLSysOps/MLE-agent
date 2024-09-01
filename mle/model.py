@@ -4,6 +4,7 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
+from mle.utils import process_function_name  # Adjust the import path as needed
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
