@@ -105,12 +105,12 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama']
+        choices=['OpenAI', 'Ollama', 'Anthropic']
     ).ask()
 
     api_key = None
-    if platform == 'OpenAI':
-        api_key = questionary.password("What is your OpenAI API key?").ask()
+    if platform in ['OpenAI', 'Anthropic']:
+        api_key = questionary.password(f"What is your {platform} API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return

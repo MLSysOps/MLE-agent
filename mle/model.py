@@ -4,6 +4,8 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
+from mle.utils import process_function_name  # Adjust the import path as needed
+import anthropic
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
@@ -110,6 +112,32 @@ class OpenAIModel(Model):
             else:
                 yield delta.content
 
+class AnthropicModel(Model):
+    def __init__(self, api_key: str, model: str = 'claude-3-sonnet-20240229'):
+        super().__init__()
+        self.model = model
+        self.model_type = 'Anthropic'
+        self.client = anthropic.Anthropic(api_key=api_key)
+
+    def query(self, chat_history: List[Dict[str, str]], **kwargs) -> str:
+        messages = [{"role": msg["role"], "content": msg["content"]} for msg in chat_history]
+        response = self.client.messages.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=1024,
+        )
+        return response.content[0].text
+
+    def stream(self, chat_history: List[Dict[str, str]], **kwargs) -> str:
+        messages = [{"role": msg["role"], "content": msg["content"]} for msg in chat_history]
+        with self.client.messages.stream(
+            model=self.model,
+            messages=messages,
+            max_tokens=1024,
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
+
 def load_model(project_dir: str, model_name: str) -> Optional[Model]:
     with open(os.path.join(project_dir, 'project.yml'), 'r') as file:
         data = yaml.safe_load(file)
@@ -117,4 +145,6 @@ def load_model(project_dir: str, model_name: str) -> Optional[Model]:
             return OpenAIModel(api_key=data['api_key'], model=model_name)
         if data['platform'] == MODEL_OLLAMA:
             return OllamaModel(model=model_name)
+        if data['platform'] == 'Anthropic':
+            return AnthropicModel(api_key=data['api_key'], model=model_name)
     return None
