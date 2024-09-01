@@ -8,7 +8,7 @@ from mle.function import get_function, process_function_name
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
-
+MODEL_CLAUDE = 'Claude'
 
 class Model(ABC):
 
@@ -156,6 +156,66 @@ class OpenAIModel(Model):
                 yield delta.content
 
 
+class ClaudeModel(Model):
+    def __init__(self, api_key, model='claude-3-5-sonnet-20240620', temperature=0.7):
+        """
+        Initialize the Claude model.
+        Args:
+            api_key (str): The Anthropic API key.
+            model (str): The model with version.
+            temperature (float): The temperature value.
+        """
+        super().__init__()
+
+        dependency = "anthropic"
+        spec = importlib.util.find_spec(dependency)
+        if spec is not None:
+            self.anthropic = importlib.import_module(dependency).Anthropic
+        else:
+            raise ImportError(
+                "It seems you didn't install anthropic. In order to enable the OpenAI client related features, "
+                "please make sure openai Python package has been installed. "
+                "More information, please refer to: https://docs.anthropic.com/en/api/client-sdks"
+            )
+
+        self.model = model
+        self.model_type = MODEL_CLAUDE
+        self.temperature = temperature
+        self.client = self.anthropic(api_key=api_key)
+
+    def query(self, chat_history, **kwargs):
+        """
+        Query the LLM model.
+
+        Args:
+            chat_history: The context (chat history).
+        """
+        completion = self.client.messages.create(
+            max_tokens=4096,
+            model=self.model,
+            messages=chat_history,
+            temperature=self.temperature,
+            stream=False,
+            **kwargs
+        )
+
+        return completion.content
+
+    def stream(self, chat_history, **kwargs):
+        """
+        Stream the output from the LLM model.
+        Args:
+            chat_history: The context (chat history).
+        """
+        for chunk in self.client.messages.create(
+            max_tokens=4096,
+            model=self.model,
+            messages=chat_history,
+            stream=True
+        ):
+            yield chunk.content
+
+
 def load_model(project_dir: str, model_name: str):
     """
     load_model: load the model based on the configuration.
@@ -167,6 +227,8 @@ def load_model(project_dir: str, model_name: str):
         data = yaml.safe_load(file)
         if data['platform'] == MODEL_OPENAI:
             return OpenAIModel(api_key=data['api_key'], model=model_name)
+        if data['platform'] == MODEL_CLAUDE:
+            return ClaudeModel(api_key=data['api_key'], model=model_name)
         if data['platform'] == MODEL_OLLAMA:
             return OllamaModel(model=model_name)
     return None
