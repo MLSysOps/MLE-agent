@@ -4,7 +4,7 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 
-from mle.function import get_function, process_function_name
+from mle.function import get_function, process_function_name, SEARCH_FUNCTIONS
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
@@ -99,6 +99,7 @@ class OpenAIModel(Model):
         self.model_type = MODEL_OPENAI
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
+        self.func_call_history = []
 
     def query(self, chat_history, **kwargs):
         """
@@ -107,12 +108,13 @@ class OpenAIModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        parameters = kwargs
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=chat_history,
             temperature=self.temperature,
             stream=False,
-            **kwargs
+            **parameters
         )
 
         resp = completion.choices[0].message
@@ -120,9 +122,14 @@ class OpenAIModel(Model):
             function_name = process_function_name(resp.function_call.name)
             arguments = json.loads(resp.function_call.arguments)
             print("[MLE FUNC CALL]: ", function_name)
+            self.func_call_history.append({"name": function_name, "arguments": arguments})
+            # avoid the multiple search function calls
+            search_attempts = [item for item in self.func_call_history if item['name'] in SEARCH_FUNCTIONS]
+            if len(search_attempts) > 3:
+                parameters['function_call'] = "none"
             result = get_function(function_name)(**arguments)
             chat_history.append({"role": "function", "content": result, "name": function_name})
-            return self.query(chat_history, **kwargs)
+            return self.query(chat_history, **parameters)
         else:
             return resp.content
 

@@ -301,6 +301,22 @@ class GitHubIntegration:
 
         return issues
 
+    def get_metadata(self):
+        """
+        Get the repository's description and tags (topics).
+        :return: A dictionary containing the repository's description and tags.
+        """
+        # We need to explicitly request the topics using a custom media type
+        headers = self.headers.copy()
+        headers["Accept"] = "application/vnd.github.mercy-preview+json"
+
+        repo_data = requests.get(f"{self.BASE_URL}/repos/{self.github_repo}", headers=headers).json()
+
+        return {
+            "description": repo_data.get("description"),
+            "tags": repo_data.get("topics", [])
+        }
+
     def get_pull_requests(
             self,
             start_date=None,
