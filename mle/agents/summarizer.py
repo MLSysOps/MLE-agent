@@ -61,7 +61,8 @@ class SummaryAgent:
         """
         self.functions = [
             schema_search_arxiv,
-            schema_search_github_repos
+            schema_search_github_repos,
+            schema_search_papers_with_code
         ]
 
         self.sys_prompt += self.json_mode_prompt
