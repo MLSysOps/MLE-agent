@@ -1,5 +1,5 @@
 """
-Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
+Report Mode: the mode to generate the AI report based on the user's requirements.
 """
 import os
 import pickle
@@ -7,7 +7,7 @@ import datetime
 from rich.console import Console
 from mle.model import load_model
 from mle.agents import ReportAgent
-from mle.utils import print_in_box, ask_text, WorkflowCache, get_config, write_config
+from mle.utils import print_in_box, ask_text, WorkflowCache, get_config
 
 
 def ask_data(data_str: str):
@@ -25,13 +25,12 @@ def ask_data(data_str: str):
 
 def get_current_week_github_activities():
     """
-    Get user's github activities on this week.
+    Get user's Github activities on this week.
     """
     config = get_config()
     if not (config.get("integration") and config["integration"].get("github")):
         return None
 
-    # refresh github activities
     token = config["integration"]["github"]["token"]
     repos = config["integration"]["github"]["repositories"]
     current_date = datetime.date.today()
@@ -41,7 +40,6 @@ def get_current_week_github_activities():
     for repo in repos:
         github = GitHubIntegration(repo, token)
         start_date = current_date - datetime.timedelta(days=current_date.weekday())
-        end_date = start_date + datetime.timedelta(days=6)
         activities[repo] = github.get_user_activity(
             username=github.get_user_info()["login"],
             start_date=start_date.strftime('%Y-%m-%d'),
@@ -62,15 +60,13 @@ def get_current_week_google_calendar_activities():
     current_date = datetime.date.today()
 
     from mle.integration.google_calendar import GoogleCalendarIntegration
-    activity = {}
     google_calendar = GoogleCalendarIntegration(token)
     start_date = current_date - datetime.timedelta(days=current_date.weekday())
     end_date = start_date + datetime.timedelta(days=6)
-    activity = google_calendar.get_events(
+    return google_calendar.get_events(
         start_date=start_date.strftime('%Y-%m-%d'),
         end_date=end_date.strftime('%Y-%m-%d'),
     )
-    return activity
 
 
 def report(work_dir: str, model='gpt-4o'):
@@ -89,7 +85,9 @@ def report(work_dir: str, model='gpt-4o'):
 
     if not cache.is_empty():
         step = ask_text(
-            f"MLE has already pass through the following steps: \n{cache}\n Pick a step for resume (ENTER to continue the workflow)")
+            f"MLE has already pass through the following steps: \n{cache}\n Pick a step for resume (ENTER to continue "
+            f"the workflow)"
+        )
         if step:
             step = int(step)
             for i in range(step, cache.current_step() + 1):

@@ -10,7 +10,7 @@ class GitHubIntegration:
 
     def __init__(self, github_repo: str, github_token=None):
         """
-        Initialize the GithubInte class with a Github token.
+        Initialize the GithubIntegration class with a Github token.
         :param github_repo: the Github repository to process, in the format of <owner>/<repo>.
         :param github_token: the Github token.
         """
@@ -221,27 +221,155 @@ class GitHubIntegration:
 
         return commit_history
 
-    def get_issues(self, start_date=None, end_date=None, username=None, limit=None):
+    def get_issues(
+            self,
+            start_date=None,
+            end_date=None,
+            username=None,
+            limit=None,
+            detailed=True,
+            open_only=False
+    ):
         """
-        Process issues within a specified date range and for a specific user.
+        Process issues (excluding pull requests) within a specified date range and for a specific user.
         :param start_date: Start date for issue range (inclusive), in 'YYYY-MM-DD' format
         :param end_date: End date for issue range (inclusive), in 'YYYY-MM-DD' format
         :param username: GitHub username to filter issues (optional)
         :param limit: Maximum number of issues to retrieve (default is None, which retrieves all in range)
-        :return: Dictionary of issues
+        :param detailed: If True, return full issue details. If False, return only title, date, and opener's username
+        :param open_only: If True, only return open issues
+        :return: List of issues (detailed or simplified based on the 'detailed' parameter)
         """
-        return self._process_items("issues", start_date, end_date, username, limit)
+        params = {
+            "state": "all",
+            "per_page": 100,  # GitHub API max per page
+            "sort": "created",
+            "direction": "desc"
+        }
+        if username:
+            params["creator"] = username
+        if start_date:
+            params["since"] = f"{start_date}T00:00:00Z"
 
-    def get_pull_requests(self, start_date=None, end_date=None, username=None, limit=None):
+        issues = []
+        page = 1
+        while True:
+            params["page"] = page
+            page_items = self._make_request("issues", params=params)
+            if not page_items:
+                break
+
+            for item in page_items:
+                # Skip pull requests
+                if 'pull_request' in item:
+                    continue
+
+                created_at = datetime.strptime(item['created_at'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+                if end_date and created_at > datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59,
+                                                                                             second=59,
+                                                                                             tzinfo=timezone.utc):
+                    continue
+                if start_date and created_at < datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc):
+                    return issues  # Stop if we've passed the start date
+
+                if open_only and item['state'] != 'open':
+                    continue
+
+                if detailed:
+                    issue = {
+                        "number": item['number'],
+                        "title": item['title'],
+                        "state": item['state'],
+                        "created_at": item['created_at'],
+                        "author": item['user']['login'],
+                        "body": item['body']
+                    }
+                else:
+                    issue = {
+                        "title": item['title'],
+                        "created_at": item['created_at'],
+                        "author": item['user']['login']
+                    }
+
+                issues.append(issue)
+
+                if limit and len(issues) >= limit:
+                    return issues
+
+            page += 1
+
+        return issues
+
+    def get_pull_requests(
+            self,
+            start_date=None,
+            end_date=None,
+            username=None,
+            limit=None,
+            open_only=False,
+            detailed=False
+    ):
         """
         Process pull requests within a specified date range and for a specific user.
         :param start_date: Start date for PR range (inclusive), in 'YYYY-MM-DD' format
         :param end_date: End date for PR range (inclusive), in 'YYYY-MM-DD' format
         :param username: GitHub username to filter PRs (optional)
         :param limit: Maximum number of PRs to retrieve (default is None, which retrieves all in range)
+        :param open_only: If True, return only open pull requests (default is False)
+        :param detailed: If True, include PR body in the result (default is False)
         :return: Dictionary of pull requests
         """
-        return self._process_items("pulls", start_date, end_date, username, limit)
+        params = {
+            "state": "open" if open_only else "all",
+            "per_page": 100,  # GitHub API max per page
+            "sort": "created",
+            "direction": "desc"
+        }
+        if start_date:
+            params["since"] = f"{start_date}T00:00:00Z"
+
+        pull_requests = {}
+        page = 1
+        while True:
+            params["page"] = page
+            page_items = self._make_request("pulls", params=params)
+            if not page_items:
+                break
+
+            for item in page_items:
+                created_at = datetime.strptime(item['created_at'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+                if end_date and created_at > datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59,
+                                                                                             second=59,
+                                                                                             tzinfo=timezone.utc):
+                    continue
+                if start_date and created_at < datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc):
+                    return pull_requests  # Stop if we've passed the start date
+
+                # Apply username filter
+                if username and item['user']['login'] != username:
+                    continue
+
+                pr_info = {
+                    "number": item['number'],
+                    "title": item['title'],
+                    "state": item['state'],
+                    "created_at": item['created_at'],
+                    "author": item['user']['login'],
+                }
+
+                if detailed:
+                    pr_info["body"] = item['body']
+
+                pull_requests[item['number']] = pr_info
+
+                if limit and len(pull_requests) >= limit:
+                    return pull_requests
+
+            page += 1
+
+        return pull_requests
 
     def get_pull_request_commits(self, pr_number):
         """
@@ -299,18 +427,21 @@ class GitHubIntegration:
             end_date = end_datetime.strftime("%Y-%m-%d")
         else:
             end_datetime = (datetime.strptime(end_date, "%Y-%m-%d")
-                            .replace(hour=23, minute=59, second=59, zinfo=timezone.utc))
+                            .replace(hour=23, minute=59, second=59, tzinfo=timezone.utc))
 
         if start_date is None:
             start_datetime = end_datetime - timedelta(days=6)
             start_date = start_datetime.strftime("%Y-%m-%d")
-        else:
-            start_datetime = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
         # Fetch data
         commits = self.get_commit_history(start_date, end_date, username)
-        pull_requests = self.get_pull_requests(start_date, end_date, username)
-        issues = self.get_issues(start_date, end_date, username)
+        pull_requests = self.get_pull_requests(
+            start_date=start_date,
+            end_date=end_date,
+            username=username,
+            detailed=True
+        )
+        issues = self.get_issues(start_date=start_date, end_date=end_date, username=username)
 
         # Aggregate commit information
         commit_count = len(commits)
@@ -336,7 +467,7 @@ class GitHubIntegration:
             'number': issue['number'],
             'title': issue['title'],
             'description': issue['body']
-        } for issue in issues.values()]
+        } for issue in issues]
 
         # Compile the report
         report = {
@@ -368,7 +499,7 @@ class GitHubIntegration:
 
 
 if __name__ == '__main__':
-    # Example usage of the GithubInte class
+    # Example usage of the GithubIntegration class
     # Noted: please add the environment variable GITHUB_TOKEN with your Github token to run this example
     github = GitHubIntegration("MLSysOps/MLE-agent")
     print(github.get_user_activity("huangyz0918"))

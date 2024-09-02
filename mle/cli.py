@@ -2,8 +2,6 @@ import os
 import yaml
 import click
 import pickle
-import calendar
-import datetime
 import questionary
 from pathlib import Path
 from rich.live import Live
@@ -15,7 +13,7 @@ import mle
 from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
-from mle.workflow import baseline, kaggle, report
+from mle.workflow import baseline, report
 from mle.utils.system import get_config, write_config
 
 console = Console()
@@ -61,11 +59,7 @@ def start(mode, model):
     if not check_config():
         return
 
-    if mode == 'kaggle':
-        # Kaggle mode
-        console.log("Kaggle mode is not supported yet. Aborted.")
-        return kaggle(os.getcwd(), model)
-    elif mode == 'report':
+    if mode == 'report':
         # Report mode
         return report(os.getcwd(), model)
     else:
