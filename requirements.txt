@@ -4,7 +4,7 @@ openai~=1.34.0
 pyyaml
 requests
 chromadb
-onnxruntime~=1.19.0
+onnxruntime
 questionary
 pandas~=2.2.2
 tavily-python
