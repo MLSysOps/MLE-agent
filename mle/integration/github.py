@@ -413,6 +413,54 @@ class GitHubIntegration:
             for release in self._make_request("releases", params={"per_page": limit})
         ]
 
+    def get_structure(self, path='', branch='main', include_invisible=False):
+        """
+        Scan and return the file structure and file names of the GitHub repository as a list of paths.
+        :param path: The path to start scanning from (default is root)
+        :param branch: The branch to scan (default is 'main')
+        :param include_invisible: Whether to include invisible files/folders (starting with .) (default is False)
+        :return: A list of file paths in the repository
+        """
+
+        def traverse_tree(tree_sha, current_path):
+            tree = self._make_request(f'git/trees/{tree_sha}')
+            paths = []
+            for item in tree['tree']:
+                item_path = os.path.join(current_path, item['path'])
+                if not include_invisible and item['path'].startswith('.'):
+                    continue
+                if item['type'] == 'tree':
+                    paths.extend(traverse_tree(item['sha'], item_path))
+                else:
+                    paths.append(item_path)
+            return paths
+
+        # Get the SHA of the latest commit on the specified branch
+        branch_data = self._make_request(f'branches/{branch}')
+        root_tree_sha = branch_data['commit']['commit']['tree']['sha']
+
+        # If a specific path is provided, navigate to that path
+        if path:
+            current_path = ''
+            for part in path.split('/'):
+                current_path += f'/{part}' if current_path else part
+                tree = self._make_request(f'contents/{current_path}', params={'ref': branch})
+                if isinstance(tree, list):
+                    for item in tree:
+                        if item['path'] == path:
+                            if item['type'] == 'dir':
+                                root_tree_sha = item['sha']
+                            else:
+                                return [item['path']]
+                elif isinstance(tree, dict):
+                    if tree['type'] == 'file':
+                        return [tree['path']]
+                    else:
+                        root_tree_sha = tree['sha']
+
+        # Traverse the tree starting from the root or specified path
+        return traverse_tree(root_tree_sha, path)
+
     def get_user_activity(self, username, start_date=None, end_date=None):
         """
         Aggregate information about a user's activity within a specific time period.
@@ -502,4 +550,5 @@ if __name__ == '__main__':
     # Example usage of the GithubIntegration class
     # Noted: please add the environment variable GITHUB_TOKEN with your Github token to run this example
     github = GitHubIntegration("MLSysOps/MLE-agent")
-    print(github.get_user_activity("huangyz0918"))
+    # print(github.get_user_activity("huangyz0918"))
+    print(github.get_structure())
