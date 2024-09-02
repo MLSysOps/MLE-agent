@@ -70,7 +70,7 @@ def get_current_week_google_calendar_activities():
     )
 
 
-def report(work_dir: str, model='gpt-4o'):
+def report(work_dir: str, model=None):
     """
     The workflow of the baseline mode.
     :return:

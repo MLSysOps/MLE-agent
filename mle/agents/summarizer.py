@@ -114,7 +114,7 @@ class SummaryAgent:
         Handle the query from the model query response.
         Args: None
         """
-        with self.console.status("MLE Advisor is summarizing the project..."):
+        with self.console.status("MLE summarizer is summarizing the project..."):
             self.chat_history.append({"role": "user", "content": self.process_knowledge()})
             text = self.model.query(
                 self.chat_history,
