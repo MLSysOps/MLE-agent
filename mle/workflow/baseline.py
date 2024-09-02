@@ -22,7 +22,7 @@ def ask_data(data_str: str):
         return f"[green]Dataset:[/green] {data_str}"
 
 
-def baseline(work_dir: str, model='gpt-4o'):
+def baseline(work_dir: str, model=None):
     """
     The workflow of the baseline mode.
     :return:

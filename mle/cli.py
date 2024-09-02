@@ -53,7 +53,7 @@ def cli():
 
 @cli.command()
 @click.argument('mode', default='general')
-@click.option('--model', default='gpt-4o', help='The model to use for the chat.')
+@click.option('--model', default=None, help='The model to use for the chat.')
 def start(mode, model):
     """
     start: start the chat with LLM.
@@ -81,7 +81,7 @@ def chat():
     if not check_config():
         return
 
-    model = load_model(os.getcwd(), model_name='gpt-4o')
+    model = load_model(os.getcwd(), model_name=None)
     coder = CodeAgent(model)
 
     while True:
@@ -110,12 +110,18 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama']
+        choices=['OpenAI', 'Ollama', 'Claude']
     ).ask()
 
     api_key = None
     if platform == 'OpenAI':
         api_key = questionary.password("What is your OpenAI API key?").ask()
+        if not api_key:
+            console.log("API key is required. Aborted.")
+            return
+
+    elif platform == 'Claude':
+        api_key = questionary.password("What is your Anthropic API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return

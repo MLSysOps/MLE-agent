@@ -28,7 +28,7 @@ class Model(ABC):
 
 
 class OllamaModel(Model):
-    def __init__(self, model: str = 'llama3', host_url=None):
+    def __init__(self, model, host_url=None):
         """
         Initialize the Ollama model.
         Args:
@@ -40,7 +40,7 @@ class OllamaModel(Model):
         dependency = "ollama"
         spec = importlib.util.find_spec(dependency)
         if spec is not None:
-            self.model = model
+            self.model = model if model else 'llama3'
             self.model_type = MODEL_OLLAMA
             self.ollama = importlib.import_module(dependency)
             self.client = self.ollama.Client(host=host_url)
@@ -74,7 +74,7 @@ class OllamaModel(Model):
 
 
 class OpenAIModel(Model):
-    def __init__(self, api_key, model='gpt-3.5-turbo', temperature=0.7):
+    def __init__(self, api_key, model, temperature=0.7):
         """
         Initialize the OpenAI model.
         Args:
@@ -95,7 +95,7 @@ class OpenAIModel(Model):
                 "More information, please refer to: https://openai.com/product"
             )
 
-        self.model = model
+        self.model = model if model else 'gpt-4o'
         self.model_type = MODEL_OPENAI
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
@@ -157,7 +157,7 @@ class OpenAIModel(Model):
 
 
 class ClaudeModel(Model):
-    def __init__(self, api_key, model='claude-3-5-sonnet-20240620', temperature=0.7):
+    def __init__(self, api_key, model, temperature=0.7):
         """
         Initialize the Claude model.
         Args:
@@ -178,7 +178,7 @@ class ClaudeModel(Model):
                 "More information, please refer to: https://docs.anthropic.com/en/api/client-sdks"
             )
 
-        self.model = model
+        self.model = model if model else 'claude-3-5-sonnet-20240620'
         self.model_type = MODEL_CLAUDE
         self.temperature = temperature
         self.client = self.anthropic(api_key=api_key)
@@ -190,13 +190,25 @@ class ClaudeModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        # claude has not system role in chat_history
+        # https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/system-prompts
+        system_prompt = ""
+        for idx, msg in enumerate(chat_history):
+            if msg["role"] == "system":
+                system_prompt = msg["content"]
+                chat_history.pop(idx)
+
+        # claude does not support mannual `response_format`, so we append it into system prompt
+        if "response_format" in kwargs.keys():
+            system_prompt += f"\n You must output in {kwargs['response_format']['type']} format"
+
         completion = self.client.messages.create(
             max_tokens=4096,
             model=self.model,
+            system=system_prompt,
             messages=chat_history,
             temperature=self.temperature,
-            stream=False,
-            **kwargs
+            stream=False
         )
 
         return completion.content[0].text
@@ -207,6 +219,18 @@ class ClaudeModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        # claude has not system role in chat_history
+        # https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/system-prompts
+        system_prompt = ""
+        for idx, msg in enumerate(chat_history):
+            if msg["role"] == "system":
+                system_prompt = msg["content"]
+                chat_history.pop(idx)
+
+        # claude does not support mannual `response_format`, so we append it into system prompt
+        if "response_format" in kwargs.keys():
+            system_prompt += f"\n You must output in {kwargs['response_format']['type']} format"
+
         for chunk in self.client.messages.create(
             max_tokens=4096,
             model=self.model,
