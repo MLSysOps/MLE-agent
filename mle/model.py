@@ -195,12 +195,18 @@ class ClaudeModel(Model):
         system_prompt = ""
         for idx, msg in enumerate(chat_history):
             if msg["role"] == "system":
-                system_prompt = msg["content"]
-                chat_history.pop(idx)
+                system_prompt += msg["content"]
+        chat_history = [msg for msg in chat_history if msg["role"] != "system"]
 
         # claude does not support mannual `response_format`, so we append it into system prompt
         if "response_format" in kwargs.keys():
-            system_prompt += f"\n You must output in {kwargs['response_format']['type']} format"
+            system_prompt += (
+                f"\nYou must output in {kwargs['response_format']['type']} format"
+                "Json format example: {\"key\": \"value\n value\n\"})")
+            chat_history.append({
+                "role": "assistant",
+                "content": f"Raw text output in {kwargs['response_format']['type']} format:"
+            })
 
         completion = self.client.messages.create(
             max_tokens=4096,
@@ -224,12 +230,18 @@ class ClaudeModel(Model):
         system_prompt = ""
         for idx, msg in enumerate(chat_history):
             if msg["role"] == "system":
-                system_prompt = msg["content"]
-                chat_history.pop(idx)
+                system_prompt += msg["content"]
+        chat_history = [msg for msg in chat_history if msg["role"] != "system"]
 
         # claude does not support mannual `response_format`, so we append it into system prompt
         if "response_format" in kwargs.keys():
-            system_prompt += f"\n You must output in {kwargs['response_format']['type']} format"
+            system_prompt += (
+                f"\nYou must output in {kwargs['response_format']['type']} format."
+                "Json format example: {\"key\": \"import a\n print(a)\n\"})")
+            chat_history.append({
+                "role": "assistant",
+                "content": f"Raw text output in {kwargs['response_format']['type']} format:"
+            })
 
         with self.client.messages.stream(
             max_tokens=4096,
