@@ -34,7 +34,7 @@ def baseline(work_dir: str, model='gpt-4o'):
 
     if not cache.is_empty():
         step = ask_text(f"MLE has finished the following steps: \n{cache}\n"
-                        "You can pick a step from 1 to {cache} to resume\n"
+                        f"You can pick a step from 1 to {cache.current_step()} to resume\n"
                         "(or ENTER to continue the workflow)")
         if step:
             step = int(step)
