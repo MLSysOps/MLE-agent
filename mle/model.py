@@ -231,14 +231,13 @@ class ClaudeModel(Model):
         if "response_format" in kwargs.keys():
             system_prompt += f"\n You must output in {kwargs['response_format']['type']} format"
 
-        for chunk in self.client.messages.create(
+        with self.client.messages.stream(
             max_tokens=4096,
             model=self.model,
             messages=chat_history,
-            stream=True
-        ):
-            if chunk.type in ("content_block_delta", ):
-                yield chunk.delta.text
+        ) as stream:
+            for chunk in stream.text_stream:
+                yield chunk
 
 
 def load_model(project_dir: str, model_name: str):
