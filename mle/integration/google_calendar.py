@@ -49,8 +49,8 @@ class GoogleCalendarIntegration:
     def get_events(self, start_date=None, end_date=None, limit=100):
         """
         Fetch upcoming calendar events.
-        :param start_date: Start date for calender events (inclusive), in 'YYYY-MM-DD' format
-        :param end_date: End date for calender events (inclusive), in 'YYYY-MM-DD' format
+        :param start_date: Start date for calendar events (inclusive), in 'YYYY-MM-DD' format
+        :param end_date: End date for calendar events (inclusive), in 'YYYY-MM-DD' format
         :param limit: The maximum number of events to return.
         :return: A list of events with details or None if an error occurs.
         """
