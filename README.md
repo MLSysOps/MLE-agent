@@ -80,7 +80,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [ ] Kaggle mode: to finish a Kaggle task without humans
   - [ ] Summary and reflect the whole ML/AI pipeline
   - [ ] Integration with Cloud data and testing and debugging platforms
-  - [ ] Local RAG support to make personal ML/AI coding assistant
+  - [x] Local RAG support to make personal ML/AI coding assistant
   - [ ] Function zoo: generate AI/ML functions and save them for future usage
 
 
@@ -91,7 +91,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
   
   - [x] Ollama LLama3
   - [x] OpenAI GPTs
-  - [ ] Anthropic Claude 3.5 Sonnet
+  - [x] Anthropic Claude 3.5 Sonnet
 </details>
 
 <details>
