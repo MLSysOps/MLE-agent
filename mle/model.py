@@ -199,7 +199,7 @@ class ClaudeModel(Model):
             **kwargs
         )
 
-        return completion.content
+        return completion.content[0].text
 
     def stream(self, chat_history, **kwargs):
         """
@@ -213,7 +213,8 @@ class ClaudeModel(Model):
             messages=chat_history,
             stream=True
         ):
-            yield chunk.content
+            if chunk.type in ("content_block_delta", ):
+                yield chunk.delta.text
 
 
 def load_model(project_dir: str, model_name: str):
