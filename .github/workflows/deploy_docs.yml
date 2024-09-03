@@ -1,37 +1,50 @@
-name: Deploy Docs to GitHub Pages
+name: Deploy Github Pages
 
 on:
   push:
     branches:
-      - main  # Set this to your default branch
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy-github-pages:
     runs-on: ubuntu-latest
 
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - name: Checkout the repository
+      - name: 'Checking Out Code'
         uses: actions/checkout@v3
-
-      - name: Install Node.js
-        uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          fetch-depth: 0
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: docs
+      - name: 'Setting up Node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Build the Next.js app
-        run: npm run build
-        working-directory: docs
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
-      - name: Export the Next.js app as static HTML
-        run: npm run export
-        working-directory: docs
+      - name: 'Setup & Build'
+        run: |
+          cd docs/
+          pnpm install
+          pnpm build
+
+      - name: 'upload'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/out
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.AUTH_TOKEN }}
-          publish_dir: ./docs/out
+        id: deployment
+        uses: actions/deploy-pages@v4
