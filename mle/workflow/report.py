@@ -1,13 +1,14 @@
 """
-Baseline Mode: the mode to quickly generate the AI baseline based on the user's requirements.
+Report Mode: the mode to generate the AI report based on the user's requirements.
 """
 import os
+import json
 import pickle
 import datetime
 from rich.console import Console
 from mle.model import load_model
-from mle.agents import ReportAgent
-from mle.utils import print_in_box, ask_text, WorkflowCache, get_config, write_config
+from mle.agents import SummaryAgent
+from mle.utils import print_in_box, ask_text, get_config
 
 
 def ask_data(data_str: str):
@@ -25,13 +26,12 @@ def ask_data(data_str: str):
 
 def get_current_week_github_activities():
     """
-    Get user's github activities on this week.
+    Get user's Github activities on this week.
     """
     config = get_config()
     if not (config.get("integration") and config["integration"].get("github")):
         return None
 
-    # refresh github activities
     token = config["integration"]["github"]["token"]
     repos = config["integration"]["github"]["repositories"]
     current_date = datetime.date.today()
@@ -41,7 +41,6 @@ def get_current_week_github_activities():
     for repo in repos:
         github = GitHubIntegration(repo, token)
         start_date = current_date - datetime.timedelta(days=current_date.weekday())
-        end_date = start_date + datetime.timedelta(days=6)
         activities[repo] = github.get_user_activity(
             username=github.get_user_info()["login"],
             start_date=start_date.strftime('%Y-%m-%d'),
@@ -62,15 +61,13 @@ def get_current_week_google_calendar_activities():
     current_date = datetime.date.today()
 
     from mle.integration.google_calendar import GoogleCalendarIntegration
-    activity = {}
     google_calendar = GoogleCalendarIntegration(token)
     start_date = current_date - datetime.timedelta(days=current_date.weekday())
     end_date = start_date + datetime.timedelta(days=6)
-    activity = google_calendar.get_events(
+    return google_calendar.get_events(
         start_date=start_date.strftime('%Y-%m-%d'),
         end_date=end_date.strftime('%Y-%m-%d'),
     )
-    return activity
 
 
 def report(work_dir: str, model=None):
@@ -80,46 +77,17 @@ def report(work_dir: str, model=None):
     """
 
     console = Console()
-    cache = WorkflowCache(work_dir)
     model = load_model(work_dir, model)
 
     # fetch activities
-    github_activities = get_current_week_github_activities()
-    google_calendar_activities = get_current_week_google_calendar_activities()
+    # github_activities = get_current_week_github_activities()
+    # google_calendar_activities = get_current_week_google_calendar_activities()
 
-    if not cache.is_empty():
-        step = ask_text(
-            f"MLE has already pass through the following steps: \n{cache}\n Pick a step for resume (ENTER to continue the workflow)")
-        if step:
-            step = int(step)
-            for i in range(step, cache.current_step() + 1):
-                cache.remove(i)  # remove the stale step caches
+    github_repo = ask_text("Please provide your github repository (organization/name)")
+    if not github_repo:
+        print_in_box("The user's github_repo is empty. Aborted", console, title="Error", color="red")
+        return
 
-    # ask for the data information
-    with cache(step=1, name="ask for the data information") as ca:
-        dataset = ca.resume("dataset")
-        if dataset is None:
-            dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
-            if not dataset:
-                print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
-                return
-            ca.store("dataset", dataset)
-
-    # ask for the user requirement
-    with cache(step=2, name="ask for the user requirement") as ca:
-        ml_requirement = ca.resume("ml_requirement")
-        if ml_requirement is None:
-            ml_requirement = ask_text("Please provide the user requirement")
-            if not ml_requirement:
-                print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
-                return
-        ca.store("ml_requirement", ml_requirement)
-
-    # advisor agent gives suggestions in a report
-    with cache(step=3, name="advisor agent gives suggestions in a report") as ca:
-        advisor_report = ca.resume("advisor_report")
-        if advisor_report is None:
-            advisor = ReportAgent(model, console)
-            advisor_report = advisor.interact(
-                "[green]User Requirement:[/green] " + ml_requirement + "\n" + ask_data(dataset))
-        ca.store("advisor_report", advisor_report)
+    summarizer = SummaryAgent(model, github_repo=github_repo)
+    github_summary = summarizer.summarize()
+    print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")

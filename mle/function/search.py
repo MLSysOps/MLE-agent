@@ -7,6 +7,55 @@ from tavily import TavilyClient
 from xml.etree import ElementTree
 
 
+def search_github_repos(query, limit=5):
+    """
+    Search GitHub public repositories based on a keyword.
+
+    :param query: The query to search for in repository names or descriptions.
+    :param limit: The total number of repositories to return.
+    :return: A list of dictionaries containing repository details, limited to the specified number.
+    """
+    repos = []
+    per_page = 10
+    page = 1
+    while len(repos) < limit:
+        url = f'https://api.github.com/search/repositories?q={query}&per_page={per_page}&page={page}'
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            items = response.json().get('items', [])
+            for item in items:
+                formatted_repo = {
+                    "name": f"{item['owner']['login']}/{item['name']}",
+                    "author": item['owner']['login'],
+                    "description": item['description'],
+                    "link": item['html_url']
+                }
+                repos.append(formatted_repo)
+                if len(repos) >= limit:
+                    break
+
+            if len(items) < per_page:  # Stop if there are no more repos to fetch
+                break
+            page += 1
+        else:
+            raise Exception(f"GitHub API request failed with status code {response.status_code}: {response.text}")
+
+    return_str = """
+    Here are some of the repositories I found on GitHub:
+    """
+
+    for repo in repos:
+        return_str += f"""
+        Name: {repo['name']}
+        Description: {repo['description']}
+        Link: {repo['link']}
+        """
+
+    return return_str
+
+
 def web_search(query: str):
     """
     Perform a web search based on the query.

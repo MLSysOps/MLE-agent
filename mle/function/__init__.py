@@ -144,6 +144,25 @@ schema_search_papers_with_code = {
     }
 }
 
+schema_search_github_repos = {
+    'name': 'search_github_repos',
+    'description': 'Search for repositories on GitHub based on the given query. '
+                   'Use this function when there is a need to search for repositories on GitHub.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'query': {
+                'type': 'string',
+                'description': 'The string query to search for in repository names or descriptions'
+            },
+            'limit': {
+                'type': 'integer',
+                'description': 'The total number of repositories to return, default is 5'
+            }
+        }
+    }
+}
+
 # Code execution related function schema
 schema_execute_command = {
     'name': 'execute_command',
@@ -243,6 +262,7 @@ FUNCTION_NAMES = [
     'web_search',
     'search_arxiv',
     'search_papers_with_code',
+    'search_github_repos',
     'execute_command',
     'ask_question',
     'ask_yes_no',
@@ -259,11 +279,19 @@ FUNCTIONS = [
     web_search,
     search_arxiv,
     search_papers_with_code,
+    search_github_repos,
     execute_command,
     ask_question,
     ask_yes_no,
     ask_choices,
     preview_csv_data
+]
+
+SEARCH_FUNCTIONS = [
+    "web_search",
+    "search_arxiv",
+    "search_papers_with_code",
+    "search_github_repos"
 ]
 
 
