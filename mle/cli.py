@@ -16,6 +16,7 @@ from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
 from mle.utils.system import get_config, write_config
+from mle.utils.dataset import suggest_datasets
 
 console = Console()
 CONFIG_FILE = 'project.yml'
@@ -153,6 +154,21 @@ def new(name):
     if search_api_key:
         os.environ["SEARCH_API_KEY"] = search_api_key
 
+    # Ask about the dataset
+    dataset_choice = questionary.select(
+        "Do you have a specific dataset in mind?",
+        choices=['Yes, I have a dataset', 'No, I need suggestions']
+    ).ask()
+
+    if dataset_choice == 'No, I need suggestions':
+        suggested_datasets = suggest_datasets()
+        dataset = questionary.select(
+            "Which dataset would you like to use?",
+            choices=suggested_datasets
+        ).ask()
+    else:
+        dataset = questionary.text("Please provide the path or name of your dataset:").ask()
+
     # make a directory for the project
     project_dir = os.path.join(os.getcwd(), name)
     Path(project_dir).mkdir(parents=True, exist_ok=True)
@@ -160,7 +176,8 @@ def new(name):
         yaml.dump({
             'platform': platform,
             'api_key': api_key,
-            'search_key': search_api_key
+            'search_key': search_api_key,
+            'dataset': dataset
         }, outfile, default_flow_style=False)
 
     # init the memory
