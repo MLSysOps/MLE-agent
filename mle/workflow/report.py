@@ -3,12 +3,12 @@ Report Mode: the mode to generate the AI report based on the user's requirements
 """
 import os
 import json
-import pickle
-import datetime
+import questionary
 from rich.console import Console
 from mle.model import load_model
 from mle.agents import SummaryAgent
-from mle.utils import print_in_box, ask_text, get_config
+from mle.utils import print_in_box, ask_text
+from mle.utils.system import get_config, write_config
 
 
 def ask_data(data_str: str):
@@ -24,70 +24,34 @@ def ask_data(data_str: str):
         return f"[green]Dataset:[/green] {data_str}"
 
 
-def get_current_week_github_activities():
+def ask_github_token():
     """
-    Get user's Github activities on this week.
+    Ask the user to integrate github.
+    :return: the github token.
     """
-    config = get_config()
-    if not (config.get("integration") and config["integration"].get("github")):
-        return None
+    config = get_config() or {}
+    if "integration" not in config.keys():
+        config["integration"] = {}
 
-    token = config["integration"]["github"]["token"]
-    repos = config["integration"]["github"]["repositories"]
-    current_date = datetime.date.today()
+    if "github" not in config["integration"].keys():
+        token = questionary.password(
+            "What is your GitHub token? (https://github.com/settings/tokens)"
+        ).ask()
 
-    from mle.integration.github import GitHubIntegration
-    activities = {}
-    for repo in repos:
-        github = GitHubIntegration(repo, token)
-        start_date = current_date - datetime.timedelta(days=current_date.weekday())
-        activities[repo] = github.get_user_activity(
-            username=github.get_user_info()["login"],
-            start_date=start_date.strftime('%Y-%m-%d'),
-        )
-    return activities
+        config["integration"]["github"] = {"token": token}
+        write_config(config)
+
+    return config["integration"]["github"]["token"]
 
 
-def get_current_week_google_calendar_activities():
-    """
-    Get user's google calendar events on this week.
-    """
-    config = get_config()
-    if not (config.get("integration") and config["integration"].get("google_calendar")):
-        return None
-
-    # refresh google calendar activities
-    token = pickle.loads(config["integration"]["google_calendar"]["token"])
-    current_date = datetime.date.today()
-
-    from mle.integration.google_calendar import GoogleCalendarIntegration
-    google_calendar = GoogleCalendarIntegration(token)
-    start_date = current_date - datetime.timedelta(days=current_date.weekday())
-    end_date = start_date + datetime.timedelta(days=6)
-    return google_calendar.get_events(
-        start_date=start_date.strftime('%Y-%m-%d'),
-        end_date=end_date.strftime('%Y-%m-%d'),
-    )
-
-
-def report(work_dir: str, model=None):
+def report(work_dir: str, github_repo: str, model=None):
     """
     The workflow of the baseline mode.
     :return:
     """
-
     console = Console()
     model = load_model(work_dir, model)
 
-    # fetch activities
-    # github_activities = get_current_week_github_activities()
-    # google_calendar_activities = get_current_week_google_calendar_activities()
-
-    github_repo = ask_text("Please provide your github repository (organization/name)")
-    if not github_repo:
-        print_in_box("The user's github_repo is empty. Aborted", console, title="Error", color="red")
-        return
-
-    summarizer = SummaryAgent(model, github_repo=github_repo)
+    summarizer = SummaryAgent(model, github_repo=github_repo, github_token=ask_github_token())
     github_summary = summarizer.summarize()
     print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")
