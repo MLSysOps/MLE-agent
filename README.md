@@ -1,6 +1,7 @@
 <div align="center">
 <h1 align="center">MLE-Agent: Your intelligent companion for seamless AI engineering and research.</h1>
 <img alt="kaia-llama" height="200px" src="assets/kaia_llama.webp">
+<a href="https://trendshift.io/repositories/11658" target="_blank"><img src="https://trendshift.io/api/badge/repositories/11658" alt="MLSysOps%2FMLE-agent | Trendshift" style="width: 250px; height: 200px;" width="250" height="200px"/></a>
 <p align="center">:love_letter: Fathers' love for Kaia :love_letter:</p>
 
 ![](https://github.com/MLSysOps/MLE-agent/actions/workflows/lint.yml/badge.svg) 
