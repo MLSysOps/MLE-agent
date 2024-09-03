@@ -33,15 +33,15 @@ jobs:
           version: 8
 
       - name: 'Setup & Build'
-        working-directory: docs
         run: |
+          cd docs
           pnpm install
           pnpm build
 
       - name: 'Upload'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs/out
+          path: docs/out
 
       - name: Deploy to GitHub Pages
         id: deployment
