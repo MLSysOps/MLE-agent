@@ -1,4 +1,5 @@
 import os
+import re
 import yaml
 import click
 import pickle
@@ -10,10 +11,10 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 import mle
+import mle.workflow as workflow
 from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
-from mle.workflow import baseline, report
 from mle.utils.system import get_config, write_config
 
 console = Console()
@@ -59,12 +60,40 @@ def start(mode, model):
     if not check_config():
         return
 
-    if mode == 'report':
-        # Report mode
-        return report(os.getcwd(), model)
-    else:
+    if mode == 'general':
         # Baseline mode
-        return baseline(os.getcwd(), model)
+        return workflow.baseline(os.getcwd(), model)
+
+
+@cli.command()
+@click.pass_context
+@click.argument('repo', required=False)
+@click.option('--model', default=None, help='The model to use for the chat.')
+def report(ctx, repo, model):
+    """
+    report: generate report with LLM.
+    """
+    if repo is None:
+        # TODO: support local project report
+        repo = questionary.text(
+            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
+        ).ask()
+
+    if not re.match(r'.*/.*', repo):
+        console.log("Invalid github repository, "
+                    "Usage: 'mle report <organization/name>'")
+        return False
+
+    if not check_config():
+        # build a new project for github report generating
+        project_name = f"mle-report-{repo.replace('/', '_').lower()}"
+        ctx.invoke(new, name=project_name)
+        # enter the new project for report generation
+        work_dir = os.path.join(os.getcwd(), project_name)
+        os.chdir(work_dir)
+        return workflow.report(work_dir, repo, model)
+
+    return workflow.report(os.getcwd(), repo, model)
 
 
 @cli.command()
@@ -159,13 +188,9 @@ def integrate():
         token = questionary.password(
             "What is your GitHub token? (https://github.com/settings/tokens)"
         ).ask()
-        repos = questionary.text(
-            "What are your working repositories? (e.g., MLSysOps/MLE-agent)"
-        ).ask()
 
         config["integration"]["github"] = {
             "token": token,
-            "repositories": repos.split(","),
         }
         write_config(config)
 
