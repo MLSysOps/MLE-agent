@@ -36,7 +36,8 @@ jobs:
         run: |
           cd docs
           pnpm install
-          pnpm run export
+          pnpm build
+          pnpm export
 
       - name: 'List docs directory'
         run: ls -la docs
