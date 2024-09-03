@@ -1,0 +1,37 @@
+name: Deploy Doc to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Set this to your default branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: MLE-agent/doc
+
+      - name: Build the Next.js app
+        run: npm run build
+        working-directory: MLE-agent/doc
+
+      - name: Export the Next.js app as static HTML
+        run: npm run export
+        working-directory: MLE-agent/doc
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.AUTH_TOKEN }}
+          publish_dir: ./MLE-agent/doc/out
