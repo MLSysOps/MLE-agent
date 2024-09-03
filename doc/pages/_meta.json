@@ -1,7 +1,7 @@
 {
   "index": "Introduction",
-  "another": "Another Page",
-  "advanced": "Advanced (A Folder)",
+  "start": "Get Started",
+  "examples": "Examples",
   "about": {
     "title": "About",
     "type": "page"

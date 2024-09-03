@@ -1,7 +1,7 @@
 {
-  "name": "nextra-docs-template",
+  "name": "mle-agent-docs",
   "version": "0.0.1",
-  "description": "Nextra docs template",
+  "description": "docs for MLE-Agent",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shuding/nextra-docs-template.git"
+    "url": "git+https://github.com/MLSysOps/MLE-agent.git"
   },
-  "author": "Shu Ding <g@shud.in>",
+  "author": "Yizheng Huang <huangyz0918@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shuding/nextra-docs-template/issues"
+    "url": "https://github.com/MLSysOps/MLE-agent/issues"
   },
-  "homepage": "https://github.com/shuding/nextra-docs-template#readme",
+  "homepage": "https://github.com/MLSysOps/MLE-agent#readme",
   "dependencies": {
     "next": "^13.0.6",
     "nextra": "latest",
