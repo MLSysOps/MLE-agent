@@ -2,16 +2,16 @@ import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 
 const config: DocsThemeConfig = {
-  logo: <span>My Project</span>,
+  logo: <span>MLE Agent</span>,
   project: {
-    link: 'https://github.com/shuding/nextra-docs-template',
+    link: 'https://github.com/MLSysOps/MLE-agent',
   },
   chat: {
-    link: 'https://discord.com',
+    link: 'https://discord.gg/xHW3Yz4x',
   },
-  docsRepositoryBase: 'https://github.com/shuding/nextra-docs-template',
+  docsRepositoryBase: 'https://github.com/MLSysOps/MLE-agent',
   footer: {
-    text: 'Nextra Docs Template',
+    text: 'MLE-Agent',
   },
 }
 
