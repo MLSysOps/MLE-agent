@@ -49,7 +49,8 @@ def cli():
 @cli.command()
 @click.argument('mode', default='general')
 @click.option('--model', default='gpt-4o', help='The model to use for the chat.')
-def start(mode, model):
+@click.option('--dataset', help='The dataset to use for the project.')
+def start(mode, model, dataset):
     """
     start: start the chat with LLM.
     """
@@ -58,14 +59,38 @@ def start(mode, model):
 
     if mode == 'kaggle':
         # Kaggle mode
-        console.log("Kaggle mode is not supported yet. Aborted.")
-        return kaggle(os.getcwd(), model)
+        if not dataset:
+            dataset = suggest_datasets()
+        return kaggle(os.getcwd(), model, dataset)
     elif mode == 'report':
         # Report mode
         return report(os.getcwd(), model)
     else:
         # Baseline mode
         return baseline(os.getcwd(), model)
+
+
+def suggest_datasets():
+    """
+    Suggest popular public datasets to the user.
+    """
+    suggestions = [
+        'titanic',
+        'house-prices-advanced-regression-techniques',
+        'digit-recognizer',
+        'nlp-getting-started',
+        'spaceship-titanic'
+    ]
+    
+    selected = questionary.select(
+        "Please select a dataset:",
+        choices=suggestions + ['Other (specify)']
+    ).ask()
+    
+    if selected == 'Other (specify)':
+        return questionary.text("Please enter the dataset name or path:").ask()
+    
+    return selected
 
 
 @cli.command()
