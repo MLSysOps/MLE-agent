@@ -63,13 +63,32 @@ def start(mode, model):
     if mode == 'general':
         # Baseline mode
         return workflow.baseline(os.getcwd(), model)
+    elif mode == 'report':
+        # Report mode
+        repo = questionary.text(
+            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
+        ).ask()
+
+        username = questionary.text(
+            "What is your GitHub username? (e.g., huangyz0918)"
+        ).ask()
+
+        if not re.match(r'.*/.*', repo):
+            console.log("Invalid github repository, "
+                        "Usage: 'mle report <organization/name>'")
+            return False
+
+        return workflow.report(os.getcwd(), repo, username, model)
+    else:
+        raise ValueError("Invalid mode. Supported modes: 'general', 'report'.")
 
 
 @cli.command()
 @click.pass_context
 @click.argument('repo', required=False)
 @click.option('--model', default=None, help='The model to use for the chat.')
-def report(ctx, repo, model):
+@click.option('--user', default=None, help='The GitHub username.')
+def report(ctx, repo, model, user):
     """
     report: generate report with LLM.
     """
@@ -79,21 +98,25 @@ def report(ctx, repo, model):
             "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
         ).ask()
 
+    if user is None:
+        user = questionary.text(
+            "What is your GitHub username? (e.g., huangyz0918)"
+        ).ask()
+
     if not re.match(r'.*/.*', repo):
         console.log("Invalid github repository, "
                     "Usage: 'mle report <organization/name>'")
         return False
 
     if not check_config():
-        # build a new project for github report generating
+        # build a new project for GitHub report generating
         project_name = f"mle-report-{repo.replace('/', '_').lower()}"
         ctx.invoke(new, name=project_name)
-        # enter the new project for report generation
         work_dir = os.path.join(os.getcwd(), project_name)
         os.chdir(work_dir)
-        return workflow.report(work_dir, repo, model)
+        return workflow.report(work_dir, repo, user, model)
 
-    return workflow.report(os.getcwd(), repo, model)
+    return workflow.report(os.getcwd(), repo, user, model)
 
 
 @cli.command()
@@ -185,23 +208,23 @@ def integrate():
     ).ask()
 
     if platform == "GitHub":
-        token = get_config().get("integration").get("github").get("token")
-        if token:
+        if config.get("integration").get("github"):
             print("GitHub is already integrated.")
         else:
             token = questionary.password(
                 "What is your GitHub token? (https://github.com/settings/tokens)"
             ).ask()
 
+            username = questionary.text("What is your GitHub username?").ask()
             config["integration"]["github"] = {
                 "token": token,
+                "username": username,
             }
             write_config(config)
 
     elif platform == "Google Calendar":
         from mle.integration.google_calendar import google_calendar_login
-        token = get_config().get("integration").get("google_calendar").get("token")
-        if token:
+        if get_config().get("integration").get("google_calendar"):
             print("Google Calendar is already integrated.")
         else:
             token = google_calendar_login()

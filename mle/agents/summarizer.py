@@ -7,18 +7,20 @@ from mle.integration import GitHubIntegration
 
 class SummaryAgent:
 
-    def __init__(self, model, github_repo: str, github_token: str = None, console=None):
+    def __init__(self, model, github_repo: str, username: str, github_token: str = None, console=None):
         """
         SummaryAgent: summary the workspace provided by the user.
 
         Args:
             model: the model to use.
+            username: the Github username of the user.
             github_token: the Github token to use, if None, will fetch from the environment variable.
             github_repo: the Github repo to summarize.
             console: the console to use.
         """
         self.report = None
         self.model = model
+        self.username = username
         self.chat_history = []
         self.github_repo = github_repo
         self.github = GitHubIntegration(github_repo, github_token)
@@ -125,5 +127,9 @@ class SummaryAgent:
 
             self.chat_history.append({"role": "assistant", "content": text})
             summary = json.loads(text)
+            summary.update({"github_repo": self.github_repo})
+
+            user_activity = self.github.get_user_activity(self.username, detailed=False)
+            summary.update({"user_activity": user_activity})
 
         return summary

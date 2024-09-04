@@ -6,8 +6,8 @@ import json
 import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.agents import SummaryAgent
 from mle.utils import print_in_box
+from mle.agents import SummaryAgent, ReportAgent
 from mle.utils.system import get_config, write_config
 
 
@@ -44,7 +44,7 @@ def ask_github_token():
     return config["integration"]["github"]["token"]
 
 
-def report(work_dir: str, github_repo: str, model=None):
+def report(work_dir: str, github_repo: str, github_username: str, model=None):
     """
     The workflow of the baseline mode.
     :return:
@@ -52,6 +52,14 @@ def report(work_dir: str, github_repo: str, model=None):
     console = Console()
     model = load_model(work_dir, model)
 
-    summarizer = SummaryAgent(model, github_repo=github_repo, github_token=ask_github_token())
+    summarizer = SummaryAgent(
+        model,
+        github_repo=github_repo,
+        username=github_username,
+        github_token=ask_github_token()
+    )
+    # reporter = ReportAgent(model, console)
+    #
+    # report = reporter.gen_report()
     github_summary = summarizer.summarize()
     print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")

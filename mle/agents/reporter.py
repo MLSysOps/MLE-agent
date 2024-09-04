@@ -72,23 +72,19 @@ class ReportAgent:
             github_summary: the summary of the Github project.
             calendar_events: the Google Calendar events.
         """
-        self.chat_history.append({"role": "user", "content": github_summary})
-        self.chat_history.append({"role": "user", "content": calendar_events})
-        text = self.model.query(
-            self.chat_history,
-            response_format={"type": "json_object"}
-        )
 
-        self.chat_history.append({"role": "assistant", "content": text})
-        self.report = json.loads(text)
-
-    def report(self):
+    def gen_report(self, github_summary: dict, calendar_events: list):
         """
         Handle the query from the model query response.
         Args: None
         """
         with self.console.status("MLE summarizer is summarizing the project..."):
-            self.chat_history.append({"role": "user", "content": self.process_knowledge()})
+            self.chat_history.append(
+                {
+                    "role": "user",
+                    "content": self.process_knowledge(github_summary, calendar_events)
+                }
+            )
             text = self.model.query(
                 self.chat_history,
                 response_format={"type": "json_object"}
@@ -96,5 +92,4 @@ class ReportAgent:
 
             self.chat_history.append({"role": "assistant", "content": text})
             summary = json.loads(text)
-
         return summary
