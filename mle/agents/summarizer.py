@@ -5,7 +5,7 @@ from mle.function import *
 from mle.integration import GitHubIntegration
 
 
-class SummaryAgent:
+class ReportAgent:
 
     def __init__(self, model, github_repo: str, github_token: str = None, console=None):
         """
@@ -41,7 +41,7 @@ class SummaryAgent:
         5. Based on the information provided, you need to guess the technical hard parts and give suggestions.
         6. You may use function `search_arxiv` and `search_github_repos` to search for the related papers and github
          repos of the project using the project keywords and tech stacks. Do not directly search the project name.
-         
+
         """
         self.json_mode_prompt = """
 
@@ -81,16 +81,16 @@ class SummaryAgent:
         repo_files = self.github.get_structure(include_invisible=False)
 
         info_str += f"""
-        
+
         README CONTENT:
         {readme_content}
-        
+
         ISSUE LIST:
         """
 
         for issue in issues:
             info_str += f"""
-            
+
             Title: {issue['title']}
             Author: {issue['author']}
             State: {issue['state']}
@@ -98,7 +98,7 @@ class SummaryAgent:
             """
 
         info_str += f"""
-        
+
         PROJECT STRUCTURE:
         """
 
