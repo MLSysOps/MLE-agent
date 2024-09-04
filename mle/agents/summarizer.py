@@ -5,7 +5,7 @@ from mle.function import *
 from mle.integration import GitHubIntegration
 
 
-class ReportAgent:
+class SummaryAgent:
 
     def __init__(self, model, github_repo: str, github_token: str = None, console=None):
         """

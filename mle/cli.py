@@ -11,10 +11,10 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 import mle
-import mle.workflow as workflow
-from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
+import mle.workflow as workflow
+from mle.utils import Memory
 from mle.utils.system import get_config, write_config
 
 console = Console()
@@ -104,7 +104,7 @@ def chat():
     if not check_config():
         return
 
-    model = load_model(os.getcwd(), model_name=None)
+    model = load_model(os.getcwd(), "gpt-4o")
     coder = CodeAgent(model)
 
     while True:
@@ -185,20 +185,27 @@ def integrate():
     ).ask()
 
     if platform == "GitHub":
-        token = questionary.password(
-            "What is your GitHub token? (https://github.com/settings/tokens)"
-        ).ask()
+        token = get_config().get("integration").get("github").get("token")
+        if token:
+            print("GitHub is already integrated.")
+        else:
+            token = questionary.password(
+                "What is your GitHub token? (https://github.com/settings/tokens)"
+            ).ask()
 
-        config["integration"]["github"] = {
-            "token": token,
-        }
-        write_config(config)
+            config["integration"]["github"] = {
+                "token": token,
+            }
+            write_config(config)
 
     elif platform == "Google Calendar":
         from mle.integration.google_calendar import google_calendar_login
-        token = google_calendar_login()
-
-        config["integration"]["google_calendar"] = {
-            "token": pickle.dumps(token, fix_imports=False),
-        }
-        write_config(config)
+        token = get_config().get("integration").get("google_calendar").get("token")
+        if token:
+            print("Google Calendar is already integrated.")
+        else:
+            token = google_calendar_login()
+            config["integration"]["google_calendar"] = {
+                "token": pickle.dumps(token, fix_imports=False),
+            }
+            write_config(config)

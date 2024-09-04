@@ -7,7 +7,7 @@ import questionary
 from rich.console import Console
 from mle.model import load_model
 from mle.agents import SummaryAgent
-from mle.utils import print_in_box, ask_text
+from mle.utils import print_in_box
 from mle.utils.system import get_config, write_config
 
 

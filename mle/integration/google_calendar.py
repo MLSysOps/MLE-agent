@@ -1,35 +1,34 @@
-import os
 import json
 import datetime
 from mle.utils import load_file
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
-# FIXME: remove the test app_crediential
-app_crediential = json.loads(load_file(
-    "https://raw.githubusercontent.com/leeeizhang/leeeizhang/assets/google_app",
-    base64_decode=True,
-))
 
 
-def google_calendar_login(app_crediential=app_crediential):
+def google_calendar_login(credential=None):
     """
     Authenticate the user using Google OAuth 2.0 and return the credentials.
 
-    :param app_crediential: The client secrets.
+    :param credential: The client secrets.
     :return: Google OAuth 2.0 credentials or None if authentication fails.
     """
+
+    if credential is None:
+        # FIXME: remove the test app_credential
+        credential = json.loads(load_file(
+            "https://raw.githubusercontent.com/leeeizhang/leeeizhang/assets/google_app",
+            base64_decode=True,
+        ))
+
     try:
         SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
         flow = InstalledAppFlow.from_client_config(
-            app_crediential,
+            credential,
             SCOPES,
         )
         creds = flow.run_local_server(host="127.0.0.1", port=0)
-    except Exception as e:
+    except Exception:
         return None
     return creds
 
@@ -55,19 +54,26 @@ class GoogleCalendarIntegration:
         :return: A list of events with details or None if an error occurs.
         """
         try:
+            # Set default dates if not provided
+            today = datetime.date.today()
+            if start_date is None:
+                start_date = (today - datetime.timedelta(days=7)).isoformat()
+            if end_date is None:
+                end_date = (today + datetime.timedelta(days=7)).isoformat()
+
+            # Convert dates to datetime objects with time
+            start_dt = datetime.datetime.strptime(f"{start_date}T00:00:00Z", "%Y-%m-%dT%H:%M:%S%z")
+            end_dt = datetime.datetime.strptime(f"{end_date}T23:59:59Z", "%Y-%m-%dT%H:%M:%S%z")
+
+            if start_dt >= end_dt:
+                raise ValueError("start_date must be less than end_date")
+
+            # Convert back to string format for API call
+            start_date = start_dt.isoformat()
+            end_date = end_dt.isoformat()
+
             # Build the service object for interacting with the Google Calendar API
             service = build("calendar", "v3", credentials=self.token)
-
-            if start_date is not None:
-                start_date = f"{start_date}T00:00:00Z"
-
-            if end_date is not None:
-                end_date = f"{end_date}T00:00:00Z"
-
-                start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%S%z")
-                end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%S%z")
-                if start_dt >= end_dt:
-                    raise ValueError("start_date must be less than end_date")
 
             # Retrieve the events from the primary calendar
             events_result = (
@@ -95,16 +101,17 @@ class GoogleCalendarIntegration:
                     "organizer": event.get("organizer"),
                     "htmlLink": event.get("htmlLink"),
                     "start_time": datetime.datetime.fromisoformat(
-                        event["start"].get("dateTime")
+                        event["start"].get("dateTime", event["start"].get("date"))
                     ),
                     "end_time": datetime.datetime.fromisoformat(
-                        event["end"].get("dateTime")
+                        event["end"].get("dateTime", event["end"].get("date"))
                     ),
                 }
                 for event in events_result
             ]
 
         except Exception as e:
+            print(f"An error occurred: {e}")
             return None
 
 
