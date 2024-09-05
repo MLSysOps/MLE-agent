@@ -42,7 +42,7 @@ def baseline(work_dir: str, model=None):
                 cache.remove(i)  # remove the stale step caches
 
     # clarifier is to enhance the understanding of user needs by multi-rounds of dialogue
-    clarifier = ClarifierAgent(model, console)  
+    clarifier = ClarifierAgent(model, console)
 
     # ask for the data information
     with cache(step=1, name="ask for the data information") as ca:

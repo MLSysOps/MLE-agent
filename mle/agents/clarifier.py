@@ -26,7 +26,7 @@ class ClarifierAgent:
         the dataset or the project requirements.
 
         You have the capability to interact with the user by invoking the following tools, thereby enhancing
-        your understanding of the ML project. 
+        your understanding of the ML project.
 
         1. Ask a multiple-choice question to the user by using function `ask_choices`.
         2. Ask a yes/no question to the user using function `ask_yes_no`.
