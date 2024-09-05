@@ -43,7 +43,9 @@ class DebugAgent:
         self.model = model
         self.chat_history = []
         self.sys_prompt = """
-        You are a program error debugger working on a Python project. Your capabilities include:
+        You are a program error debugger working on a Python project.
+
+        Your can leverage your capabilities by using the specific functions listed below:
 
         1. Install the code dependencies using function `execute_command` based on the Developer's dependencies list.
         2. Execute the code using function `execute_command` to test the code based on the Developer's instructions.

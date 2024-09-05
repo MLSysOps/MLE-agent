@@ -46,9 +46,9 @@ class CodeAgent:
         self.sys_prompt = f"""
         You are a programmer working on an Machine Learning task using Python.
         You are currently working on: {self.working_dir}.
-        
-        Your capabilities include:
-        
+
+        Your can leverage your capabilities by using the specific functions listed below:
+
         1. Creating project structures based on the user requirement using function `create_directory`.
         2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`.
         3. Exam the project to re-use the existing code snippets as much as possible, you may need to use
