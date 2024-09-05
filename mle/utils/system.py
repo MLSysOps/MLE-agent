@@ -48,7 +48,7 @@ def print_in_box(text: str, console: Optional[Console] = None, title: str = "", 
     """
     console = console or Console()
 
-    panel = Panel(text, title=title, border_style=color, expand=False)
+    panel = Panel(text, title=title, border_style=color, expand=True)
     console.print(panel)
 
 

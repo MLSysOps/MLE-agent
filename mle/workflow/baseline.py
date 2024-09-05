@@ -41,9 +41,6 @@ def baseline(work_dir: str, model=None):
             for i in range(step, cache.current_step() + 1):
                 cache.remove(i)  # remove the stale step caches
 
-    # clarifier is to enhance the understanding of user needs by multi-rounds of dialogue
-    clarifier = ClarifierAgent(model, console)
-
     # ask for the data information
     with cache(step=1, name="ask for the data information") as ca:
         dataset = ca.resume("dataset")
@@ -52,6 +49,7 @@ def baseline(work_dir: str, model=None):
             if not dataset:
                 print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
                 return
+            clarifier = ClarifierAgent(model, console)
             dataset = clarifier.interact(dataset, type='dataset')
             ca.store("dataset", dataset)
 
@@ -63,7 +61,6 @@ def baseline(work_dir: str, model=None):
             if not ml_requirement:
                 print_in_box("The user's requirement is empty. Aborted", console, title="Error", color="red")
                 return
-            ml_requirement = clarifier.interact(ml_requirement, type='requirement')
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

@@ -58,14 +58,8 @@ class ClarifierAgent:
             more than once. Finally, you can only output the final dataset name or path.
             """
         else:
-            user_prompt = f"""
-            The user's project requirement is: `{input}`
-            If the requirements are not clear or have ambiguities, you should ask the user some questions, supply
-            yes/no questions for the user to confirm, or provide some options inferred from the user's intentions
-            to choose from. Output the final detailed user's requirement for this project once you have confirmed.
-            """
+            raise NotImplementedError
 
-        # with self.console.status("MLE Agent is understanding the requirements..."):
         self.chat_history.append({"role": "user", "content": user_prompt})
         text = self.model.query(
             self.chat_history,
