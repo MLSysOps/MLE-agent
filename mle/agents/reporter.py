@@ -1,5 +1,7 @@
 import json
 from rich.console import Console
+from mle.utils import dict_to_markdown
+from time import gmtime, strftime
 
 
 class ReportAgent:
@@ -155,4 +157,8 @@ class ReportAgent:
             )
 
             self.chat_history.append({"role": "assistant", "content": text})
-            return json.loads(text)
+            # save the dict into a local markdown file
+            today = strftime("%Y_%m_%d", gmtime())
+            result_dict = json.loads(text)
+            dict_to_markdown(result_dict, f"progress_report_{today}.md")
+            return result_dict

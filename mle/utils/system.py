@@ -179,7 +179,6 @@ def load_file(filepath: str, base64_decode: bool = False) -> str:
     :param base64_decode: Whether to decode the content from Base64 format.
     :return: The content of the file or URL as a decoded text string.
     """
-    text = None
     if filepath.startswith('http://') or filepath.startswith('https://'):
         response = requests.get(filepath)
         response.raise_for_status()
