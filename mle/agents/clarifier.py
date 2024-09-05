@@ -55,14 +55,14 @@ class ClarifierAgent:
             The dataset description provided by the user for this project is: `{input}`
             If the dataset description is not a specific dataset or a valid file path, you can supply some publicly
             available datasets for the user to choose from. You can only ask the user within the calling functions no
-            more than once. Then, you should output the final dataset name or path.
+            more than once. Finally, you can only output the final dataset name or path.
             """
         else:
             user_prompt = f"""
             The user's project requirement is: `{input}`
             If the requirements are not clear or have ambiguities, you should ask the user some questions, supply
             yes/no questions for the user to confirm, or provide some options inferred from the user's intentions
-            to choose from. Output the final user's requirement once you have confirmed.
+            to choose from. Output the final detailed user's requirement for this project once you have confirmed.
             """
 
         # with self.console.status("MLE Agent is understanding the requirements..."):
