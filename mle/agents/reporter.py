@@ -52,7 +52,7 @@ class ReportAgent:
             "dev_progress": ["implemented the data collection Python function...", ...],
             "communicate_progress": ["Meeting with the design team to discuss the new feature...", ...],
             "dev_todo": [{"task": "fix ...", "description": ..., "priority": "high"}, {"task": "support ..."," description": ..., "priority": "medium"}, ...],
-            "communicate_todo": [{"task": "seek helps from ...", "description": ..., "priority": "high"},
+            "communicate_todo": [{"task": "seek helps from ...", "priority": "high"},
              {"task": "meet with ...", "priority": "low"} ...],
             "hard_parts": ["The project may face the challenge of ...", ...],
             "require_manager_help": ["The project needs help from the design team to ...", ...],
