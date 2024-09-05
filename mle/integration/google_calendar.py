@@ -45,12 +45,13 @@ class GoogleCalendarIntegration:
         if self.token.expired and self.token.refresh_token:
             self.token.refresh(Request())
 
-    def get_events(self, start_date=None, end_date=None, limit=100):
+    def get_events(self, start_date=None, end_date=None, limit=100, detailed=True):
         """
         Fetch upcoming calendar events.
         :param start_date: Start date for calendar events (inclusive), in 'YYYY-MM-DD' format
         :param end_date: End date for calendar events (inclusive), in 'YYYY-MM-DD' format
         :param limit: The maximum number of events to return.
+        :param detailed: Whether to return detailed event information.
         :return: A list of events with details or None if an error occurs.
         """
         try:
@@ -91,34 +92,29 @@ class GoogleCalendarIntegration:
             events_result = events_result.get("items", [])
 
             # Format the events into a specified structure
-            return [
-                {
-                    "summary": event.get("summary"),
-                    "kind": event.get("kind"),
+            events = []
+            for event in events_result:
+                e = {
+                    "title": event.get("summary"),
                     "status": event.get("status"),
                     "description": event.get("description"),
                     "creator": event.get("creator"),
                     "organizer": event.get("organizer"),
-                    "htmlLink": event.get("htmlLink"),
-                    "start_time": datetime.datetime.fromisoformat(
-                        event["start"].get("dateTime", event["start"].get("date"))
-                    ),
-                    "end_time": datetime.datetime.fromisoformat(
-                        event["end"].get("dateTime", event["end"].get("date"))
-                    ),
+                    "start_time": event["start"].get("dateTime", event["start"].get("date")),
+                    "end_time": event["end"].get("dateTime", event["end"].get("date"))
                 }
-                for event in events_result
-            ]
+
+                if detailed:
+                    e.update(
+                        {
+                            "htmlLink": event.get("htmlLink"),
+                            "kind": event.get("kind"),
+                        }
+                    )
+
+                events.append(e)
+            return events
 
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
-
-
-if __name__ == "__main__":
-    # Example usage of the GoogleCalendarIntegration class
-    # Noted: please follow the following docs to set up the credentials in `~/.local/google_oauth/credentials.json`
-    # refer to: https://developers.google.com/calendar/api/quickstart/python
-    token = google_calendar_login()
-    calendar = GoogleCalendarIntegration(token)
-    print(calendar.get_events())

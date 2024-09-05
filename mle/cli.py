@@ -15,30 +15,9 @@ from mle.model import load_model
 from mle.agents import CodeAgent
 import mle.workflow as workflow
 from mle.utils import Memory
-from mle.utils.system import get_config, write_config
+from mle.utils.system import get_config, write_config, check_config
 
 console = Console()
-CONFIG_FILE = 'project.yml'
-
-
-def check_config():
-    """
-    check_config: check if the configuration file exists.
-    :return: True if the configuration file exists, False otherwise.
-    """""
-    current_work_dir = os.getcwd()
-    config_path = os.path.join(current_work_dir, CONFIG_FILE)
-
-    if not os.path.exists(config_path):
-        console.log("Configuration file not found. Please run 'mle new' first.")
-        return False
-
-    with open(config_path, 'r') as file:
-        data = yaml.safe_load(file)
-        if data.get('search_key'):
-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
-
-    return True
 
 
 @click.group()
@@ -57,7 +36,7 @@ def start(mode, model):
     """
     start: start the chat with LLM.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
     if mode == 'general':
@@ -108,7 +87,7 @@ def report(ctx, repo, model, user):
                     "Usage: 'mle report <organization/name>'")
         return False
 
-    if not check_config():
+    if not check_config(console):
         # build a new project for GitHub report generating
         project_name = f"mle-report-{repo.replace('/', '_').lower()}"
         ctx.invoke(new, name=project_name)
@@ -124,7 +103,7 @@ def chat():
     """
     chat: start an interactive chat with LLM to work on your ML project.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
     model = load_model(os.getcwd(), "gpt-4o")
@@ -179,7 +158,7 @@ def new(name):
     # make a directory for the project
     project_dir = os.path.join(os.getcwd(), name)
     Path(project_dir).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(project_dir, CONFIG_FILE), 'w') as outfile:
+    with open(os.path.join(project_dir, 'project.yml'), 'w') as outfile:
         yaml.dump({
             'platform': platform,
             'api_key': api_key,
@@ -195,7 +174,7 @@ def integrate():
     """
     integrate: integrate the third-party extensions.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
     config = get_config()
