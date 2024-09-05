@@ -2,12 +2,10 @@
 Report Mode: the mode to generate the AI report based on the user's requirements.
 """
 import os
-import json
 import pickle
 import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.utils import print_in_box
 from mle.agents import SummaryAgent, ReportAgent
 from mle.utils.system import get_config, write_config, check_config
 from mle.integration import GoogleCalendarIntegration
