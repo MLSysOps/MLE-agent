@@ -294,6 +294,11 @@ SEARCH_FUNCTIONS = [
     "search_github_repos"
 ]
 
+INTERACT_FUNCTIONS = [
+    "ask_question",
+    "ask_yes_no",
+    "ask_choices",
+]
 
 # Function related utility functions
 def get_function(function_name: str):

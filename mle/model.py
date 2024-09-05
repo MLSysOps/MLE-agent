@@ -4,7 +4,7 @@ import json
 import importlib.util
 from abc import ABC, abstractmethod
 
-from mle.function import get_function, process_function_name, SEARCH_FUNCTIONS
+from mle.function import get_function, process_function_name, SEARCH_FUNCTIONS, INTERACT_FUNCTIONS
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
@@ -127,8 +127,12 @@ class OpenAIModel(Model):
             search_attempts = [item for item in self.func_call_history if item['name'] in SEARCH_FUNCTIONS]
             if len(search_attempts) > 3:
                 parameters['function_call'] = "none"
+            # avoid the multiple interaction function calls
+            interact_attempts = [item for item in self.func_call_history if item['name'] in INTERACT_FUNCTIONS]
+            if len(interact_attempts) > 1:
+                parameters['function_call'] = "none"
             result = get_function(function_name)(**arguments)
-            chat_history.append({"role": "function", "content": result, "name": function_name})
+            chat_history.append({"role": "function", "content": str(result), "name": function_name})
             return self.query(chat_history, **parameters)
         else:
             return resp.content
