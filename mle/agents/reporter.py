@@ -1,6 +1,5 @@
 import json
 from rich.console import Console
-from mle.utils import dict_to_markdown
 from time import gmtime, strftime
 
 
@@ -65,13 +64,14 @@ class ReportAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def process_knowledge(self, github_summary: dict, calendar_events: list = None):
+    def process_knowledge(self, github_summary: dict, calendar_events: list = None, okr: str = None):
         """
         Process the knowledge to generate the report.
 
         Args:
             github_summary: the summary of the GitHub project.
             calendar_events: the Google Calendar events.
+            okr: the OKR of the project.
         """
         info_prompt = f"""
 # Project Overview
@@ -81,6 +81,9 @@ class ReportAgent:
 ## Technology stack: {github_summary.get('tech_stack')}\n
 ## The project summary: {github_summary.get('summary')}\n
 """
+        if okr:
+            info_prompt += f"\n## The project's OKR: \n"
+            info_prompt += f"{okr}\n"
 
         info_prompt += f"\n## The project's business goal: \n"
         for goal in github_summary.get("business_goal", []):
@@ -139,16 +142,19 @@ class ReportAgent:
         self.knowledge = info_prompt
         return info_prompt
 
-    def gen_report(self, github_summary: dict, calendar_events: list = None):
+    def gen_report(self, github_summary: dict, calendar_events: list = None, okr: str = None):
         """
         Handle the query from the model query response.
-        Args: None
+        Args:
+            github_summary: the summary of the GitHub project.
+            calendar_events: the Google Calendar
+            okr: the OKR of the project.
         """
         with self.console.status("MLE reporter is writing the progress report..."):
             self.chat_history.append(
                 {
                     "role": "user",
-                    "content": self.process_knowledge(github_summary, calendar_events)
+                    "content": self.process_knowledge(github_summary, calendar_events, okr)
                 }
             )
             text = self.model.query(
@@ -157,8 +163,9 @@ class ReportAgent:
             )
 
             self.chat_history.append({"role": "assistant", "content": text})
-            # save the dict into a local markdown file
+            # save the dict into a local files
             today = strftime("%Y_%m_%d", gmtime())
             result_dict = json.loads(text)
-            dict_to_markdown(result_dict, f"progress_report_{today}.md")
+            with open(f'progress_report_{today}.json', 'w') as f:
+                json.dump(result_dict, f)
             return result_dict

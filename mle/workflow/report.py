@@ -48,10 +48,16 @@ def report(
         work_dir: str,
         github_repo: str,
         github_username: str,
+        okr_str: str = None,
         model=None
 ):
     """
     The workflow of the baseline mode.
+    :param work_dir: the working directory.
+    :param github_repo: the GitHub repository.
+    :param github_username: the GitHub username.
+    :param okr_str: the OKR string.
+    :param model: the model to use.
     :return:
     """
     console = Console()
@@ -74,6 +80,6 @@ def report(
     reporter = ReportAgent(model, console)
 
     github_summary = summarizer.summarize()
-    proj_report = reporter.gen_report(github_summary, events)
+    proj_report = reporter.gen_report(github_summary, events, okr=okr_str)
     # print_in_box(proj_report, console, title="Github Summarizer", color="green")
     print(proj_report)
