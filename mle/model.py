@@ -95,7 +95,7 @@ class OpenAIModel(Model):
                 "More information, please refer to: https://openai.com/product"
             )
 
-        self.model = model if model else 'gpt-4o'
+        self.model = model if model else 'gpt-4o-2024-08-06'
         self.model_type = MODEL_OPENAI
         self.temperature = temperature
         self.client = self.openai(api_key=api_key)
@@ -189,6 +189,36 @@ class ClaudeModel(Model):
         self.model_type = MODEL_CLAUDE
         self.temperature = temperature
         self.client = self.anthropic(api_key=api_key)
+        self.func_call_history = []
+
+    @staticmethod
+    def _add_tool_result_into_chat_history(chat_history, func, result):
+        """
+        Add the result of tool calls into messages.
+        """
+        return chat_history.extend([
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": func.id,
+                        "name": func.name,
+                        "input": func.input,
+                    },
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": func.id,
+                        "content": result,
+                    },
+                ]
+            },
+        ])
 
     def query(self, chat_history, **kwargs):
         """
@@ -203,28 +233,47 @@ class ClaudeModel(Model):
         for idx, msg in enumerate(chat_history):
             if msg["role"] == "system":
                 system_prompt += msg["content"]
-        chat_history = [msg for msg in chat_history if msg["role"] != "system"]
 
         # claude does not support mannual `response_format`, so we append it into system prompt
         if "response_format" in kwargs.keys():
             system_prompt += (
-                f"\nYou must output in {kwargs['response_format']['type']} format"
-                "Json format example: {\"key\": \"value\n value\n\"})")
-            chat_history.append({
-                "role": "assistant",
-                "content": f"Raw text output in {kwargs['response_format']['type']} format:"
-            })
+                f"\nOutputs only valid {kwargs['response_format']['type']} without any explanatory words"
+            )
+
+        # mapping the openai function_schema to claude tool_schema
+        tools = kwargs.get("functions",[])
+        for tool in tools:
+            if "parameters" in tool.keys():
+                tool["input_schema"] = tool["parameters"]
+                del tool["parameters"]
 
         completion = self.client.messages.create(
             max_tokens=4096,
             model=self.model,
             system=system_prompt,
-            messages=chat_history,
+            messages=[msg for msg in chat_history if msg["role"] != "system"],
             temperature=self.temperature,
-            stream=False
+            stream=False,
+            tools=tools,
         )
 
-        return completion.content[0].text
+        if completion.stop_reason == "tool_use":
+            for func in completion.content:
+                if func.type != "tool_use":
+                    continue
+                function_name = process_function_name(func.name)
+                arguments = func.input
+                print("[MLE FUNC CALL]: ", function_name)
+                self.func_call_history.append({"name": function_name, "arguments": arguments})
+                # avoid the multiple search function calls
+                search_attempts = [item for item in self.func_call_history if item['name'] in SEARCH_FUNCTIONS]
+                if len(search_attempts) > 3:
+                    kwargs['functions'] = []
+                result = get_function(function_name)(**arguments)
+                self._add_tool_result_into_chat_history(chat_history, func, result)
+                return self.query(chat_history, **kwargs)
+        else:
+            return completion.content[0].text
 
     def stream(self, chat_history, **kwargs):
         """
@@ -243,12 +292,8 @@ class ClaudeModel(Model):
         # claude does not support mannual `response_format`, so we append it into system prompt
         if "response_format" in kwargs.keys():
             system_prompt += (
-                f"\nYou must output in {kwargs['response_format']['type']} format."
-                "Json format example: {\"key\": \"import a\n print(a)\n\"})")
-            chat_history.append({
-                "role": "assistant",
-                "content": f"Raw text output in {kwargs['response_format']['type']} format:"
-            })
+                f"\nOutputs only valid {kwargs['response_format']['type']} without any explanatory words"
+            )
 
         with self.client.messages.stream(
             max_tokens=4096,
