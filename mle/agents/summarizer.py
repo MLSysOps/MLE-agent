@@ -7,18 +7,20 @@ from mle.integration import GitHubIntegration
 
 class SummaryAgent:
 
-    def __init__(self, model, github_repo: str, github_token: str = None, console=None):
+    def __init__(self, model, github_repo: str, username: str, github_token: str = None, console=None):
         """
         SummaryAgent: summary the workspace provided by the user.
 
         Args:
             model: the model to use.
+            username: the Github username of the user.
             github_token: the Github token to use, if None, will fetch from the environment variable.
             github_repo: the Github repo to summarize.
             console: the console to use.
         """
         self.report = None
         self.model = model
+        self.username = username
         self.chat_history = []
         self.github_repo = github_repo
         self.github = GitHubIntegration(github_repo, github_token)
@@ -41,7 +43,7 @@ class SummaryAgent:
         5. Based on the information provided, you need to guess the technical hard parts and give suggestions.
         6. You may use function `search_arxiv` and `search_github_repos` to search for the related papers and github
          repos of the project using the project keywords and tech stacks. Do not directly search the project name.
-         
+
         """
         self.json_mode_prompt = """
 
@@ -81,16 +83,16 @@ class SummaryAgent:
         repo_files = self.github.get_structure(include_invisible=False)
 
         info_str += f"""
-        
+
         README CONTENT:
         {readme_content}
-        
+
         ISSUE LIST:
         """
 
         for issue in issues:
             info_str += f"""
-            
+
             Title: {issue['title']}
             Author: {issue['author']}
             State: {issue['state']}
@@ -98,7 +100,7 @@ class SummaryAgent:
             """
 
         info_str += f"""
-        
+
         PROJECT STRUCTURE:
         """
 
@@ -125,5 +127,9 @@ class SummaryAgent:
 
             self.chat_history.append({"role": "assistant", "content": text})
             summary = json.loads(text)
+            summary.update({"github_repo": self.github_repo})
+
+            user_activity = self.github.get_user_activity(self.username, detailed=False)
+            summary.update({"user_activity": user_activity})
 
         return summary

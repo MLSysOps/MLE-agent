@@ -3,12 +3,14 @@ Report Mode: the mode to generate the AI report based on the user's requirements
 """
 import os
 import json
+import pickle
 import questionary
 from rich.console import Console
 from mle.model import load_model
-from mle.agents import SummaryAgent
-from mle.utils import print_in_box, ask_text
-from mle.utils.system import get_config, write_config
+from mle.utils import print_in_box
+from mle.agents import SummaryAgent, ReportAgent
+from mle.utils.system import get_config, write_config, check_config
+from mle.integration import GoogleCalendarIntegration
 
 
 def ask_data(data_str: str):
@@ -26,8 +28,8 @@ def ask_data(data_str: str):
 
 def ask_github_token():
     """
-    Ask the user to integrate github.
-    :return: the github token.
+    Ask the user to integrate GitHub.
+    :return: the GitHub token.
     """
     config = get_config() or {}
     if "integration" not in config.keys():
@@ -44,7 +46,12 @@ def ask_github_token():
     return config["integration"]["github"]["token"]
 
 
-def report(work_dir: str, github_repo: str, model=None):
+def report(
+        work_dir: str,
+        github_repo: str,
+        github_username: str,
+        model=None
+):
     """
     The workflow of the baseline mode.
     :return:
@@ -52,6 +59,23 @@ def report(work_dir: str, github_repo: str, model=None):
     console = Console()
     model = load_model(work_dir, model)
 
-    summarizer = SummaryAgent(model, github_repo=github_repo, github_token=ask_github_token())
+    events = None
+    if check_config(console):
+        config = get_config()
+        if "google_calendar" in config["integration"].keys():
+            google_token = pickle.loads(config["integration"]["google_calendar"].get("token"))
+            google_calendar = GoogleCalendarIntegration(google_token)
+            events = google_calendar.get_events()
+
+    summarizer = SummaryAgent(
+        model,
+        github_repo=github_repo,
+        username=github_username,
+        github_token=ask_github_token()
+    )
+    reporter = ReportAgent(model, console)
+
     github_summary = summarizer.summarize()
-    print_in_box(json.dumps(github_summary), console, title="Github Summarizer", color="green")
+    proj_report = reporter.gen_report(github_summary, events)
+    # print_in_box(proj_report, console, title="Github Summarizer", color="green")
+    print(proj_report)

@@ -11,34 +11,13 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 import mle
-import mle.workflow as workflow
-from mle.utils import Memory
 from mle.model import load_model
 from mle.agents import CodeAgent
-from mle.utils.system import get_config, write_config
+import mle.workflow as workflow
+from mle.utils import Memory
+from mle.utils.system import get_config, write_config, check_config
 
 console = Console()
-CONFIG_FILE = 'project.yml'
-
-
-def check_config():
-    """
-    check_config: check if the configuration file exists.
-    :return: True if the configuration file exists, False otherwise.
-    """""
-    current_work_dir = os.getcwd()
-    config_path = os.path.join(current_work_dir, CONFIG_FILE)
-
-    if not os.path.exists(config_path):
-        console.log("Configuration file not found. Please run 'mle new' first.")
-        return False
-
-    with open(config_path, 'r') as file:
-        data = yaml.safe_load(file)
-        if data.get('search_key'):
-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
-
-    return True
 
 
 @click.group()
@@ -57,19 +36,38 @@ def start(mode, model):
     """
     start: start the chat with LLM.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
     if mode == 'general':
         # Baseline mode
         return workflow.baseline(os.getcwd(), model)
+    elif mode == 'report':
+        # Report mode
+        repo = questionary.text(
+            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
+        ).ask()
+
+        username = questionary.text(
+            "What is your GitHub username? (e.g., huangyz0918)"
+        ).ask()
+
+        if not re.match(r'.*/.*', repo):
+            console.log("Invalid github repository, "
+                        "Usage: 'mle report <organization/name>'")
+            return False
+
+        return workflow.report(os.getcwd(), repo, username, model)
+    else:
+        raise ValueError("Invalid mode. Supported modes: 'general', 'report'.")
 
 
 @cli.command()
 @click.pass_context
 @click.argument('repo', required=False)
 @click.option('--model', default=None, help='The model to use for the chat.')
-def report(ctx, repo, model):
+@click.option('--user', default=None, help='The GitHub username.')
+def report(ctx, repo, model, user):
     """
     report: generate report with LLM.
     """
@@ -79,21 +77,25 @@ def report(ctx, repo, model):
             "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
         ).ask()
 
+    if user is None:
+        user = questionary.text(
+            "What is your GitHub username? (e.g., huangyz0918)"
+        ).ask()
+
     if not re.match(r'.*/.*', repo):
         console.log("Invalid github repository, "
                     "Usage: 'mle report <organization/name>'")
         return False
 
-    if not check_config():
-        # build a new project for github report generating
+    if not check_config(console):
+        # build a new project for GitHub report generating
         project_name = f"mle-report-{repo.replace('/', '_').lower()}"
         ctx.invoke(new, name=project_name)
-        # enter the new project for report generation
         work_dir = os.path.join(os.getcwd(), project_name)
         os.chdir(work_dir)
-        return workflow.report(work_dir, repo, model)
+        return workflow.report(work_dir, repo, user, model)
 
-    return workflow.report(os.getcwd(), repo, model)
+    return workflow.report(os.getcwd(), repo, user, model)
 
 
 @cli.command()
@@ -101,10 +103,10 @@ def chat():
     """
     chat: start an interactive chat with LLM to work on your ML project.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
-    model = load_model(os.getcwd(), model_name=None)
+    model = load_model(os.getcwd(), "gpt-4o")
     coder = CodeAgent(model)
 
     while True:
@@ -156,7 +158,7 @@ def new(name):
     # make a directory for the project
     project_dir = os.path.join(os.getcwd(), name)
     Path(project_dir).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(project_dir, CONFIG_FILE), 'w') as outfile:
+    with open(os.path.join(project_dir, 'project.yml'), 'w') as outfile:
         yaml.dump({
             'platform': platform,
             'api_key': api_key,
@@ -172,7 +174,7 @@ def integrate():
     """
     integrate: integrate the third-party extensions.
     """
-    if not check_config():
+    if not check_config(console):
         return
 
     config = get_config()
@@ -185,20 +187,27 @@ def integrate():
     ).ask()
 
     if platform == "GitHub":
-        token = questionary.password(
-            "What is your GitHub token? (https://github.com/settings/tokens)"
-        ).ask()
+        if config.get("integration").get("github"):
+            print("GitHub is already integrated.")
+        else:
+            token = questionary.password(
+                "What is your GitHub token? (https://github.com/settings/tokens)"
+            ).ask()
 
-        config["integration"]["github"] = {
-            "token": token,
-        }
-        write_config(config)
+            username = questionary.text("What is your GitHub username?").ask()
+            config["integration"]["github"] = {
+                "token": token,
+                "username": username,
+            }
+            write_config(config)
 
     elif platform == "Google Calendar":
         from mle.integration.google_calendar import google_calendar_login
-        token = google_calendar_login()
-
-        config["integration"]["google_calendar"] = {
-            "token": pickle.dumps(token, fix_imports=False),
-        }
-        write_config(config)
+        if get_config().get("integration").get("google_calendar"):
+            print("Google Calendar is already integrated.")
+        else:
+            token = google_calendar_login()
+            config["integration"]["google_calendar"] = {
+                "token": pickle.dumps(token, fix_imports=False),
+            }
+            write_config(config)

@@ -68,6 +68,27 @@ def ask_text(question: str, title: str = "User", console: Optional[Console] = No
     return answer
 
 
+def check_config(console: Optional[Console] = None):
+    """
+    check_config: check if the configuration file exists.
+    :return: True if the configuration file exists, False otherwise.
+    """""
+    console = console or Console()
+    current_work_dir = os.getcwd()
+    config_path = os.path.join(current_work_dir, 'project.yml')
+
+    if not os.path.exists(config_path):
+        console.log("Configuration file not found. Please run 'mle new' first.")
+        return False
+
+    with open(config_path, 'r') as file:
+        data = yaml.safe_load(file)
+        if data.get('search_key'):
+            os.environ["SEARCH_API_KEY"] = data.get('search_key')
+
+    return True
+
+
 def get_config() -> Optional[Dict[str, Any]]:
     """
     Get the configuration file.
@@ -158,7 +179,6 @@ def load_file(filepath: str, base64_decode: bool = False) -> str:
     :param base64_decode: Whether to decode the content from Base64 format.
     :return: The content of the file or URL as a decoded text string.
     """
-    text = None
     if filepath.startswith('http://') or filepath.startswith('https://'):
         response = requests.get(filepath)
         response.raise_for_status()

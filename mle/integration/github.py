@@ -477,12 +477,13 @@ class GitHubIntegration:
         # Traverse the tree starting from the root or specified path
         return traverse_tree(root_tree_sha, path)
 
-    def get_user_activity(self, username, start_date=None, end_date=None):
+    def get_user_activity(self, username, start_date=None, end_date=None, detailed=True):
         """
         Aggregate information about a user's activity within a specific time period.
         :param username: GitHub username to analyze
         :param start_date: Start date for the analysis period, in 'YYYY-MM-DD' format
         :param end_date: End date for the analysis period, in 'YYYY-MM-DD' format
+        :param detailed: If True, include detailed information about commits, PRs, and issues
         :return: Dictionary containing aggregated user activity information, if the
         start and end dates are not provided, the default period is the last 7 days.
         """
@@ -516,22 +517,33 @@ class GitHubIntegration:
         pr_details = []
         for pr in pull_requests.values():
             pr_commits = self.get_pull_request_commits(pr['number'])
-            pr_details.append({
+            pr_detail = {
                 'number': pr['number'],
                 'title': pr['title'],
-                'description': pr['body'],
                 'status': pr['state'],
                 'commit_count': len(pr_commits),
-                'commit_messages': [commit['commit']['message'] for commit in pr_commits]
-            })
+            }
+
+            if detailed:
+                pr_detail.update({
+                    'description': pr['body'],
+                    'commit_messages': [commit['commit']['message'] for commit in pr_commits]
+                })
+
+            pr_details.append(pr_detail)
 
         # Aggregate issue information
+        issue_details = []
         issue_count = len(issues)
-        issue_details = [{
-            'number': issue['number'],
-            'title': issue['title'],
-            'description': issue['body']
-        } for issue in issues]
+        for issue in issues:
+            issue_detail = {
+                'number': issue['number'],
+                'title': issue['title'],
+            }
+
+            if detailed:
+                issue_detail.update({'description': issue['body']})
+            issue_details.append(issue_detail)
 
         # Compile the report
         report = {
@@ -560,11 +572,3 @@ class GitHubIntegration:
         }
 
         return report
-
-
-if __name__ == '__main__':
-    # Example usage of the GithubIntegration class
-    # Noted: please add the environment variable GITHUB_TOKEN with your Github token to run this example
-    github = GitHubIntegration("MLSysOps/MLE-agent")
-    # print(github.get_user_activity("huangyz0918"))
-    print(github.get_structure())
