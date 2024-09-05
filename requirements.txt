@@ -2,6 +2,8 @@ rich
 click
 openai~=1.34.0
 pyyaml
+fastapi
+uvicorn
 requests
 chromadb
 onnxruntime
