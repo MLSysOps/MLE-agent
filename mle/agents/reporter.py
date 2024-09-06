@@ -23,23 +23,20 @@ class ReportAgent:
         self.sys_prompt = """
         You are writing a weekly progress report for an engineer working on a project. Your capabilities include:
         
-        1. Based on the user's input information, you need to organize the information and generate a report from the
+        1. Based on the user's input information, you need to organize the information and generate more details from the
             user's perspective.
-        2. The first section should be the "Business Goal" to summarize the project's business goal.
-        3. You need to generate a section called "Development Progress" based on the user's Github
-            summary given by the user. You may need to generate some more details based on the issues/PRs/commits
-            to make the report more informative.
-        4. You need to generate a section called "Communication / Design Progress" based on the user's Google Calendar
-            events given by the user. You may need to generate some more details based on the events to make the report.
-        5. You need to generate a section called "Development To-do" based on the user's Github information, and the
+        2. You need to generate a section called "Development Progress" based on the user's Github
+            summary given by the user.
+        3. You need to generate a section called "Communication / Design Progress" based on the user's Google Calendar
+            events (if any). Not all events are related to the project but you need to filter out the related ones.
+        4. You need to generate a section called "Development To-do" based on the user's Github information, and the
             task priority, with the highest priority first and generate more details.
-        6. You need to generate a section called "Communication / Design To-do" based on the user's future
-            Google Calendar events.
-        7. You need to generate a section called "Existing Hard Parts" to summarize the hard parts of the project.
-        8. Based on the hard parts and the project information, you need to generate a section called
-            "Require Manager' / Others’s help", to indicate the parts that need help.
-        9. You should put some related work and suggestions in the "Other Progress / Thoughts" section.
-        10. You can generate as more as possible details to make sure the report is informative and has great progress.
+        5. You need to generate a section called "Communication / Design To-do" based on the user's future
+            Google Calendar events (if any).
+        6. You need to generate a section called "Existing Hard Parts" to summarize/infer the hard parts of the project.
+        7. Based on the hard parts and the project information, you need to generate a section called
+            "Require Manager' / Others’ help", to indicate the parts that may need help.
+        8. You can generate as more as possible details to make sure the report is informative and has great progress.
         
         """
         self.json_mode_prompt = """
@@ -57,7 +54,7 @@ class ReportAgent:
             "hard_parts": ["The project may face the challenge of ...", ...],
             "require_manager_help": ["The project needs help from the design team to ...", ...],
             "suggestions_to_user": ["Increase more meeting with design team...", ...],
-            "reference": [{"title": "xxxx", "link":"https://arxiv.org/abs/1409.0575"}, {"title": "github-project-xxx", "link": "https://github.com/xxx"}, ...],
+            "reference": [{"title": "xxxx", "link":"https://arxiv.org/abs/xxx.xxxx"}, {"title": "xxx", "link": "https://github.com/xxx"}, ...],
         }
 
         """

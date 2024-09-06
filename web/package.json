@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@uiw/react-md-editor": "^4.0.4",
+    "@uiw/react-md-editor": "v3.6.0",
     "antd": "^5.20.5",
     "next": "14.2.8",
     "react": "^18",

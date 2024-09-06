@@ -69,14 +69,51 @@ def read_latest_report():
 
 
 @app.post("/gen_report")
-async def gen_report(report_request: ReportRequest, background_tasks: BackgroundTasks):
+def gen_report(report_request: ReportRequest):
     """
-    Generate a report based on the provided GitHub repository and username.
+    Generate a report synchronously based on the provided GitHub repository and username.
     Optionally includes OKR text.
 
     Example payload:
 
     curl -X POST http://localhost:8000/gen_report \
+     -H "Content-Type: application/json" \
+     -d '{
+           "repo": "MLSysOps/MLE-agent",
+           "username": "huangyz0918",
+           "okr": "Improve system efficiency by 20% this quarter"
+         }'
+    """
+    try:
+        # Run report generation synchronously
+        result = report(
+            os.getcwd(),
+            report_request.repo,
+            report_request.username,
+            okr_str=report_request.okr,
+            model="gpt-4o",
+        )
+
+        return {
+            "message": "Report generation completed",
+            "repo": report_request.repo,
+            "username": report_request.username,
+            "okr_provided": report_request.okr is not None,
+            "result": result  # Assuming the report function returns some result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error in report generation process: {e}")
+
+
+@app.post("/gen_report_async")
+async def gen_report_async(report_request: ReportRequest, background_tasks: BackgroundTasks):
+    """
+    Generate a report (async) based on the provided GitHub repository and username.
+    Optionally includes OKR text.
+
+    Example payload:
+
+    curl -X POST http://localhost:8000/gen_report_async \
      -H "Content-Type: application/json" \
      -d '{
            "repo": "MLSysOps/MLE-agent",
