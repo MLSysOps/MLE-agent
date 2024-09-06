@@ -126,7 +126,7 @@ export default function Home() {
       <Content className="p-8">
         <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
           <Card className="w-[70%]" style={{ maxHeight: 'calc(100vh - 50px)', overflowY: 'auto' }}>
-            <Spin size="large" spinning={loading} >
+            <Spin size="large" spinning={loading} tip="Generating. This may take a few minutes...">
               <MDEditor value={reportContent} preview='preview' onChange={setReportContent} height='calc(100vh - 50px)'/>
             </Spin>
           </Card>

@@ -205,10 +205,8 @@ def integrate():
                 "What is your GitHub token? (https://github.com/settings/tokens)"
             ).ask()
 
-            username = questionary.text("What is your GitHub username?").ask()
             config["integration"]["github"] = {
-                "token": token,
-                "username": username,
+                "token": token
             }
             write_config(config)
 

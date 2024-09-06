@@ -101,7 +101,7 @@ class ReportAgent:
 
         info_prompt += f"\n## The project's related work: \n"
         for work in github_summary.get("related_work", []):
-            info_prompt += f"- {work}\n"
+            info_prompt += f"- {work['title']} ({work['link']})\n"
 
         activities = github_summary.get("user_activity")
         info_prompt += f"""
