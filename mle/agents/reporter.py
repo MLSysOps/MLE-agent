@@ -57,7 +57,7 @@ class ReportAgent:
             "hard_parts": ["The project may face the challenge of ...", ...],
             "require_manager_help": ["The project needs help from the design team to ...", ...],
             "suggestions_to_user": ["Increase more meeting with design team...", ...],
-            "reference": [{"title": "ImageNet Large Scale Visual Recognition Challenge", "link":"https://arxiv.org/abs/1409.0575"}, {"title": "MLE-Agent", "link": "https://github.com/MLSysOps/MLE-Agent"}, ...],
+            "reference": [{"title": "xxxx", "link":"https://arxiv.org/abs/1409.0575"}, {"title": "github-project-xxx", "link": "https://github.com/xxx"}, ...],
         }
 
         """
