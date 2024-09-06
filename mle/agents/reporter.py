@@ -26,7 +26,7 @@ class ReportAgent:
         1. Based on the user's input information, you need to organize the information and generate more details from the
             user's perspective.
         2. You need to generate a section called "Development Progress" based on the user's Github
-            summary given by the user.
+            summary given by the user, do not use the commit messages directly.
         3. You need to generate a section called "Communication / Design Progress" based on the user's Google Calendar
             events (if any). Not all events are related to the project but you need to filter out the related ones.
         4. You need to generate a section called "Development To-do" based on the user's Github information, and the
