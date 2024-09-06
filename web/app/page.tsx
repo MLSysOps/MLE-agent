@@ -1,8 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Layout, Card, Input, Button, message, Form, Select } from 'antd';
-import MDEditor from '@uiw/react-md-editor';
+import dynamic from "next/dynamic";
 
+const MDEditor = dynamic(
+  () => import("@uiw/react-md-editor"),
+  { ssr: false }
+);
 const { Content } = Layout;
 const { TextArea } = Input;
 const { Option } = Select;
@@ -70,7 +74,7 @@ export default function Home() {
     markdown += `### Challenges\n${data.hard_parts.map(part => `- ${part}`).join('\n')}\n\n`;
     markdown += `### Manager Help Required\n${data.require_manager_help.map(help => `- ${help}`).join('\n')}\n\n`;
     markdown += `### Suggestions\n${data.suggestions_to_user.map(suggestion => `- ${suggestion}`).join('\n')}\n\n`;
-    markdown += `### References\n${data.reference.map(ref => `- ${ref}`).join('\n')}\n\n`;
+    markdown += `### References\n${data.reference.map(ref => `* ${ref}`).join('\n')}\n\n`;
     return markdown;
   };
 
@@ -108,8 +112,8 @@ export default function Home() {
     <Layout className="min-h-screen">
       <Content className="p-8">
         <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
-          <Card className="w-[70%]" title="Report" style={{ maxHeight: 'calc(100vh - 50px)', overflowY: 'auto' }}>
-              <MDEditor.Markdown source={reportContent} />
+          <Card className="w-[70%]" style={{ maxHeight: 'calc(100vh - 50px)', overflowY: 'auto' }}>
+              <MDEditor value={reportContent} preview='preview' onChange={setReportContent} height='calc(100vh - 50px)'/>
           </Card>
 
           <Card className="w-[30%]" title="Settings" style={{ position: 'sticky', top: '20px' }}>
