@@ -21,20 +21,21 @@ interface ReportData {
   hard_parts: string[];
   require_manager_help: string[];
   suggestions_to_user: string[];
-  reference: string[];
+  reference: { title: string; link: string;}[];
 }
 
 interface ReportRequest {
   repo: string;
   username: string;
   okr?: string;
-  dateRange: string;
-  recurringReports: string;
-  additionalSources: string[];
+  dateRange?: string;
+  recurringReports?: string;
+  additionalSources?: string[];
 }
 
 export default function Home() {
   const [reportContent, setReportContent] = useState<string>("");
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [form] = Form.useForm<ReportRequest>();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -50,6 +51,7 @@ export default function Home() {
         throw new Error('Failed to fetch latest report');
       }
       const data: ReportData = await response.json();
+      setReportData(data);
       const markdownContent = convertToMarkdown(data);
       setReportContent(markdownContent);
     } catch (error) {
@@ -67,14 +69,18 @@ export default function Home() {
     }
 
     markdown += `### Business Goal\n${data.business_goal.map(goal => `- ${goal}`).join('\n')}\n\n`;
-    markdown += `### Development Progress\n${data.dev_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
-    markdown += `### Communication Progress\n${data.communicate_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
-    markdown += `### Development TODO\n${data.dev_todo.map(todo => `- **${todo.task}** (${todo.priority}): ${todo.description}`).join('\n')}\n\n`;
-    markdown += `### Communication TODO\n${data.communicate_todo.map(todo => `- **${todo.task}** (${todo.priority})`).join('\n')}\n\n`;
-    markdown += `### Challenges\n${data.hard_parts.map(part => `- ${part}`).join('\n')}\n\n`;
-    markdown += `### Manager Help Required\n${data.require_manager_help.map(help => `- ${help}`).join('\n')}\n\n`;
-    markdown += `### Suggestions\n${data.suggestions_to_user.map(suggestion => `- ${suggestion}`).join('\n')}\n\n`;
-    markdown += `### References\n${data.reference.map(ref => `* ${ref}`).join('\n')}\n\n`;
+    markdown += `### Work Finished This Week\n\n`;
+    markdown += `#### Development Progress\n${data.dev_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
+    markdown += `#### Communication/Design Progress\n${data.communicate_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
+    markdown += `### Work TODO in the Next Week\n\n`;
+    markdown += `#### Development TODO\n${data.dev_todo.map(todo => `- **${todo.task}** (${todo.priority}): ${todo.description}`).join('\n')}\n\n`;
+    markdown += `#### Communication TODO\n${data.communicate_todo.map(todo => `- **${todo.task}** (${todo.priority})`).join('\n')}\n\n`;
+    markdown += `### Hard Problems\n\n`;
+    markdown += `#### Challenges\n${data.hard_parts.map(part => `- ${part}`).join('\n')}\n\n`;
+    markdown += `#### Manager Help Required\n${data.require_manager_help.map(help => `- ${help}`).join('\n')}\n\n`;
+    markdown += `### Other Progress and Thoughts\n\n`;
+    markdown += `#### Suggestions\n${data.suggestions_to_user.map(suggestion => `- ${suggestion}`).join('\n')}\n\n`;
+    markdown += `#### References\n${data.reference.map(ref => `- [${ref.title}](${ref.link})`).join('\n')}\n\n`;
     return markdown;
   };
 
@@ -139,7 +145,7 @@ export default function Home() {
               <Form.Item
                 name="dateRange"
                 label="Date Range"
-                rules={[{ required: true, message: 'Please select a date range' }]}
+                rules={[{ message: 'Please select a date range' }]}
               >
                 <Select placeholder="Select date range">
                   <Option value="lastDay">Last Day</Option>
