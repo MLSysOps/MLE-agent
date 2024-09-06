@@ -13,9 +13,9 @@ class SummaryAgent:
 
         Args:
             model: the model to use.
-            username: the Github username of the user.
-            github_token: the Github token to use, if None, will fetch from the environment variable.
-            github_repo: the Github repo to summarize.
+            username: the GitHub username of the user.
+            github_token: the GitHub token to use, if None, will fetch from the environment variable.
+            github_repo: the GitHub repo to summarize.
             console: the console to use.
         """
         self.report = None
@@ -57,7 +57,7 @@ class SummaryAgent:
             "tech_stack": ["Python", "PyTorch", "MLFlow", ...],
             "roadmap": [{"task": "fix ...", "priority": "high"}, {"task": "support ...", "priority": "medium"}, ...],
             "hard_parts": ["The project may face the challenge of ...", ...],
-            "related_work": ["https://arxiv.org/abs/1409.0575", "https://github.com/MLSysOps/MLE-Agent", ...],
+            "related_work": [{"title": "xxxx", "link":"https://arxiv.org/abs/xxx.xxxx"}, {"title": "xxx", "link": "https://github.com/xxx"}, ...],
         }
 
         """
@@ -72,7 +72,7 @@ class SummaryAgent:
 
     def process_knowledge(self):
         """
-        Process the knowledge from the Github repo.
+        Process the knowledge from the GitHub repo.
         Args: None
         """
         info_str = f"""

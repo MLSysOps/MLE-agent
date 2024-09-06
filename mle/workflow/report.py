@@ -80,6 +80,4 @@ def report(
     reporter = ReportAgent(model, console)
 
     github_summary = summarizer.summarize()
-    proj_report = reporter.gen_report(github_summary, events, okr=okr_str)
-    # print_in_box(proj_report, console, title="Github Summarizer", color="green")
-    print(proj_report)
+    return reporter.gen_report(github_summary, events, okr=okr_str)

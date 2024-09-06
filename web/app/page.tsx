@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Layout, Card, Input, Button, message, Form, Select } from 'antd';
+import { Layout, Card, Input, Button, message, Form, Select, Spin } from 'antd';
 import dynamic from "next/dynamic";
 
 const MDEditor = dynamic(
@@ -72,9 +72,9 @@ export default function Home() {
     markdown += `### Work Finished This Week\n\n`;
     markdown += `#### Development Progress\n${data.dev_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
     markdown += `#### Communication/Design Progress\n${data.communicate_progress.map(progress => `- ${progress}`).join('\n')}\n\n`;
-    markdown += `### Work TODO in the Next Week\n\n`;
-    markdown += `#### Development TODO\n${data.dev_todo.map(todo => `- **${todo.task}** (${todo.priority}): ${todo.description}`).join('\n')}\n\n`;
-    markdown += `#### Communication TODO\n${data.communicate_todo.map(todo => `- **${todo.task}** (${todo.priority})`).join('\n')}\n\n`;
+    markdown += `### Work TODOs in the Next Week\n\n`;
+    markdown += `#### Development TODOs\n${data.dev_todo.map(todo => `- ${todo.task} **(${todo.priority})**: ${todo.description}`).join('\n')}\n\n`;
+    markdown += `#### Communication TODOs\n${data.communicate_todo.map(todo => `- ${todo.task} **(${todo.priority})**`).join('\n')}\n\n`;
     markdown += `### Hard Problems\n\n`;
     markdown += `#### Challenges\n${data.hard_parts.map(part => `- ${part}`).join('\n')}\n\n`;
     markdown += `#### Manager Help Required\n${data.require_manager_help.map(help => `- ${help}`).join('\n')}\n\n`;
@@ -100,8 +100,15 @@ export default function Home() {
       }
 
       const result = await response.json();
-      message.success('Report generation started successfully');
-      setTimeout(fetchLatestReport, 5000);
+      
+      if (result.result) {
+        setReportData(result.result);
+        const markdownContent = convertToMarkdown(result.result);
+        setReportContent(markdownContent);
+        message.success('Report generated successfully');
+      } else {
+        message.info('Report generation completed, but no data returned');
+      }
     } catch (error) {
       console.error('Error generating report:', error);
       message.error('Failed to generate report');
@@ -119,7 +126,9 @@ export default function Home() {
       <Content className="p-8">
         <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
           <Card className="w-[70%]" style={{ maxHeight: 'calc(100vh - 50px)', overflowY: 'auto' }}>
+            <Spin size="large" spinning={loading} tip="Generating. This may take a few minutes...">
               <MDEditor value={reportContent} preview='preview' onChange={setReportContent} height='calc(100vh - 50px)'/>
+            </Spin>
           </Card>
 
           <Card className="w-[30%]" title="Settings" style={{ position: 'sticky', top: '20px' }}>
