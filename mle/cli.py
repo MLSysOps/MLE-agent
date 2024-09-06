@@ -3,6 +3,7 @@ import re
 import yaml
 import click
 import pickle
+import uvicorn
 import questionary
 from pathlib import Path
 from rich.live import Live
@@ -11,6 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 import mle
+from mle.server import app
 from mle.model import load_model
 from mle.agents import CodeAgent
 import mle.workflow as workflow
@@ -121,6 +123,15 @@ def chat():
                         )
         except (KeyboardInterrupt, EOFError):
             exit()
+
+
+@cli.command()
+@click.option('--host', default='0.0.0.0', help='Host to bind the server to')
+@click.option('--port', default=8000, help='Port to bind the server to')
+def serve(host, port):
+    """Start the FastAPI server"""
+    click.echo(f"Starting server on {host}:{port}")
+    uvicorn.run(app, host=host, port=port)
 
 
 @cli.command()
