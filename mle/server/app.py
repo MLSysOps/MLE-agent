@@ -28,6 +28,7 @@ class ReportRequest(BaseModel):
     """
     repo: str
     username: str
+    token: Optional[str] = None
     okr: Optional[str] = None
 
 
@@ -79,6 +80,7 @@ def gen_report(report_request: ReportRequest):
     curl -X POST http://localhost:8000/gen_report \
      -H "Content-Type: application/json" \
      -d '{
+           "token": "***",
            "repo": "MLSysOps/MLE-agent",
            "username": "huangyz0918",
            "okr": "Improve system efficiency by 20% this quarter"
@@ -90,6 +92,7 @@ def gen_report(report_request: ReportRequest):
             os.getcwd(),
             report_request.repo,
             report_request.username,
+            report_request.token,
             okr_str=report_request.okr,
             model="gpt-4o",
         )
@@ -116,6 +119,7 @@ async def gen_report_async(report_request: ReportRequest, background_tasks: Back
     curl -X POST http://localhost:8000/gen_report_async \
      -H "Content-Type: application/json" \
      -d '{
+           "token": "***",
            "repo": "MLSysOps/MLE-agent",
            "username": "huangyz0918",
            "okr": "Improve system efficiency by 20% this quarter"
@@ -128,6 +132,7 @@ async def gen_report_async(report_request: ReportRequest, background_tasks: Back
             os.getcwd(),
             report_request.repo,
             report_request.username,
+            report_request.token,
             okr_str=report_request.okr,
             model="gpt-4o",
         )
