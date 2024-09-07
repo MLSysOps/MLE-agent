@@ -168,8 +168,9 @@ def new(name):
 
     # make a directory for the project
     project_dir = os.path.join(os.getcwd(), name)
-    Path(project_dir).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(project_dir, 'project.yml'), 'w') as outfile:
+    config_dir = os.path.join(project_dir, '.mle')
+    Path(config_dir).mkdir(parents=True, exist_ok=True)
+    with open(os.path.join(config_dir, 'project.yml'), 'w') as outfile:
         yaml.dump({
             'platform': platform,
             'api_key': api_key,

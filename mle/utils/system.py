@@ -75,7 +75,15 @@ def check_config(console: Optional[Console] = None):
     """""
     console = console or Console()
     current_work_dir = os.getcwd()
-    config_path = os.path.join(current_work_dir, 'project.yml')
+
+    config_dir = os.path.join(current_work_dir, '.mle')
+    config_path = os.path.join(config_dir, 'project.yml')
+
+    # move the old config file to the new path for compatibility (delete in future)
+    old_config_path = os.path.join(os.getcwd(), 'project.yml')
+    if os.path.exists(old_config_path):
+        os.makedirs(config_dir, exist_ok=True)
+        shutil.move(old_config_path, config_path)
 
     if not os.path.exists(config_path):
         console.log("Configuration file not found. Please run 'mle new' first.")
@@ -94,7 +102,8 @@ def get_config() -> Optional[Dict[str, Any]]:
     Get the configuration file.
     :return: the configuration file.
     """
-    config_path = os.path.join(os.getcwd(), 'project.yml')
+    config_dir = os.path.join(os.getcwd(), '.mle')
+    config_path = os.path.join(config_dir, 'project.yml')
     if not os.path.exists(config_path):
         return None
 
@@ -106,7 +115,9 @@ def write_config(value: Dict[str, Any]) -> None:
     """
     Write the configuration file.
     """
-    config_path = os.path.join(os.getcwd(), 'project.yml')
+    config_dir = os.path.join(os.getcwd(), '.mle')
+    config_path = os.path.join(config_dir, 'project.yml')
+    os.makedirs(config_dir, exist_ok=True)
     with open(config_path, 'w') as file:
         yaml.dump(value, file, default_flow_style=False)
 
