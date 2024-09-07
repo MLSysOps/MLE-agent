@@ -143,6 +143,13 @@ export default function Home() {
               layout="vertical"
             >
               <Form.Item
+                name="token"
+                label="GitHub Token"
+                rules={[{ required: true, message: 'Please enter the GitHub token' }]}
+              >
+                <Input placeholder="Enter GitHub token" type="password"/>
+              </Form.Item>
+              <Form.Item
                 name="repo"
                 label="Repository"
                 rules={[{ required: true, message: 'Please enter the GitHub repository' }]}
