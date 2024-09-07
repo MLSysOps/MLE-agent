@@ -158,7 +158,7 @@ class AdviseAgent:
 
     def clarify_dataset(self, dataset: str):
         """
-        Clarify the dataset blurity by suggest some datasets. 
+        Clarify the dataset blurity by suggest some datasets.
         Args:
             dataset: the user's input dataset name.
         """
@@ -189,8 +189,8 @@ class AdviseAgent:
 
         # recommend some datasets based on the users' description
         user_prompt = f"""
-        Since the user has not provided a specific dataset, suggest up to five publicly available datasets 
-        that best match the user's description ({dataset}). Ensure your recommendations are concise and 
+        Since the user has not provided a specific dataset, suggest up to five publicly available datasets
+        that best match the user's description ({dataset}). Ensure your recommendations are concise and
         include a clear explanation (within 100 words) for why each dataset is appropriate.
 
         Json output format:
