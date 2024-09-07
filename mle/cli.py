@@ -76,7 +76,7 @@ def report(ctx, repo, model, user, visualize):
             "[blue underline]http://localhost:3000/[/blue underline]",
             console=console, title="MLE Report", color="green"
         )
-        with ThreadPoolExecutor() as executor:   
+        with ThreadPoolExecutor() as executor:
             future1 = executor.submit(ctx.invoke, serve)
             future2 = executor.submit(ctx.invoke, web)
             future1.result()
