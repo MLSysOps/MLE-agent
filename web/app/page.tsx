@@ -47,8 +47,13 @@ export default function Home() {
   const fetchLatestReport = async () => {
     try {
       const response = await fetch('http://localhost:8000/latest_report');
+      if (response.status === 404) {
+        setReportContent("No report has been found. Please click 'Generate Report' to create one.");
+        setReportData(null);
+        return;
+      }
       if (!response.ok) {
-        throw new Error('Failed to fetch latest report');
+        throw new Error('Failed to fetch the latest report');
       }
       const data: ReportData = await response.json();
       setReportData(data);
@@ -173,11 +178,20 @@ export default function Home() {
               </Form.Item>
               <Form.Item
                 name="additionalSources"
-                label="Additional Data Sources"
+                label={
+                  <span>
+                    Additional Data Sources (
+                    <a href="https://repx.app" target="_blank" rel="noopener noreferrer">RepX PRO</a> required)
+                  </span>
+                }
               >
                 <div style={{ display: 'flex', width: '100%' }}>
-                  <Button style={{ flex: '1 1 0', marginRight: '4px' }} disabled>Google Calendar</Button>
-                  <Button style={{ flex: '1 1 0', marginLeft: '4px' }} disabled>Zoom Meetings</Button>
+                  <Button style={{ flex: '1 1 0', margin: '2px' }} href='https://repx.app'>Zoom Meetings</Button>
+                  <Button style={{ flex: '1 1 0', margin: '2px' }} href='https://repx.app'>Google Calendar</Button>
+                </div>
+                <div style={{ display: 'flex', width: '100%'}}>
+                  <Button style={{ flex: '1 1 0', margin: '2px' }} href='https://repx.app'>Slack</Button>
+                  <Button style={{ flex: '1 1 0', margin: '2px' }} href='https://repx.app'>GitLab</Button>
                 </div>
               </Form.Item>
               <Form.Item
@@ -196,9 +210,6 @@ export default function Home() {
               <div style={{ display: 'flex', width: '100%' }}>
                   <Button style={{ flex: '1 1 0', marginRight: '4px' }} type="primary" htmlType="submit" loading={loading}>
                     Generate Report
-                  </Button>
-                  <Button style={{ flex: '1 1 0', marginRight: '4px' }} onClick={handleSaveReport}>
-                    Save Report
                   </Button>
                 </div>
               </Form.Item>
