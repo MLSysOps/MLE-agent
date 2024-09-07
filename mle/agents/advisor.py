@@ -55,7 +55,7 @@ class AdviseAgent:
          the model (or method), and the evaluation metrics, etc. You should always follow the user's requirements.
         2. You should briefly analyze the user's dataset, and give a summary of the dataset, the dataset input can be
          a public dataset name or a path to a local CSV file. You can use the function `preview_csv_data` to preview
-         the CSV file.
+         the CSV file or not if the dataset is a public dataset.
         3. And then you should always use the function `search_arxiv` or `search_papers_with_code` to search the
          state-of-the-art machine learning tasks/models/algorithms that can be used to solve the user's requirements,
           and stay up-to-date with the latest.
