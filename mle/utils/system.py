@@ -80,7 +80,7 @@ def check_config(console: Optional[Console] = None):
     config_path = os.path.join(config_dir, 'project.yml')
 
     # move the old config file to the new path for compatibility (delete in future)
-    old_config_path = os.path.join(os.getcwd(), 'project.yml')
+    old_config_path = os.path.join(current_work_dir, 'project.yml')
     if os.path.exists(old_config_path):
         os.makedirs(config_dir, exist_ok=True)
         shutil.move(old_config_path, config_path)
@@ -112,11 +112,11 @@ def get_config(workdir: str = None) -> Optional[Dict[str, Any]]:
         return yaml.safe_load(file)
 
 
-def write_config(value: Dict[str, Any]) -> None:
+def write_config(value: Dict[str, Any], workdir: str = None) -> None:
     """
     Write the configuration file.
     """
-    config_dir = os.path.join(os.getcwd(), '.mle')
+    config_dir = os.path.join(workdir or os.getcwd(), '.mle')
     config_path = os.path.join(config_dir, 'project.yml')
     os.makedirs(config_dir, exist_ok=True)
     with open(config_path, 'w') as file:
