@@ -10,6 +10,7 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.console import Console
 from rich.markdown import Markdown
+from concurrent.futures import ThreadPoolExecutor
 
 import mle
 from mle.server import app
@@ -17,7 +18,13 @@ from mle.model import load_model
 from mle.agents import CodeAgent
 import mle.workflow as workflow
 from mle.utils import Memory
-from mle.utils.system import get_config, write_config, check_config
+from mle.utils.system import (
+    get_config,
+    write_config,
+    check_config,
+    startup_web,
+    print_in_box,
+)
 
 console = Console()
 
@@ -32,9 +39,10 @@ def cli():
 
 
 @cli.command()
+@click.pass_context
 @click.argument('mode', default='general')
 @click.option('--model', default=None, help='The model to use for the chat.')
-def start(mode, model):
+def start(ctx, mode, model):
     """
     start: start the chat with LLM.
     """
@@ -46,20 +54,7 @@ def start(mode, model):
         return workflow.baseline(os.getcwd(), model)
     elif mode == 'report':
         # Report mode
-        repo = questionary.text(
-            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
-        ).ask()
-
-        username = questionary.text(
-            "What is your GitHub username? (e.g., huangyz0918)"
-        ).ask()
-
-        if not re.match(r'.*/.*', repo):
-            console.log("Invalid github repository, "
-                        "Usage: 'mle report <organization/name>'")
-            return False
-
-        return workflow.report(os.getcwd(), repo, username, model)
+        return ctx.invoke(report, model=model, visualize=False)
     else:
         raise ValueError("Invalid mode. Supported modes: 'general', 'report'.")
 
@@ -69,35 +64,48 @@ def start(mode, model):
 @click.argument('repo', required=False)
 @click.option('--model', default=None, help='The model to use for the chat.')
 @click.option('--user', default=None, help='The GitHub username.')
-def report(ctx, repo, model, user):
+@click.option('--visualize', default=True, help='Visualize the report in browser.')
+def report(ctx, repo, model, user, visualize):
     """
     report: generate report with LLM.
     """
-    if repo is None:
-        # TODO: support local project report
-        repo = questionary.text(
-            "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
-        ).ask()
+    if visualize:
+        print_in_box(
+            "✨ Your MLE Agent is starting soon! \n"
+            "Access to generate your report: "
+            "[blue underline]http://localhost:3000/[/blue underline]",
+            console=console, title="MLE Report", color="green"
+        )
+        with ThreadPoolExecutor() as executor:   
+            future1 = executor.submit(ctx.invoke, serve)
+            future2 = executor.submit(ctx.invoke, web)
+            future1.result()
+            future2.result()
+    else:
+        if repo is None:
+            # TODO: support local project report
+            repo = questionary.text(
+                "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
+            ).ask()
 
-    if user is None:
-        user = questionary.text(
-            "What is your GitHub username? (e.g., huangyz0918)"
-        ).ask()
+        if user is None:
+            user = questionary.text(
+                "What is your GitHub username? (e.g., huangyz0918)"
+            ).ask()
 
-    if not re.match(r'.*/.*', repo):
-        console.log("Invalid github repository, "
-                    "Usage: 'mle report <organization/name>'")
-        return False
+        if not re.match(r'.*/.*', repo):
+            console.log("Invalid github repository, "
+                        "Usage: 'mle report <organization/name>'")
+            return False
 
-    if not check_config(console):
-        # build a new project for GitHub report generating
-        project_name = f"mle-report-{repo.replace('/', '_').lower()}"
-        ctx.invoke(new, name=project_name)
-        work_dir = os.path.join(os.getcwd(), project_name)
-        os.chdir(work_dir)
-        return workflow.report(work_dir, repo, user, model)
-
-    return workflow.report(os.getcwd(), repo, user, model)
+        if not check_config(console):
+            # build a new project for GitHub report generating
+            project_name = f"mle-report-{repo.replace('/', '_').lower()}"
+            ctx.invoke(new, name=project_name)
+            work_dir = os.path.join(os.getcwd(), project_name)
+            os.chdir(work_dir)
+            return workflow.report(work_dir, repo, user, model)
+        return workflow.report(os.getcwd(), repo, user, model)
 
 
 @cli.command()
@@ -131,7 +139,16 @@ def chat():
 def serve(host, port):
     """Start the FastAPI server"""
     click.echo(f"Starting server on {host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_level="critical")
+
+
+@cli.command()
+@click.option('--host', default='0.0.0.0', help='Host to bind the server to')
+@click.option('--port', default=3000, help='Port to bind the server to')
+def web(host, port):
+    """Start the Web server"""
+    click.echo(f"Starting web on {host}:{port}")
+    startup_web(host, port)
 
 
 @cli.command()

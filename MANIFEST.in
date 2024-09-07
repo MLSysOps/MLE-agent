@@ -1,0 +1,20 @@
+recursive-include web *
+recursive-include web/app *
+
+recursive-exclude web/node_modules *
+recursive-exclude web/.pnp
+recursive-exclude web/.pnp.js
+recursive-exclude web/.yarn/install-state.gz
+recursive-exclude web/coverage *
+recursive-exclude web/.next *
+recursive-exclude web/out *
+recursive-exclude web/build *
+recursive-exclude web/.DS_Store
+recursive-exclude web/*.pem
+recursive-exclude web/npm-debug.log*
+recursive-exclude web/yarn-debug.log*
+recursive-exclude web/yarn-error.log*
+recursive-exclude web/.env*.local
+recursive-exclude web/.vercel
+recursive-exclude web/*.tsbuildinfo
+recursive-exclude web/next-env.d.ts
