@@ -154,3 +154,59 @@ class AdviseAgent:
                 print_in_box(self.report, title="MLE Advisor", color="green")
 
         return self.report
+
+
+    def clarify_dataset(self, dataset: str):
+        """
+        Clarify the dataset blurity by suggest some datasets. 
+        Args:
+            dataset: the user's input dataset name.
+        """
+        system_prompt = """
+        You are an Machine learning Product Manager, you are going to collaborate with the user to plan
+        the ML project, in the use of the dataset.
+        """
+        chat_history = [{"role": "system", "content": system_prompt}]
+
+        # verify whether the user's dataset is unclear or blur
+        user_prompt = f"""
+        The dataset provided by the user is: `{dataset}`
+
+        Your task is to determine if the dataset refers to:
+        1. A specific dataset name, or
+        2. A file path.
+
+        Response format: Yes / No
+        - Yes: if the dataset is clearly identifiable as either a specific dataset name or a file path.
+        - No: if the dataset cannot be clearly identified as either a specific dataset name or a file path.
+        """
+        with self.console.status("MLE Advisor is verifing dataset..."):
+            chat_history.append({"role": "user", "content": user_prompt})
+            text = self.model.query(chat_history)
+            chat_history.append({"role": "assistant", "content": text})
+            if "yes" in text.lower():
+                return
+
+        # recommend some datasets based on the users' description
+        user_prompt = f"""
+        Since the user has not provided a specific dataset, suggest up to five publicly available datasets 
+        that best match the user's description ({dataset}). Ensure your recommendations are concise and 
+        include a clear explanation (within 100 words) for why each dataset is appropriate.
+
+        Json output format:
+        {{
+            "datasets": ["xxx", "xxx", "xxx"],
+            "reason": "Based on the user's dataset description..."
+        }}
+        """
+        with self.console.status("MLE Advisor is suggesting datasets..."):
+            chat_history.append({"role": "user", "content": user_prompt})
+            text = self.model.query(
+                chat_history,
+                response_format={"type": "json_object"}
+            )
+            chat_history.append({"role": "assistant", "content": text})
+            suggestions = json.loads(text)
+
+        print_in_box("Which datasets would you like?", title="MLE Advisor", color="green")
+        return questionary.select("Type your answer here:", choices=suggestions['datasets']).ask()
