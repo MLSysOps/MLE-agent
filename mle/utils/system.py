@@ -97,12 +97,13 @@ def check_config(console: Optional[Console] = None):
     return True
 
 
-def get_config() -> Optional[Dict[str, Any]]:
+def get_config(workdir: str = None) -> Optional[Dict[str, Any]]:
     """
     Get the configuration file.
+    :workdir: the project directory.
     :return: the configuration file.
     """
-    config_dir = os.path.join(os.getcwd(), '.mle')
+    config_dir = os.path.join(workdir or os.getcwd(), '.mle')
     config_path = os.path.join(config_dir, 'project.yml')
     if not os.path.exists(config_path):
         return None

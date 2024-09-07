@@ -310,7 +310,7 @@ def load_model(project_dir: str, model_name: str):
         project_dir (str): The project directory.
         model_name (str): The model name.
     """
-    config = get_config()
+    config = get_config(project_dir)
     if config['platform'] == MODEL_OPENAI:
         return OpenAIModel(api_key=config['api_key'], model=model_name)
     if config['platform'] == MODEL_CLAUDE:

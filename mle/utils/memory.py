@@ -29,7 +29,7 @@ class Memory:
         self.collection_name = 'memory'
         self.client = chromadb.PersistentClient(path=os.path.join(project_path, self.db_name))
 
-        config = get_config()
+        config = get_config(project_path)
         # use the OpenAI embedding function if the openai section is set in the configuration.
         if config['platform'] == 'OpenAI':
             self.client.get_or_create_collection(
