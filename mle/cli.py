@@ -40,7 +40,7 @@ def cli():
 
 @cli.command()
 @click.pass_context
-@click.argument('mode', default='general')
+@click.argument('mode', default='baseline')
 @click.option('--model', default=None, help='The model to use for the chat.')
 def start(ctx, mode, model):
     """
@@ -49,14 +49,14 @@ def start(ctx, mode, model):
     if not check_config(console):
         return
 
-    if mode == 'general':
+    if mode == 'baseline':
         # Baseline mode
         return workflow.baseline(os.getcwd(), model)
     elif mode == 'report':
         # Report mode
         return ctx.invoke(report, model=model, visualize=False)
     else:
-        raise ValueError("Invalid mode. Supported modes: 'general', 'report'.")
+        raise ValueError("Invalid mode. Supported modes: 'baseline', 'report'.")
 
 
 @cli.command()
