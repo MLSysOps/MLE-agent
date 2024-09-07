@@ -71,7 +71,7 @@ def report(ctx, repo, model, user, visualize):
     """
     if visualize:
         print_in_box(
-            "✨ Your MLE Agent is starting soon! \n"
+            "✨ Your MLE Agent is starting! \n"
             "Access to generate your report: "
             "[blue underline]http://localhost:3000/[/blue underline]",
             console=console, title="MLE Report", color="green"
