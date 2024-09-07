@@ -4,6 +4,7 @@ import yaml
 import base64
 import shutil
 import requests
+import subprocess
 from typing import Dict, Any, Optional
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -191,3 +192,56 @@ def load_file(filepath: str, base64_decode: bool = False) -> str:
     if base64_decode:
         text = base64.b64decode(text).decode('utf-8')
     return text
+
+
+def check_installed(name: str):
+    """
+    Check if a command-line tool is installed.
+    """
+    try:
+        subprocess.run(['which', name], capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError:
+        return False
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def startup_web(host: str = "0.0.0.0", port: int = 3000):
+    """
+    Start up the web server.
+    :param host: The host address for the web server. Default is "0.0.0.0".
+    :param port: The port for the web server. Default is 3000.
+    """
+    webapp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '../web/')
+    if not os.path.exists(webapp_dir):
+        raise RuntimeError(f"Failed to find web application directory: {webapp_dir}")
+
+    env = os.environ.copy()
+    env['HOST'] = host
+    env['PORT'] = str(port)
+
+    run_kwargs = {
+        "cwd": webapp_dir,
+        "env": env,
+        "check": True,
+        # "stdout": subprocess.DEVNULL,
+        # "stderr": subprocess.DEVNULL,
+    }
+    if check_installed("pnpm"):
+        try:
+            subprocess.run(['pnpm', 'install'], **run_kwargs)
+            subprocess.run(['pnpm', 'dev'], **run_kwargs)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to start the web server: {e}")
+    elif check_installed("npm"):
+        try:
+            subprocess.run(['npm', 'install'], **run_kwargs)
+            subprocess.run(['npm', 'run', 'dev'], **run_kwargs)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to start the web server: {e}")
+    else:
+        raise RuntimeError(
+            "Please install `npm` and `nodejs` before starting the web applications.\n"
+            "Refer to: https://nodejs.org/en/download/package-manager"
+        )
