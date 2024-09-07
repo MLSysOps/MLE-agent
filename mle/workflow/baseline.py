@@ -45,10 +45,12 @@ def baseline(work_dir: str, model=None):
     with cache(step=1, name="ask for the data information") as ca:
         dataset = ca.resume("dataset")
         if dataset is None:
+            advisor = AdviseAgent(model, console)
             dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
             if not dataset:
                 print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
                 return
+            dataset = advisor.clarify_dataset(dataset)
             ca.store("dataset", dataset)
 
     # ask for the user requirement
