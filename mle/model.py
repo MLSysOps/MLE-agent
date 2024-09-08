@@ -127,6 +127,7 @@ class OpenAIModel(Model):
             if len(search_attempts) > 3:
                 parameters['function_call'] = "none"
             result = get_function(function_name)(**arguments)
+            chat_history.append({"role": "assistant", "function_call": dict(resp.function_call)})
             chat_history.append({"role": "function", "content": result, "name": function_name})
             return self.query(chat_history, **parameters)
         else:
