@@ -1,9 +1,8 @@
-import os
-import yaml
 import json
 import importlib.util
 from abc import ABC, abstractmethod
 
+from mle.utils import get_config
 from mle.function import get_function, process_function_name, SEARCH_FUNCTIONS
 
 MODEL_OLLAMA = 'Ollama'
@@ -311,12 +310,11 @@ def load_model(project_dir: str, model_name: str):
         project_dir (str): The project directory.
         model_name (str): The model name.
     """
-    with open(os.path.join(project_dir, 'project.yml'), 'r') as file:
-        data = yaml.safe_load(file)
-        if data['platform'] == MODEL_OPENAI:
-            return OpenAIModel(api_key=data['api_key'], model=model_name)
-        if data['platform'] == MODEL_CLAUDE:
-            return ClaudeModel(api_key=data['api_key'], model=model_name)
-        if data['platform'] == MODEL_OLLAMA:
-            return OllamaModel(model=model_name)
+    config = get_config(project_dir)
+    if config['platform'] == MODEL_OPENAI:
+        return OpenAIModel(api_key=config['api_key'], model=model_name)
+    if config['platform'] == MODEL_CLAUDE:
+        return ClaudeModel(api_key=config['api_key'], model=model_name)
+    if config['platform'] == MODEL_OLLAMA:
+        return OllamaModel(model=model_name)
     return None

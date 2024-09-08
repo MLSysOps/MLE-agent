@@ -66,7 +66,7 @@ def report(
     events = None
     if check_config(console):
         config = get_config()
-        if "google_calendar" in config["integration"].keys():
+        if "google_calendar" in config.get("integration", {}).keys():
             google_token = pickle.loads(config["integration"]["google_calendar"].get("token"))
             google_calendar = GoogleCalendarIntegration(google_token)
             events = google_calendar.get_events()

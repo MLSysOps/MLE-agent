@@ -1,4 +1,3 @@
-import yaml
 import uuid
 import os.path
 from datetime import datetime
@@ -7,7 +6,7 @@ from typing import List, Dict
 import chromadb
 from chromadb.utils import embedding_functions
 
-from mle.model import OpenAIModel
+from mle.utils import get_config
 
 chromadb.logger.setLevel(chromadb.logging.ERROR)
 
@@ -30,19 +29,18 @@ class Memory:
         self.collection_name = 'memory'
         self.client = chromadb.PersistentClient(path=os.path.join(project_path, self.db_name))
 
-        with open(os.path.join(project_path, 'project.yml'), 'r') as file:
-            data = yaml.safe_load(file)
-            # use the OpenAI embedding function if the openai section is set in the configuration.
-            if data['platform'] == OpenAIModel:
-                self.client.get_or_create_collection(
-                    self.collection_name,
-                    embedding_function=embedding_functions.OpenAIEmbeddingFunction(
-                        model_name=embedding_model,
-                        api_key=data['api_key']
-                    )
+        config = get_config(project_path)
+        # use the OpenAI embedding function if the openai section is set in the configuration.
+        if config['platform'] == 'OpenAI':
+            self.client.get_or_create_collection(
+                self.collection_name,
+                embedding_function=embedding_functions.OpenAIEmbeddingFunction(
+                    model_name=embedding_model,
+                    api_key=config['api_key']
                 )
-            else:
-                self.client.get_or_create_collection(self.collection_name)
+            )
+        else:
+            self.client.get_or_create_collection(self.collection_name)
 
     def add_query(
             self,
