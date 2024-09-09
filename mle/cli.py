@@ -55,8 +55,11 @@ def start(ctx, mode, model):
     elif mode == 'report':
         # Report mode
         return ctx.invoke(report, model=model, visualize=False)
+    elif mode == 'kaggle':
+        # Kaggle mode
+        return ctx.invoke(kaggle, model=model)
     else:
-        raise ValueError("Invalid mode. Supported modes: 'baseline', 'report'.")
+        raise ValueError("Invalid mode. Supported modes: 'baseline', 'report', 'kaggle'.")
 
 
 @cli.command()
@@ -106,6 +109,33 @@ def report(ctx, repo, model, user, visualize):
             os.chdir(work_dir)
             return workflow.report(work_dir, repo, user, model)
         return workflow.report(os.getcwd(), repo, user, model)
+
+
+@cli.command()
+@click.option('--model', default=None, help='The model to use for the chat.')
+def kaggle(model):
+    """
+    kaggle: kaggle competition workflow.
+    """
+    if not check_config(console):
+        return
+    
+    config = get_config()
+    if "integration" not in config.keys():
+        config["integration"] = {}
+
+    if "kaggle" not in config.get("integration", {}).keys():
+        from mle.integration.kaggle import kaggle_login
+        username, key = kaggle_login()
+        config["integration"]["kaggle"] = {
+            "key": key,
+            "username": username,
+        }
+        write_config(config)
+
+    username = config["integration"]["kaggle"].get("username")
+    key = config["integration"]["kaggle"].get("key")
+    return workflow.kaggle(os.getcwd(), model, username, key)
 
 
 @cli.command()
@@ -199,7 +229,8 @@ def new(name):
 
 
 @cli.command()
-def integrate():
+@click.option('--reset', is_flag=True, help='Reset the integration')
+def integrate(reset):
     """
     integrate: integrate the third-party extensions.
     """
@@ -212,11 +243,11 @@ def integrate():
 
     platform = questionary.select(
         "Which platform do you want to integrate?",
-        choices=['GitHub', 'Google Calendar']
+        choices=['GitHub', 'Google Calendar', 'Kaggle']
     ).ask()
 
     if platform == "GitHub":
-        if config.get("integration").get("github"):
+        if not reset and config.get("integration").get("github"):
             print("GitHub is already integrated.")
         else:
             token = questionary.password(
@@ -230,11 +261,23 @@ def integrate():
 
     elif platform == "Google Calendar":
         from mle.integration.google_calendar import google_calendar_login
-        if get_config().get("integration").get("google_calendar"):
+        if not reset and get_config().get("integration").get("google_calendar"):
             print("Google Calendar is already integrated.")
         else:
             token = google_calendar_login()
             config["integration"]["google_calendar"] = {
                 "token": pickle.dumps(token, fix_imports=False),
+            }
+            write_config(config)
+
+    elif platform == "Kaggle":
+        from mle.integration.kaggle import kaggle_login
+        if not reset and get_config().get("integration").get("kaggle"):
+            print("Kaggle is already integrated.")
+        else:
+            username, key = kaggle_login()
+            config["integration"]["kaggle"] = {
+                "key": key,
+                "username": username,
             }
             write_config(config)
