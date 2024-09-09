@@ -56,7 +56,13 @@ class OllamaModel(Model):
         Args:
             chat_history: The context (chat history).
         """
-        return self.client.chat(model=self.model, messages=chat_history)['message']['content']
+
+        # Check if 'response_format' exists in kwargs
+        format = None
+        if 'response_format' in kwargs and kwargs['response_format'].get('type') == 'json_object':
+            format = 'json'
+
+        return self.client.chat(model=self.model, messages=chat_history, format=format)['message']['content']
 
     def stream(self, chat_history, **kwargs):
         """
