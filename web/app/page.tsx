@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Layout, Card, Input, Button, message, Form, Select, Spin } from 'antd';
+import { Layout, Card, Input, Button, message, Form, Select, Spin, Flex, Row, Col } from 'antd';
+import { HomeOutlined, BookOutlined, MailOutlined, GithubOutlined, XOutlined } from '@ant-design/icons';
 import dynamic from "next/dynamic";
 
 const MDEditor = dynamic(
   () => import("@uiw/react-md-editor"),
   { ssr: false }
 );
-const { Content } = Layout;
+const { Content, Header } = Layout;
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -128,6 +129,30 @@ export default function Home() {
 
   return (
     <Layout className="min-h-screen">
+      <Header style={{ backgroundColor: '#f5f5f5' }}>
+        <Row gutter={16} style={{ paddingTop: '10px' }}>
+          <Col span={8}>
+            <a href='https://repx.app/' style={{ display: 'block', textAlign: 'left' }}>
+              <img src='./logo.png' style={{ height: '3rem', display: 'inline-block' }} alt="Repx.app" />
+            </a>
+          </Col>
+          <Col offset={8} span={8}>
+            <Flex style={{ display: 'flex', height: '100%' }} align='flex-end' justify='flex-end'>
+              <Button type="text" block style={{ width: '100px' }} icon={<HomeOutlined />} href="https://repx.app/">
+                Home
+              </Button>
+              <Button type="text" block style={{ width: '100px' }} icon={<BookOutlined />} href="https://docs.repx.app/">
+                Docs
+              </Button>
+              <Button type="text" block style={{ width: '120px' }} icon={<MailOutlined />} href="https://discord.gg/xHW3Yz4x">
+                Feedback
+              </Button>
+              <Button type="text" block style={{ minWidth: '48px', maxWidth: '48px' }} icon={<GithubOutlined />} href="https://github.com/MLSysOps/MLE-agent"/>
+              <Button type="text" block style={{ minWidth: '48px', maxWidth: '48px' }} icon={<XOutlined />} href="https://x.com/MLE_Agent/"/>
+            </Flex>
+          </Col>
+        </Row>
+      </Header>
       <Content className="p-8">
         <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
           <Card className="w-[70%]" style={{ maxHeight: 'calc(100vh - 50px)', overflowY: 'auto' }}>
