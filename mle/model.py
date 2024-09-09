@@ -404,6 +404,7 @@ class MistralModel(Model):
             if chunk.choices[0].delta.tool_calls:
                 tool_call = chunk.choices[0].delta.tool_calls[0]
                 if tool_call.function.name:
+                    chat_history.append({"role": "assistant", "content": '', "tool_calls": [tool_call], "prefix":False})
                     function_name = process_function_name(tool_call.function.name)
                     arguments = json.loads(tool_call.function.arguments)
                     result = get_function(function_name)(**arguments)
