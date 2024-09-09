@@ -52,7 +52,6 @@ def baseline(work_dir: str, model=None):
                 return
             dataset = advisor.clarify_dataset(dataset)
             ca.store("dataset", dataset)
-
     # ask for the user requirement
     with cache(step=2, name="ask for the user requirement") as ca:
         ml_requirement = ca.resume("ml_requirement")

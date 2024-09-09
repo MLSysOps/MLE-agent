@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 from rich.console import Console
@@ -73,7 +74,7 @@ class AdviseAgent:
         """
         self.json_mode_prompt = """
 
-        JSON Output Format:
+        Return below JSON Object Format:
         
         {
             "task":"xxxxx",
@@ -102,6 +103,14 @@ class AdviseAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
+    def clean_json_string(self, input_string):
+        cleaned = input_string.strip()
+        cleaned = re.sub(r'^```\s*json?\s*', '', cleaned)
+        cleaned = re.sub(r'\s*```\s*$', '', cleaned)
+        print("Cleaned:",cleaned)
+        parsed_json = json.loads(cleaned)
+        return parsed_json
+
     def suggest(self, requirement):
         """
         Handle the query from the model query response.
@@ -118,7 +127,11 @@ class AdviseAgent:
             )
 
             self.chat_history.append({"role": "assistant", "content": text})
-            suggestions = json.loads(text)
+            try:
+                suggestions = json.loads(text)
+            except json.JSONDecodeError as e:
+                suggestions = self.clean_json_string(text)
+
 
         return process_report(requirement, suggestions)
 
@@ -185,7 +198,7 @@ class AdviseAgent:
             text = self.model.query(chat_history)
             chat_history.append({"role": "assistant", "content": text})
             if "yes" in text.lower():
-                return
+                return dataset
 
         # recommend some datasets based on the users' description
         user_prompt = f"""

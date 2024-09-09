@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 import questionary
@@ -82,6 +83,13 @@ class PlanAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
+    def clean_json_string(self, input_string):
+        cleaned = input_string.strip()
+        cleaned = re.sub(r'^```\s*json?\s*', '', cleaned)
+        cleaned = re.sub(r'\s*```\s*$', '', cleaned)
+        parsed_json = json.loads(cleaned)
+        return parsed_json
+    
     def plan(self, user_prompt):
         """
         Handle the query from the model query response.
@@ -101,7 +109,8 @@ class PlanAgent:
             return json.loads(text)
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON response: {e}")
-            sys.exit(1)
+            return self.clean_json_string(text)
+            # sys.exit(1)
 
     def interact(self, user_prompt):
         """
