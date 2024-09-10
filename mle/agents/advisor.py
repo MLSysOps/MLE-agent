@@ -4,7 +4,7 @@ import json
 from rich.console import Console
 
 from mle.function import *
-from mle.utils import get_config, print_in_box
+from mle.utils import get_config, print_in_box, clean_json_string
 
 
 def process_report(requirement: str, suggestions: dict):
@@ -74,7 +74,7 @@ class AdviseAgent:
         """
         self.json_mode_prompt = """
 
-        Return below JSON Object Format:
+        JSON Output Format:
         
         {
             "task":"xxxxx",
@@ -103,14 +103,6 @@ class AdviseAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def clean_json_string(self, input_string):
-        cleaned = input_string.strip()
-        cleaned = re.sub(r'^```\s*json?\s*', '', cleaned)
-        cleaned = re.sub(r'\s*```\s*$', '', cleaned)
-        print("Cleaned:",cleaned)
-        parsed_json = json.loads(cleaned)
-        return parsed_json
-
     def suggest(self, requirement):
         """
         Handle the query from the model query response.
@@ -130,8 +122,7 @@ class AdviseAgent:
             try:
                 suggestions = json.loads(text)
             except json.JSONDecodeError as e:
-                suggestions = self.clean_json_string(text)
-
+                suggestions = clean_json_string(text)
 
         return process_report(requirement, suggestions)
 

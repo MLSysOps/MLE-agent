@@ -1,10 +1,9 @@
-import re
 import sys
 import json
 import questionary
 from rich.console import Console
 
-from mle.utils import print_in_box
+from mle.utils import print_in_box, clean_json_string
 
 
 def process_plan(plan_dict: dict):
@@ -83,13 +82,6 @@ class PlanAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def clean_json_string(self, input_string):
-        cleaned = input_string.strip()
-        cleaned = re.sub(r'^```\s*json?\s*', '', cleaned)
-        cleaned = re.sub(r'\s*```\s*$', '', cleaned)
-        parsed_json = json.loads(cleaned)
-        return parsed_json
-    
     def plan(self, user_prompt):
         """
         Handle the query from the model query response.
@@ -108,9 +100,7 @@ class PlanAgent:
         try:
             return json.loads(text)
         except json.JSONDecodeError as e:
-            print(f"Error parsing JSON response: {e}")
-            return self.clean_json_string(text)
-            # sys.exit(1)
+            return clean_json_string(text)
 
     def interact(self, user_prompt):
         """
