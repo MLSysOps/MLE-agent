@@ -48,6 +48,7 @@ def report(
         work_dir: str,
         github_repo: str,
         github_username: str,
+        github_token: str = None,
         okr_str: str = None,
         model=None
 ):
@@ -56,6 +57,7 @@ def report(
     :param work_dir: the working directory.
     :param github_repo: the GitHub repository.
     :param github_username: the GitHub username.
+    :param github_token: the GitHub token.
     :param okr_str: the OKR string.
     :param model: the model to use.
     :return:
@@ -75,7 +77,7 @@ def report(
         model,
         github_repo=github_repo,
         username=github_username,
-        github_token=ask_github_token()
+        github_token=github_token or ask_github_token(),
     )
     reporter = ReportAgent(model, console)
 
