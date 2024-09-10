@@ -193,7 +193,7 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude']
+        choices=['OpenAI', 'Ollama', 'Claude', 'MistralAI']
     ).ask()
 
     api_key = None
@@ -205,6 +205,12 @@ def new(name):
 
     elif platform == 'Claude':
         api_key = questionary.password("What is your Anthropic API key?").ask()
+        if not api_key:
+            console.log("API key is required. Aborted.")
+            return
+    
+    elif platform == 'MistralAI':
+        api_key = questionary.password("What is your MistralAI API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
@@ -223,7 +229,6 @@ def new(name):
             'api_key': api_key,
             'search_key': search_api_key
         }, outfile, default_flow_style=False)
-
     # init the memory
     Memory(project_dir)
 

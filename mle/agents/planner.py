@@ -3,7 +3,7 @@ import json
 import questionary
 from rich.console import Console
 
-from mle.utils import print_in_box
+from mle.utils import print_in_box, clean_json_string
 
 
 def process_plan(plan_dict: dict):
@@ -100,8 +100,7 @@ class PlanAgent:
         try:
             return json.loads(text)
         except json.JSONDecodeError as e:
-            print(f"Error parsing JSON response: {e}")
-            sys.exit(1)
+            return clean_json_string(text)
 
     def interact(self, user_prompt):
         """

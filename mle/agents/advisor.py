@@ -3,7 +3,7 @@ import json
 from rich.console import Console
 
 from mle.function import *
-from mle.utils import get_config, print_in_box
+from mle.utils import get_config, print_in_box, clean_json_string
 
 
 def process_report(requirement: str, suggestions: dict):
@@ -118,7 +118,10 @@ class AdviseAgent:
             )
 
             self.chat_history.append({"role": "assistant", "content": text})
-            suggestions = json.loads(text)
+            try:
+                suggestions = json.loads(text)
+            except json.JSONDecodeError as e:
+                suggestions = clean_json_string(text)
 
         return process_report(requirement, suggestions)
 
@@ -185,7 +188,7 @@ class AdviseAgent:
             text = self.model.query(chat_history)
             chat_history.append({"role": "assistant", "content": text})
             if "yes" in text.lower():
-                return
+                return dataset
 
         # recommend some datasets based on the users' description
         user_prompt = f"""
