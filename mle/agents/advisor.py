@@ -1,4 +1,3 @@
-import re
 import sys
 import json
 from rich.console import Console
