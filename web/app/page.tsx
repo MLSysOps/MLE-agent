@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Layout, Card, Input, Button, message, Form, Select, Spin, Flex, Row, Col } from 'antd';
-import { HomeOutlined, BookOutlined, MailOutlined, GithubOutlined, XOutlined } from '@ant-design/icons';
+import { HomeOutlined, BookOutlined, MailOutlined, GithubOutlined, XOutlined, DiscordOutlined} from '@ant-design/icons';
 import dynamic from "next/dynamic";
 
 const MDEditor = dynamic(
@@ -144,11 +144,11 @@ export default function Home() {
               <Button type="text" block style={{ width: '100px' }} icon={<BookOutlined />} href="https://docs.repx.app/">
                 Docs
               </Button>
-              <Button type="text" block style={{ width: '120px' }} icon={<MailOutlined />} href="https://discord.gg/xHW3Yz4x">
+              <Button type="text" block style={{ width: '120px' }} icon={<DiscordOutlined />} href="https://discord.gg/xHW3Yz4x">
                 Feedback
               </Button>
               <Button type="text" block style={{ minWidth: '48px', maxWidth: '48px' }} icon={<GithubOutlined />} href="https://github.com/MLSysOps/MLE-agent"/>
-              <Button type="text" block style={{ minWidth: '48px', maxWidth: '48px' }} icon={<XOutlined />} href="https://x.com/MLE_Agent/"/>
+              <Button type="text" block style={{ minWidth: '48px', maxWidth: '48px' }} icon={<XOutlined />} href="https://x.com/zhzHNN/"/>
             </Flex>
           </Col>
         </Row>
