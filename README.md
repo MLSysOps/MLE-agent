@@ -30,6 +30,7 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ## Milestones
 
+- :rocket: 09/10/2024: Release the `0.4.0` with new CLIs like `MLE report`, `MLE kaggle`, `MLE integration` and many new models like `Mistral`.
 - :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc (v0.3.0)
 - :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
 - 👨‍🍼 **07/03/2024: Kaia is born**
