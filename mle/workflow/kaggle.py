@@ -6,7 +6,7 @@ import questionary
 from rich.console import Console
 from mle.model import load_model
 from mle.utils import ask_text, WorkflowCache
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
 from mle.integration import KaggleIntegration
 
 
@@ -49,7 +49,8 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         if ml_requirement is None:
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
                 overview = kaggle.get_competition_overview(competition)
-                ml_requirement =  f"Finish a kaggle competition: {overview}"
+                summary = SummaryAgent(model, console=console)
+                ml_requirement =  summary.kaggle_request_summarize(overview)
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

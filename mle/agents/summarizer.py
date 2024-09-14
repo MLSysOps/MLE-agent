@@ -7,7 +7,7 @@ from mle.integration import GitHubIntegration
 
 class SummaryAgent:
 
-    def __init__(self, model, github_repo: str, username: str, github_token: str = None, console=None):
+    def __init__(self, model, github_repo: str = None, username: str = None, github_token: str = None, console=None):
         """
         SummaryAgent: summary the workspace provided by the user.
 
@@ -133,3 +133,25 @@ class SummaryAgent:
             summary.update({"user_activity": user_activity})
 
         return summary
+
+    def kaggle_request_summarize(self, kaggle_overview):
+        """
+        Summarize the kaggle requests.
+        :params: kaggle_overview: the overview json of kaggle competition
+        """
+        system_prompt = """
+        You are a seasoned data science expert in Kaggle competitions. Your task is to summarize the
+        requirements of a specific Kaggle competition in a clear and concise manner. Please ensure that
+        your summary includes the following aspects:
+
+        1. **Overview**: Describe the competition's objective and significance.
+        2. **Data**: Detail the datasets, including file types, structure, and key features.
+        3. **Evaluation**: Explain the judging metric and its calculation.
+        4. **Submission**: Outline the format and requirements for submissions.
+        5. **Rules**: Highlight important rules, including data usage, team composition, and resources.
+        """
+        chat_history = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": str(kaggle_overview)}
+        ]
+        return self.model.query(chat_history)
