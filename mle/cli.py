@@ -146,7 +146,7 @@ def chat():
     if not check_config(console):
         return
 
-    model = load_model(os.getcwd(), "gpt-4o")
+    model = load_model(os.getcwd())
     coder = CodeAgent(model)
 
     while True:
@@ -193,7 +193,7 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude', 'MistralAI']
+        choices=['OpenAI', 'Ollama', 'Claude', 'MistralAI', 'DeepSeek']
     ).ask()
 
     api_key = None
@@ -211,6 +211,11 @@ def new(name):
     
     elif platform == 'MistralAI':
         api_key = questionary.password("What is your MistralAI API key?").ask()
+        if not api_key:
+            console.log("API key is required. Aborted.")
+            return
+    elif platform == 'DeepSeek':
+        api_key = questionary.password("What is your DeepSeek API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
