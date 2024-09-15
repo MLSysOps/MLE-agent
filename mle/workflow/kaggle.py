@@ -59,7 +59,7 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         if advisor_report is None:
             advisor = AdviseAgent(model, console)
             advisor_report = advisor.interact(
-                f"[green]User Requirement:[/green] {ml_requirement}\n"
+                f"[green]Competition Requirement:[/green] {ml_requirement}\n"
                 f"Dataset is downloaded in path: {dataset}"
             )
         ca.store("advisor_report", advisor_report)
