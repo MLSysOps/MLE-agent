@@ -336,14 +336,31 @@ def get_langfuse_observer(
         enabled=True,
     )
 
-    def _observe(fn):
+    def _observe(fn: Callable):
+        @langfuse.observe(as_type="generation")
+        def _fn(cls, *args, **kwargs):
+            model = getattr(cls.model, "model", None)
+            messages = getattr(cls.model, "chat_history", (args, kwargs))
+            response = fn(cls, *args, **kwargs)
+            langfuse.langfuse_context.update_current_observation(
+                model=model,
+                input=messages,
+                output=response,
+                usage={
+                    "input": len(str(messages)),
+                    "output": len(str(response)),
+                    "unit": "TOKENS",
+                }
+            )
+            return response
+
         @langfuse.observe()
         def query(*args, **kwargs):
             langfuse.langfuse_context.update_current_trace(
                 user_id=user_id,
                 session_id=session_id,
             )
-            return fn(*args, **kwargs)
+            return _fn(*args, **kwargs)
         return query
 
     return _observe
