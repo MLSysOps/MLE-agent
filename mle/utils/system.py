@@ -1,11 +1,14 @@
 import os
 import re
+import uuid
 import yaml
 import base64
 import shutil
 import requests
+import platform
 import subprocess
-from typing import Dict, Any, Optional
+import importlib.util
+from typing import Dict, Any, Optional, Callable
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.console import Console
@@ -257,3 +260,90 @@ def startup_web(host: str = "0.0.0.0", port: int = 3000):
             "Please install `npm` and `nodejs` before starting the web applications.\n"
             "Refer to: https://nodejs.org/en/download/package-manager"
         )
+
+
+def get_user_id():
+    """
+    Get the unique user id of the current machine.
+    """
+    system = platform.system()
+    username = None
+    hostname = None
+
+    if system == "Windows":
+        username = os.getenv('USERNAME', 'root')
+        hostname = os.getenv('COMPUTERNAME')
+    else:
+        username = os.getenv('USER', 'root')
+        try:
+            hostname = os.uname().nodename
+        except AttributeError:
+            import socket
+            hostname = socket.gethostname()
+
+    if username and hostname:
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{hostname}-{username}"))
+    else:
+        return None
+
+
+def get_session_id():
+    """
+    Get the session id of the current process.
+    """
+    pid = os.getpid()
+    start = os.stat(__file__).st_ctime if os.path.exists(__file__) else 0
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{pid}-{start}"))
+
+
+def get_langfuse_observer(
+    secret_key: Optional[str] = None,
+    public_key: Optional[str] = None,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None,
+    host: Optional[str] = None,
+):
+    """
+    Get the Langfuse observer.
+    :param secret_key: Langfuse secret key.
+    :param public_key: Langfuse public key.
+    :param host: Optional host address, defaulting to 'https://us.cloud.langfuse.com'.
+    """
+    spec = importlib.util.find_spec("langfuse")
+    if spec is None:
+        raise ImportError(
+            "It seems you didn't install langfuse. In order to enable the observer, "
+            "please make sure `langfuse` Python package has been installed. "
+            "More information, please refer to: https://python.reference.langfuse.com/langfuse"
+        )
+
+    if secret_key is None:
+        secret_key = os.environ["LANGFUSE_SECRET_KEY"]
+    if public_key is None:
+        public_key = os.environ["LANGFUSE_PUBLIC_KEY"]
+    if user_id is None:
+        user_id = get_user_id()
+    if session_id is None:
+        session_id = get_session_id()
+    if host is None:
+        host = os.getenv("LANGFUSE_HOST", "https://us.cloud.langfuse.com")
+
+    langfuse = importlib.import_module("langfuse.decorators")
+    langfuse.langfuse_context.configure(
+        secret_key=secret_key,
+        public_key=public_key,
+        host=host,
+        enabled=True,
+    )
+
+    def _observe(fn):
+        @langfuse.observe()
+        def query(*args, **kwargs):
+            langfuse.langfuse_context.update_current_trace(
+                user_id=user_id,
+                session_id=session_id,
+            )
+            return fn(*args, **kwargs)
+        return query
+
+    return _observe
