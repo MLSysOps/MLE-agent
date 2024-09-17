@@ -11,6 +11,7 @@ questionary
 pandas~=2.2.2
 tavily-python
 instructor
+langfuse
 setuptools
 numexpr~=2.10.1
 bottleneck~=1.4.0
