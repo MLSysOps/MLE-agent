@@ -208,12 +208,13 @@ def new(name):
         if not api_key:
             console.log("API key is required. Aborted.")
             return
-    
+
     elif platform == 'MistralAI':
         api_key = questionary.password("What is your MistralAI API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
+
     elif platform == 'DeepSeek':
         api_key = questionary.password("What is your DeepSeek API key?").ask()
         if not api_key:
@@ -232,8 +233,10 @@ def new(name):
         yaml.dump({
             'platform': platform,
             'api_key': api_key,
-            'search_key': search_api_key
+            'search_key': search_api_key,
+            'integration': {},
         }, outfile, default_flow_style=False)
+
     # init the memory
     Memory(project_dir)
 
@@ -257,13 +260,11 @@ def integrate(reset):
     ).ask()
 
     if platform == "GitHub":
+        from mle.integration.github import github_login
         if not reset and config.get("integration").get("github"):
             print("GitHub is already integrated.")
         else:
-            token = questionary.password(
-                "What is your GitHub token? (https://github.com/settings/tokens)"
-            ).ask()
-
+            token = github_login()
             config["integration"]["github"] = {
                 "token": token
             }

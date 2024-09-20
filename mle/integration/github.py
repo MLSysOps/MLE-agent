@@ -1,8 +1,19 @@
 import os
 import base64
 import requests
+import questionary
 from fnmatch import fnmatch
 from datetime import datetime, timezone, timedelta
+
+
+def github_login():
+    """
+    GitHub login by API token.
+    :returns: API key.
+    """
+    token = questionary.password(
+        "What is your GitHub token? (https://github.com/settings/tokens)").ask()
+    return token
 
 
 class GitHubIntegration:

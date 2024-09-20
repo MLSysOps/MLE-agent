@@ -8,7 +8,7 @@ from rich.console import Console
 from mle.model import load_model
 from mle.agents import SummaryAgent, ReportAgent
 from mle.utils.system import get_config, write_config, check_config
-from mle.integration import GoogleCalendarIntegration
+from mle.integration import GoogleCalendarIntegration, github_login
 
 
 def ask_data(data_str: str):
@@ -22,26 +22,6 @@ def ask_data(data_str: str):
         return f"[green]CSV Dataset Location:[/green] {data_str}"
     else:
         return f"[green]Dataset:[/green] {data_str}"
-
-
-def ask_github_token():
-    """
-    Ask the user to integrate GitHub.
-    :return: the GitHub token.
-    """
-    config = get_config() or {}
-    if "integration" not in config.keys():
-        config["integration"] = {}
-
-    if "github" not in config["integration"].keys():
-        token = questionary.password(
-            "What is your GitHub token? (https://github.com/settings/tokens)"
-        ).ask()
-
-        config["integration"]["github"] = {"token": token}
-        write_config(config)
-
-    return config["integration"]["github"]["token"]
 
 
 def report(
@@ -68,6 +48,14 @@ def report(
     events = None
     if check_config(console):
         config = get_config()
+        if github_token is None:
+            if "github" in config.get("integration", {}).keys():
+                github_token = config["integration"]["github"].get("token")
+            else:
+                github_token = github_login()
+                config["integration"]["github"] = {"token": github_token}
+                write_config(config)
+
         if "google_calendar" in config.get("integration", {}).keys():
             google_token = pickle.loads(config["integration"]["google_calendar"].get("token"))
             google_calendar = GoogleCalendarIntegration(google_token)
@@ -77,7 +65,7 @@ def report(
         model,
         github_repo=github_repo,
         username=github_username,
-        github_token=github_token or ask_github_token(),
+        github_token=github_token,
     )
     reporter = ReportAgent(model, console)
 
