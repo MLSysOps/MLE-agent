@@ -1,3 +1,4 @@
+import os
 import copy
 import importlib.util
 import json
@@ -107,7 +108,10 @@ class OpenAIModel(Model):
         self.model = model if model else 'gpt-4o-2024-08-06'
         self.model_type = MODEL_OPENAI
         self.temperature = temperature
-        self.client = self.openai(api_key=api_key)
+        self.client = self.openai(
+            api_key=api_key,
+            base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        )
         self.func_call_history = []
 
     def query(self, chat_history, **kwargs):
