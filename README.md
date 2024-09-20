@@ -24,6 +24,7 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 - 📂 File System Integration: Organizes your project structure efficiently.
 - 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
 - ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
+- 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
 
 
 https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
@@ -66,6 +67,29 @@ You can also start an interactive chat in the terminal under the project directo
 mle chat
 ```
 
+## Use cases
+
+### Generate Work Report
+
+MLE agent can help you summarize your weekly report, including development progress, communication notes, and to-do lists.
+
+```bash
+cd <project name>
+mle report
+```
+
+Then, you can visit http://localhost:3000/ to generate your report locally.
+Alternatively, you can directly try our deployed service at https://workspace.repx.app/ to generate reports with more third-party extensions (e.g., Zoom, Google Calendar) supported.
+
+### Start with Kaggle Competition
+
+MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training independently.
+
+```bash
+cd <project name>
+mle kaggle
+```
+
 ## Roadmap
 
 The following is a list of the tasks we plan to do, welcome to propose something new!
@@ -79,7 +103,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [x] Execute the code on the local machine/cloud, debug and fix the errors
   - [x] Leverage the built-in functions to complete ML engineering tasks
   - [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
-  - [ ] Kaggle mode: to finish a Kaggle task without humans
+  - [x] Kaggle mode: to finish a Kaggle task without humans
   - [ ] Summary and reflect the whole ML/AI pipeline
   - [ ] Integration with Cloud data and testing and debugging platforms
   - [x] Local RAG support to make personal ML/AI coding assistant
@@ -100,8 +124,8 @@ The following is a list of the tasks we plan to do, welcome to propose something
   <summary><b>:sparkling_heart: Better user experience</b></summary>
 
   - [x] CLI Application
-  - [ ] Web UI
-  - [ ] Discord
+  - [x] Web UI
+  - [x] Discord
 </details>
 
 <details>
