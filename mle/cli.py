@@ -151,9 +151,9 @@ def chat():
     coder = CodeAgent(model)
 
     # read the project information
-    dataset = cache(step=1).resume("dataset")
-    ml_requirement = cache(step=2).resume("ml_requirement")
-    advisor_report = cache(step=3).resume("advisor_report")
+    dataset = cache.resume_variable("dataset")
+    ml_requirement = cache.resume_variable("ml_requirement")
+    advisor_report = cache.resume_variable("advisor_report")
 
     # inject the project information into prompts
     coder.read_requirement(advisor_report or ml_requirement or dataset)

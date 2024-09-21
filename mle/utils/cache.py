@@ -110,6 +110,26 @@ class WorkflowCache:
         """
         return max(self.cache.keys()) if self.cache else 0
 
+    def resume_variable(self, key: str, step: Optional[int] = None):
+        """
+        Resume the cached variable.
+
+        Args:
+            key (str): The key of the value to be resumed.
+            step (str): The step to be initialized.
+
+        Returns:
+            object: The resumed value, or None if the key does not exist.
+        """
+        if step is not None:
+            return self.__call__(step).resume(key)
+        else:
+            for step in range(self.current_step()):
+                value = self.resume_variable(key, step)
+                if value is not None:
+                    return value
+            return None
+
     def _load_cache_buffer(self) -> Dict[str, Any]:
         """
         Load the cache buffer from the configuration.
