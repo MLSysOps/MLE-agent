@@ -128,7 +128,7 @@ class WorkflowCache:
         """
         write_config(self.buffer)
 
-    def __call__(self, step: int, name: str) -> WorkflowCacheOperator:
+    def __call__(self, step: int, name: Optional[str] = None) -> WorkflowCacheOperator:
         """
         Initialize the cache content for a given step and name.
 

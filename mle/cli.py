@@ -17,7 +17,7 @@ from mle.server import app
 from mle.model import load_model
 from mle.agents import CodeAgent
 import mle.workflow as workflow
-from mle.utils import Memory
+from mle.utils import Memory, WorkflowCache
 from mle.utils.system import (
     get_config,
     write_config,
@@ -147,7 +147,16 @@ def chat():
         return
 
     model = load_model(os.getcwd())
+    cache = WorkflowCache(os.getcwd())
     coder = CodeAgent(model)
+
+    # read the project information
+    dataset = cache(step=1).resume("dataset")
+    ml_requirement = cache(step=2).resume("ml_requirement")
+    advisor_report = cache(step=3).resume("advisor_report")
+
+    # inject the project information into prompts
+    coder.read_requirement(advisor_report or ml_requirement or dataset)
 
     while True:
         try:
