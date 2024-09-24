@@ -89,15 +89,20 @@ def check_config(console: Optional[Console] = None):
         os.makedirs(config_dir, exist_ok=True)
         shutil.move(old_config_path, config_path)
 
-    if not os.path.exists(config_path):
+    try:
+        with open(config_path, 'r') as file:
+            data = yaml.safe_load(file)
+            if data is None:
+                raise yaml.YAMLError
+    except FileNotFoundError:
         console.log("Configuration file not found. Please run 'mle new' first.")
         return False
+    except yaml.YAMLError:
+        console.log("Configuration file could not be loaded.")
+        return False
 
-    with open(config_path, 'r') as file:
-        data = yaml.safe_load(file)
-        if data.get('search_key'):
-            os.environ["SEARCH_API_KEY"] = data.get('search_key')
-
+    if data.get('search_key'):
+        os.environ["SEARCH_API_KEY"] = data.get('search_key')
     return True
 
 
