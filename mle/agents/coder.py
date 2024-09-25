@@ -205,35 +205,3 @@ class CodeAgent:
                 )
             print_in_box(process_summary(self.code_summary), self.console, title="MLE Developer", color="cyan")
         return self.code_summary
-
-    def chat(self, user_prompt):
-        """
-        Handle the response from the model streaming.
-        The stream mode is integrative with the model streaming function, we don't
-        need to set it into the JSON mode.
-        Args:
-            user_prompt: the user prompt.
-        """
-        text = ''
-        self.chat_history.append({"role": "user", "content": user_prompt})
-        for content in self.model.stream(
-                self.chat_history,
-                function_call='auto',
-                functions=[
-                    schema_read_file,
-                    schema_create_file,
-                    schema_write_file,
-                    schema_list_files,
-                    schema_create_directory,
-                    schema_search_arxiv,
-                    schema_search_papers_with_code,
-                    schema_web_search,
-                    schema_execute_command,
-                    schema_preview_csv_data
-                ]
-        ):
-            if content:
-                text += content
-                yield text
-
-        self.chat_history.append({"role": "assistant", "content": text})
