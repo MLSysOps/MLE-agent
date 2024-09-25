@@ -11,6 +11,11 @@
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 
+[🏠 Website](https://repx.app/) | 
+[📚 Get Started](https://docs.repx.app/) | 
+[🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) | 
+👋 Join us on <a href="https://discord.gg/SgxBpENGRG" target="_blank">Discord</a>
+
 </div>
 
 
@@ -69,9 +74,10 @@ mle chat
 
 ## Use cases
 
-### Generate Work Report
+### :bar_chart: Generate Work Report
 
 MLE agent can help you summarize your weekly report, including development progress, communication notes, and to-do lists.
+For more details, see the [MLE-Agent Tutorials](https://docs.repx.app/tutorial/Report_your_progress_and_plan).
 
 ```bash
 cd <project name>
@@ -81,9 +87,10 @@ mle report
 Then, you can visit http://localhost:3000/ to generate your report locally.
 Alternatively, you can directly try our deployed service at https://workspace.repx.app/ to generate reports with more third-party extensions (e.g., Zoom, Google Calendar) supported.
 
-### Start with Kaggle Competition
+### :trophy: Start with Kaggle Competition
 
 MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training independently.
+For more details, see the [MLE-Agent Tutorials](https://docs.repx.app/tutorial/Start_a_kaggle_task).
 
 ```bash
 cd <project name>
