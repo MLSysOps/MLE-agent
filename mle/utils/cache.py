@@ -71,16 +71,18 @@ class WorkflowCache:
     methods to load, store, and remove cached steps.
     """
 
-    def __init__(self, project_dir: str):
+    def __init__(self, project_dir: str, workflow: str = 'baseline'):
         """
         Initialize WorkflowCache with a project directory.
 
         Args:
             project_dir (str): The directory of the project.
+            workflow (str): The name of the cached workflow.
         """
         self.project_dir = project_dir
-        self.buffer = self._load_cache_buffer()
-        self.cache: Dict[int, Dict[str, Any]] = self.buffer["cache"]
+        self.workflow = workflow
+        self.buffer = self._load_cache_buffer(workflow)
+        self.cache: Dict[int, Dict[str, Any]] = self.buffer["cache"][workflow]
 
     def is_empty(self) -> bool:
         """
@@ -124,22 +126,27 @@ class WorkflowCache:
         if step is not None:
             return self.__call__(step).resume(key)
         else:
-            for step in range(self.current_step()):
+            for step in range(self.current_step() + 1):
                 value = self.resume_variable(key, step)
                 if value is not None:
                     return value
             return None
 
-    def _load_cache_buffer(self) -> Dict[str, Any]:
+    def _load_cache_buffer(self, workflow: str) -> Dict[str, Any]:
         """
         Load the cache buffer from the configuration.
+
+        Args:
+            workflow (str): The name of the cached workflow.
 
         Returns:
             dict: The buffer loaded from the configuration.
         """
         buffer = get_config() or {}
-        if "cache" not in buffer:
+        if "cache" not in buffer.keys():
             buffer["cache"] = {}
+        if workflow not in buffer["cache"].keys():
+            buffer["cache"][workflow] = {}
         return buffer
 
     def _store_cache_buffer(self) -> None:
@@ -159,7 +166,7 @@ class WorkflowCache:
         Returns:
             WorkflowCacheOperator: An instance of WorkflowCacheOperator.
         """
-        if step not in self.cache:
+        if step not in self.cache.keys():
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.cache[step] = {
                 "step": step,

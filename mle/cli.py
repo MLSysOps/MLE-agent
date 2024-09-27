@@ -6,18 +6,13 @@ import pickle
 import uvicorn
 import questionary
 from pathlib import Path
-from rich.live import Live
-from rich.panel import Panel
 from rich.console import Console
-from rich.markdown import Markdown
-from concurrent.futures import ThreadPoolExecutor
 
 import mle
+import mle.workflow as workflow
 from mle.server import app
 from mle.model import load_model
-from mle.agents import CodeAgent
-import mle.workflow as workflow
-from mle.utils import Memory, WorkflowCache
+from mle.utils import Memory
 from mle.utils.system import (
     get_config,
     write_config,
@@ -58,6 +53,9 @@ def start(ctx, mode, model):
     elif mode == 'kaggle':
         # Kaggle mode
         return ctx.invoke(kaggle, model=model)
+    elif mode == 'chat':
+        # Chat mode
+        return ctx.invoke(chat, model=model)
     else:
         raise ValueError("Invalid mode. Supported modes: 'baseline', 'report', 'kaggle'.")
 
@@ -79,6 +77,8 @@ def report(ctx, repo, model, user, visualize):
             "[blue underline]http://localhost:3000/[/blue underline]",
             console=console, title="MLE Report", color="green"
         )
+        from concurrent.futures import ThreadPoolExecutor
+
         with ThreadPoolExecutor() as executor:
             future1 = executor.submit(ctx.invoke, serve)
             future2 = executor.submit(ctx.invoke, web)
@@ -139,37 +139,15 @@ def kaggle(model):
 
 
 @cli.command()
-def chat():
+@click.option('--model', default=None, help='The model to use for the chat.')
+def chat(model):
     """
     chat: start an interactive chat with LLM to work on your ML project.
     """
     if not check_config(console):
         return
 
-    model = load_model(os.getcwd())
-    cache = WorkflowCache(os.getcwd())
-    coder = CodeAgent(model)
-
-    # read the project information
-    dataset = cache.resume_variable("dataset")
-    ml_requirement = cache.resume_variable("ml_requirement")
-    advisor_report = cache.resume_variable("advisor_report")
-
-    # inject the project information into prompts
-    coder.read_requirement(advisor_report or ml_requirement or dataset)
-
-    while True:
-        try:
-            user_pmpt = questionary.text("[Exit/Ctrl+D]: ").ask()
-            if user_pmpt:
-                with Live(console=Console()) as live:
-                    for text in coder.chat(user_pmpt.strip()):
-                        live.update(
-                            Panel(Markdown(text), title="[bold magenta]MLE-Agent[/]", border_style="magenta"),
-                            refresh=True
-                        )
-        except (KeyboardInterrupt, EOFError):
-            exit()
+    return workflow.chat(os.getcwd(), model)
 
 
 @cli.command()
