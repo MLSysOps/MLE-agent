@@ -15,7 +15,7 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
     The workflow of the kaggle mode.
     """
     console = Console()
-    cache = WorkflowCache(work_dir)
+    cache = WorkflowCache(work_dir, 'kaggle')
     model = load_model(work_dir, model)
     kaggle = KaggleIntegration(kaggle_username, kaggle_token)
 

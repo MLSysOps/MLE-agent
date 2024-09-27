@@ -20,8 +20,7 @@ class ChatAgent:
         self.model = model
         self.chat_history = []
         self.working_dir = working_dir
-        self.cache = WorkflowCache(working_dir)
-
+        self.cache = WorkflowCache(working_dir, 'baseline')
 
         self.console = console
         if not self.console:
@@ -89,6 +88,7 @@ class ChatAgent:
         You are a Chatbot designed to collaborate with users on planning and debugging ML projects.
         Your goal is to provide concise and friendly greetings within 50 words, including:
         1. Infer about the project's purpose or objective.
+        2. Summarize the previous conversations if it existed.
         2. Offering a brief overview of the assistance and support you can provide to the user, such as:
            - Helping with project planning and management.
            - Assisting with debugging and troubleshooting code.

@@ -29,7 +29,7 @@ def baseline(work_dir: str, model=None):
     """
 
     console = Console()
-    cache = WorkflowCache(work_dir)
+    cache = WorkflowCache(work_dir, 'baseline')
     model = load_model(work_dir, model)
 
     if not cache.is_empty():
