@@ -69,8 +69,10 @@ class ChatAgent:
             ml_requirement = self.cache.resume_variable("ml_requirement")
             advisor_report = self.cache.resume_variable("advisor_report")
             self.sys_prompt += f"""
-            The overall project information:\n
-            {advisor_report or ml_requirement or dataset}
+            The overall project information: \n
+            {'Dataset: ' + dataset if dataset else ''} \n
+            {'Requirement: ' + ml_requirement if ml_requirement else ''} \n
+            {'Advisor: ' + advisor_report if advisor_report else ''} \n
             """
 
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
@@ -86,7 +88,7 @@ class ChatAgent:
         system_prompt = """
         You are a Chatbot designed to collaborate with users on planning and debugging ML projects.
         Your goal is to provide concise and friendly greetings within 50 words, including:
-        1. Inquiring about the project's purpose or objective.
+        1. Infer about the project's purpose or objective.
         2. Offering a brief overview of the assistance and support you can provide to the user, such as:
            - Helping with project planning and management.
            - Assisting with debugging and troubleshooting code.
