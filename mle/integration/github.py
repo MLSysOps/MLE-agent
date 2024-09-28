@@ -440,11 +440,11 @@ class GitHubIntegration:
             for release in self._make_request("releases", params={"per_page": limit})
         ]
 
-    def get_structure(self, path='', branch='main', include_invisible=False):
+    def get_structure(self, path='', branch=None, include_invisible=False):
         """
         Scan and return the file structure and file names of the GitHub repository as a list of paths.
         :param path: The path to start scanning from (default is root)
-        :param branch: The branch to scan (default is 'main')
+        :param branch: The branch to scan (if None, the repository's default branch will be used)
         :param include_invisible: Whether to include invisible files/folders (starting with .) (default is False)
         :return: A list of file paths in the repository
         """
@@ -463,6 +463,9 @@ class GitHubIntegration:
             return paths
 
         # Get the SHA of the latest commit on the specified branch
+        if branch is None:
+            branch = self._make_request().get("default_branch", "main")
+
         branch_data = self._make_request(f'branches/{branch}')
         root_tree_sha = branch_data['commit']['commit']['tree']['sha']
 
