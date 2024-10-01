@@ -11,7 +11,7 @@
   "dependencies": {
     "@uiw/react-md-editor": "v3.6.0",
     "antd": "^5.20.5",
-    "next": "14.2.8",
+    "next": "14.2.10",
     "react": "^18",
     "react-dom": "^18"
   },
