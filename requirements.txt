@@ -6,6 +6,7 @@ fastapi
 uvicorn
 requests
 chromadb
+GitPython
 onnxruntime
 questionary
 pandas~=2.2.2
