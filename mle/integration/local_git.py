@@ -1,5 +1,5 @@
 from git import Repo, NULL_TREE
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class GitIntegration:
@@ -29,22 +29,25 @@ class GitIntegration:
         except Exception as e:
             return f"An error occurred: {str(e)}"
 
-    def get_commit_history(self, limit=None):
+    def get_commit_history(self, date_range=None, limit=None):
         """
         Get commit history from a git repository
-        :param limit: Number of commits to retrieve
+        :param date_range: Number of days to look back from today (default None)
+        :param limit: Number of commits to retrieve (default None)
         :return: List of commit history
         """
         try:
             commit_history = []
             for commit in self.repo.iter_commits(max_count=limit):
-                commit_history.append({
-                    'commit_hash': commit.hexsha,
-                    'author': commit.author.name,
-                    'email': commit.author.email,
-                    'message': commit.message.strip(),
-                    'date': datetime.fromtimestamp(commit.committed_date).strftime("%Y-%m-%d %H:%M:%S")
-                })
+                commit_date = datetime.fromtimestamp(commit.committed_date)
+                if date_range is None or (datetime.now() - commit_date).days <= date_range:
+                    commit_history.append({
+                        'commit_hash': commit.hexsha,
+                        'author': commit.author.name,
+                        'email': commit.author.email,
+                        'message': commit.message.strip(),
+                        'date': commit_date.strftime("%Y-%m-%d %H:%M:%S")
+                    })
 
             return commit_history
 
