@@ -2,6 +2,7 @@ rich
 click
 openai~=1.34.0
 pyyaml
+kaggle
 fastapi
 uvicorn
 requests

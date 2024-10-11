@@ -10,14 +10,14 @@ from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAge
 from mle.integration import KaggleIntegration
 
 
-def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
+def kaggle(work_dir: str, model=None):
     """
     The workflow of the kaggle mode.
     """
     console = Console()
     cache = WorkflowCache(work_dir, 'kaggle')
     model = load_model(work_dir, model)
-    kaggle = KaggleIntegration(kaggle_username, kaggle_token)
+    integration = KaggleIntegration()
 
     if not cache.is_empty():
         step = ask_text(f"MLE has finished the following steps: \n{cache}\n"
@@ -35,10 +35,10 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         if competition is None or dataset is None:
             competition = questionary.select(
                 "Please select a Kaggle competition to join:",
-                choices=kaggle.list_competition()
+                choices=integration.list_competition()
             ).ask()
             with console.status("MLE Agent is downloading the kaggle competition dataset..."):
-                dataset = kaggle.download_competition_dataset(
+                dataset = integration.download_competition_dataset(
                     competition, os.path.join(os.getcwd(), 'data'))
         ca.store("competition", competition)
         ca.store("dataset", dataset)
@@ -48,9 +48,8 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         ml_requirement = ca.resume("ml_requirement")
         if ml_requirement is None:
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
-                overview = kaggle.get_competition_overview(competition)
                 summary = SummaryAgent(model, console=console)
-                ml_requirement = summary.kaggle_request_summarize(overview)
+                ml_requirement = summary.kaggle_request_summarize(integration.get_competition_overview(competition))
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

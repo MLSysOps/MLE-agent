@@ -134,7 +134,7 @@ class SummaryAgent:
 
         return summary
 
-    def kaggle_request_summarize(self, kaggle_overview):
+    def kaggle_request_summarize(self, kaggle_overview: str):
         """
         Summarize the kaggle requests.
         :params: kaggle_overview: the overview json of kaggle competition
@@ -144,14 +144,15 @@ class SummaryAgent:
         requirements of a specific Kaggle competition in a clear and concise manner. Please ensure that
         your summary includes the following aspects:
 
-        1. **Overview**: Describe the competition's objective and significance.
-        2. **Data**: Detail the datasets, including file types, structure, and key features.
-        3. **Evaluation**: Explain the judging metric and its calculation.
-        4. **Submission**: Outline the format and requirements for submissions.
-        5. **Rules**: Highlight important rules, including data usage, team composition, and resources.
+        1. Overview: Describe the competition's objective and significance.
+        2. Data: Detail the datasets, including file types, structure, and key features.
+        3. Evaluation: Explain the judging metric and its calculation.
+        4. Submission: Outline the format and requirements for submissions.
+        5. Rules: Highlight important rules, including data usage, team composition, and resources.
         """
+        print(kaggle_overview)
         chat_history = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": str(kaggle_overview)}
+            {"role": "user", "content": kaggle_overview}
         ]
         return self.model.query(chat_history)

@@ -119,22 +119,7 @@ def kaggle(model):
     if not check_config(console):
         return
 
-    config = get_config()
-    if "integration" not in config.keys():
-        config["integration"] = {}
-
-    if "kaggle" not in config.get("integration", {}).keys():
-        from mle.integration.kaggle import kaggle_login
-        username, key = kaggle_login()
-        config["integration"]["kaggle"] = {
-            "key": key,
-            "username": username,
-        }
-        write_config(config)
-
-    username = config["integration"]["kaggle"].get("username")
-    key = config["integration"]["kaggle"].get("key")
-    return workflow.kaggle(os.getcwd(), model, username, key)
+    return workflow.kaggle(os.getcwd(), model)
 
 
 @cli.command()
@@ -264,17 +249,5 @@ def integrate(reset):
             token = google_calendar_login()
             config["integration"]["google_calendar"] = {
                 "token": pickle.dumps(token, fix_imports=False),
-            }
-            write_config(config)
-
-    elif platform == "Kaggle":
-        from mle.integration.kaggle import kaggle_login
-        if not reset and get_config().get("integration").get("kaggle"):
-            print("Kaggle is already integrated.")
-        else:
-            username, key = kaggle_login()
-            config["integration"]["kaggle"] = {
-                "key": key,
-                "username": username,
             }
             write_config(config)
