@@ -9,7 +9,7 @@ from rich.console import Console
 from mle.model import load_model
 from mle.function import execute_command
 from mle.integration import KaggleIntegration
-from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache
+from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache, print_in_box
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
 
 
@@ -68,6 +68,7 @@ def auto_kaggle(
         "task": competition_id,
         "description": requirements
     }
+    print_in_box(requirements, console, title="Kaggle Competition Requirement", color="green")
     code_report = coder.code(coding_task)
     while True:
         with console.status("MLE Debug Agent is executing and debugging the code..."):
@@ -75,7 +76,22 @@ def auto_kaggle(
             logs = execute_command(running_cmd)
             debug_report = debugger.analyze_with_log(running_cmd, logs)
         if debug_report.get('status') == 'success':
-            break
+            # check the submission file
+            if os.path.exists(submission):
+                console.log(f"The submission file ({submission}) is not found. Launch the coder to improve...")
+                code_report = coder.debug(
+                    coding_task,
+                    {
+                        "status": "error",
+                        "changes": [
+                            f"make sure the submission file is generated in {submission}",
+                            f"make sure the submission file is in the correct format. You can refer to the example submission file: {sub_examples}"
+                        ],
+                        "suggestion": f"Please update the code related to generating the submission file."
+                    }
+                )
+            else:
+                break
         else:
             code_report = coder.debug(coding_task, debug_report)
 
