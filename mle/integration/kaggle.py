@@ -14,8 +14,6 @@ class KaggleIntegration:
 
         kaggle_file = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
 
-        print(os.path.exists(kaggle_file))
-
         if not os.path.exists(kaggle_file):
             username = questionary.text("What is your Kaggle username?").ask()
             key = questionary.password("What is your Kaggle token?").ask()
@@ -58,7 +56,7 @@ class KaggleIntegration:
                     zip_ref.extractall(download_dir)
         return download_dir
 
-    def get_competition_overview(self, competition: str):
+    def fetch_competition_overview(self, competition: str):
         """
         Fetches competition overview information using the Kaggle API.
         :param competition: The URL or name of the Kaggle competition.

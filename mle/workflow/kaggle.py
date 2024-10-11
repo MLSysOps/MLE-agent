@@ -3,16 +3,70 @@ Kaggle Mode: the mode to generate ML pipeline for kaggle competitions.
 """
 import os
 import questionary
+from typing import List
 from rich.console import Console
+
 from mle.model import load_model
-from mle.utils import ask_text, WorkflowCache
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
 from mle.integration import KaggleIntegration
+from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
+
+
+def auto_kaggle(work_dir: str, datasets: List[str], description: str, model=None):
+    """
+    The workflow of the kaggle mode.
+    :param work_dir: the working directory.
+    :param datasets: the datasets to use.
+    :param description: the description of the competition, can be a path to a local .md file or a string.
+    :param model: the model to use.
+    """
+    console = Console()
+    model = load_model(work_dir, model)
+
+    # initialize the agents
+    advisor = AdviseAgent(model, console)
+    summarizer = SummaryAgent(model, console=console)
+    planner = PlanAgent(model, console)
+    coder = CodeAgent(model, work_dir, console)
+    debugger = DebugAgent(model, console)
+
+    if is_markdown_file(description):
+        description = read_markdown(description)
+
+    with console.status("MLE Agent is processing the kaggle competition overview..."):
+        requirements = summarizer.kaggle_request_summarize(description)
+        requirements += f"\nLOCAL DATASET PATH:\n"
+        for dataset in datasets:
+            requirements += f" - {dataset}\n"
+
+    with console.status("MLE Agent is thinking about the competition strategy..."):
+        advisor_report = advisor.suggest(requirements)
+
+    with console.status("MLE Agent is generating the coding plan..."):
+        coding_plan = planner.plan(advisor_report)
+
+    coder.read_requirement(advisor_report)
+    for current_task in coding_plan.get('tasks'):
+        code_report = coder.interact(current_task)
+        is_debugging = code_report.get('debug')
+
+        while True:
+            if is_debugging == 'true' or is_debugging == 'True':
+                with console.status("MLE Debug Agent is executing and debugging the code..."):
+                    debug_report = debugger.analyze(code_report)
+                if debug_report.get('status') == 'success':
+                    break
+                else:
+                    code_report = coder.debug(current_task, debug_report)
+            else:
+                break
 
 
 def kaggle(work_dir: str, model=None):
     """
     The workflow of the kaggle mode.
+    :param work_dir: the working directory.
+    :param model: the model to use.
     """
     console = Console()
     cache = WorkflowCache(work_dir, 'kaggle')
@@ -49,7 +103,7 @@ def kaggle(work_dir: str, model=None):
         if ml_requirement is None:
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
                 summary = SummaryAgent(model, console=console)
-                ml_requirement = summary.kaggle_request_summarize(integration.get_competition_overview(competition))
+                ml_requirement = summary.kaggle_request_summarize(integration.fetch_competition_overview(competition))
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

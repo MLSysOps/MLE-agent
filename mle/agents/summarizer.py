@@ -150,7 +150,6 @@ class SummaryAgent:
         4. Submission: Outline the format and requirements for submissions.
         5. Rules: Highlight important rules, including data usage, team composition, and resources.
         """
-        print(kaggle_overview)
         chat_history = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": kaggle_overview}
