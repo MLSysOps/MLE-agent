@@ -40,9 +40,6 @@ class KaggleIntegration:
         :param username: Kaggle username.
         :param token: Kaggle API key.
         """
-        os.environ["KAGGLE_USERNAME"] = username
-        os.environ["KAGGLE_KEY"] = token
-
         dependency = "kaggle"
         spec = importlib.util.find_spec(dependency)
         if spec is not None:
