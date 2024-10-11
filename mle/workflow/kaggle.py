@@ -77,7 +77,7 @@ def auto_kaggle(
             debug_report = debugger.analyze_with_log(running_cmd, logs)
         if debug_report.get('status') == 'success':
             # check the submission file
-            if os.path.exists(submission):
+            if not os.path.exists(submission):
                 console.log(f"The submission file ({submission}) is not found. Launch the coder to improve...")
                 code_report = coder.debug(
                     coding_task,

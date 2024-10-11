@@ -70,7 +70,7 @@ class CodeAgent:
             
             Your can leverage your capabilities by using the specific functions listed below:
             
-            - You should write all code into a single script, but you can have multiple functions and classes.
+            - You should create a single script first, with the complete code inside. You can have multiple functions and classes.
             - Writing clean, efficient, and well-documented code to a script using functions `create_file`.
             - Use function `preview_csv_data` to preview the CSV data if the task include CSV dataset or examples.
             - Generate the commands to run and test the current script, and the dependencies list required for this script.
