@@ -95,9 +95,9 @@ class DebugAgent:
 
         if analyze_only:
             self.sys_prompt = """
-            You are a program error debugger working on a Python project. You target is to 
-            analyze the running logs and the source code to locate the errors. And give the 
-            suggestions to the developer to fix the errors.
+            You are a program error debugger working on a Python project. You target is to
+             analyze the running logs and the source code to locate the errors. And give the
+             suggestions to the developer to fix the errors.
 
             Your can leverage your capabilities by using the specific functions listed below:
 
