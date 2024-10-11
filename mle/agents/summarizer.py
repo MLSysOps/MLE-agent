@@ -134,10 +134,16 @@ class SummaryAgent:
 
         return summary
 
-    def kaggle_request_summarize(self, kaggle_overview: str):
+    def kaggle_request_summarize(
+            self,
+            kaggle_overview: str,
+            exp_submission: str = None,
+            submission_file: str = "./submission.csv"):
         """
         Summarize the kaggle requests.
         :params: kaggle_overview: the overview json of kaggle competition
+        :params: exp_submission: the expected sample submission file.
+        :params: submission_file: the submission file path.
         """
         system_prompt = """
         You are a seasoned data science expert in Kaggle competitions. Your task is to summarize the
@@ -147,11 +153,23 @@ class SummaryAgent:
         1. Overview: Describe the competition's objective and significance.
         2. Data: Detail the datasets, including file types, structure, and key features.
         3. Evaluation: Explain the judging metric and its calculation.
-        4. Submission: Outline the format and requirements for submissions.
+        4. Submission: Outline the format and requirements for submissions, you can includes some submission samples using function `preview_csv_data`.
         5. Rules: Highlight important rules, including data usage, team composition, and resources.
         """
+
+        if exp_submission:
+            kaggle_overview += f"""
+            \n\n EXAMPLE SUBMISSION FILE: {exp_submission}\n
+            SUBMISSION FILE LOCATION: {submission_file}
+            """
+
         chat_history = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": kaggle_overview}
         ]
-        return self.model.query(chat_history)
+
+        return self.model.query(
+            chat_history,
+            function_call='auto',
+            functions=[schema_preview_csv_data]
+        )

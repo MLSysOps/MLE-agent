@@ -55,7 +55,7 @@ class AdviseAgent:
          the model (or method), and the evaluation metrics, etc. You should always follow the user's requirements.
         2. You should briefly analyze the user's dataset, and give a summary of the dataset, the dataset input can be
          a public dataset name or a path to a local CSV file. You can use the function `preview_csv_data` to preview
-         the CSV file or not if the dataset is a public dataset.
+         the CSV files or not if the dataset is a public dataset.
         3. And then you should always use the function `search_arxiv` or `search_papers_with_code` to search the
          state-of-the-art machine learning tasks/models/algorithms that can be used to solve the user's requirements,
           and stay up-to-date with the latest.
@@ -102,11 +102,12 @@ class AdviseAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def suggest(self, requirement):
+    def suggest(self, requirement, process=True):
         """
         Handle the query from the model query response.
         Args:
             requirement: the user requirement.
+            process: whether to process the report.
         """
         with self.console.status("MLE Advisor is thinking the best strategy to help you..."):
             self.chat_history.append({"role": "user", "content": requirement})
@@ -122,6 +123,9 @@ class AdviseAgent:
                 suggestions = json.loads(text)
             except json.JSONDecodeError as e:
                 suggestions = clean_json_string(text)
+
+        if not process:
+            return suggestions
 
         return process_report(requirement, suggestions)
 
@@ -157,7 +161,6 @@ class AdviseAgent:
                 print_in_box(self.report, title="MLE Advisor", color="green")
 
         return self.report
-
 
     def clarify_dataset(self, dataset: str):
         """

@@ -7,17 +7,29 @@ from typing import List
 from rich.console import Console
 
 from mle.model import load_model
+from mle.function import execute_command
 from mle.integration import KaggleIntegration
 from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache
 from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
 
 
-def auto_kaggle(work_dir: str, datasets: List[str], description: str, model=None):
+def auto_kaggle(
+        work_dir: str,
+        datasets: List[str],
+        description: str,
+        submission='./submission.csv',
+        sub_examples=None,
+        competition_id=None,
+        model=None
+):
     """
     The workflow of the kaggle mode.
     :param work_dir: the working directory.
     :param datasets: the datasets to use.
     :param description: the description of the competition, can be a path to a local .md file or a string.
+    :param submission: the path of the kaggle submission file.
+    :param sub_examples: the path to the kaggle submission example file.
+    :param competition_id: the competition id.
     :param model: the model to use.
     """
     console = Console()
@@ -26,40 +38,46 @@ def auto_kaggle(work_dir: str, datasets: List[str], description: str, model=None
     # initialize the agents
     advisor = AdviseAgent(model, console)
     summarizer = SummaryAgent(model, console=console)
-    planner = PlanAgent(model, console)
-    coder = CodeAgent(model, work_dir, console)
-    debugger = DebugAgent(model, console)
+    coder = CodeAgent(model, work_dir, console=console, single_file=True)
+    debugger = DebugAgent(model, console, analyze_only=True)
 
     if is_markdown_file(description):
         description = read_markdown(description)
 
     with console.status("MLE Agent is processing the kaggle competition overview..."):
-        requirements = summarizer.kaggle_request_summarize(description)
-        requirements += f"\nLOCAL DATASET PATH:\n"
+        requirements = summarizer.kaggle_request_summarize(description, sub_examples, submission)
+        requirements += f"\n\nLOCAL DATASET PATH:\n"
         for dataset in datasets:
             requirements += f" - {dataset}\n"
 
-    with console.status("MLE Agent is thinking about the competition strategy..."):
-        advisor_report = advisor.suggest(requirements)
+    suggestions = advisor.suggest(requirements, process=False)
+    requirements += f"""
+    \nIMPLEMENTATION PLAN:
+    
+    - Suggestion Summary: {suggestions.get('suggestion')}\n
+    - ML Task: {suggestions.get('task')}\n
+    - Model or Algorithm: {suggestions.get('model_or_algorithm')}
+    - Training Strategy: {suggestions.get('training_method')}
+    """
 
-    with console.status("MLE Agent is generating the coding plan..."):
-        coding_plan = planner.plan(advisor_report)
+    coder.read_requirement(requirements)
+    if competition_id is None:
+        competition_id = "kaggle competition"
 
-    coder.read_requirement(advisor_report)
-    for current_task in coding_plan.get('tasks'):
-        code_report = coder.interact(current_task)
-        is_debugging = code_report.get('debug')
-
-        while True:
-            if is_debugging == 'true' or is_debugging == 'True':
-                with console.status("MLE Debug Agent is executing and debugging the code..."):
-                    debug_report = debugger.analyze(code_report)
-                if debug_report.get('status') == 'success':
-                    break
-                else:
-                    code_report = coder.debug(current_task, debug_report)
-            else:
-                break
+    coding_task = {
+        "task": competition_id,
+        "description": requirements
+    }
+    code_report = coder.code(coding_task)
+    while True:
+        with console.status("MLE Debug Agent is executing and debugging the code..."):
+            running_cmd = code_report.get('command')
+            logs = execute_command(running_cmd)
+            debug_report = debugger.analyze_with_log(running_cmd, logs)
+        if debug_report.get('status') == 'success':
+            break
+        else:
+            code_report = coder.debug(coding_task, debug_report)
 
 
 def kaggle(work_dir: str, model=None):

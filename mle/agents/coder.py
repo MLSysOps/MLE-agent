@@ -24,7 +24,7 @@ Whether the code is required to execute and debug: {summary_dict.get('debug')}""
 
 class CodeAgent:
 
-    def __init__(self, model, working_dir='.', console=None):
+    def __init__(self, model, working_dir='.', console=None, single_file=False):
         """
         CodeAgent: the agent to solve the given coding problems, by planning coding tasks, searching websites,
         and generating code snippets. It does not execute the code, only make use of built-in functions to provides
@@ -32,6 +32,9 @@ class CodeAgent:
 
         Args:
             model: the model to use.
+            working_dir: the working directory.
+            console: the console to use.
+            single_file: whether the agent is working on a single file or not.
         """
         config_data = get_config()
         self.code_summary = None
@@ -49,19 +52,37 @@ class CodeAgent:
 
         Your can leverage your capabilities by using the specific functions listed below:
 
-        1. Creating project structures based on the user requirement using function `create_directory`.
-        2. Writing clean, efficient, and well-documented code using function `create_file` and `write_file`.
-        3. Exam the project to re-use the existing code snippets as much as possible, you may need to use
+        - Creating project structures based on the user requirement using function `create_directory`.
+        - Writing clean, efficient, and well-documented code using function `create_file` and `write_file`.
+        - Exam the project to re-use the existing code snippets as much as possible, you may need to use
          functions like `list_files`, `read_file` and `write_file`.
-        4. Writing the code into the file when creating new files, do not create empty files.
-        5. Use function `preview_csv_data` to preview the CSV data if the task include CSV data processing.
-        6. Decide whether the task requires execution and debugging before moving to the next or not.
-        7. Generate the commands to run and test the current task, and the dependencies list for this task.
-        8. You only write Python scripts, don't write Jupiter notebooks which require interactive execution.
+        - Writing the code into the file when creating new files, do not create empty files.
+        - Use function `preview_csv_data` to preview the CSV data if the task include CSV data processing.
+        - Decide whether the task requires execution and debugging before moving to the next or not.
+        - Generate the commands to run and test the current task, and the dependencies list for this task.
+        - You only write Python scripts, don't write Jupiter notebooks which require interactive execution.
         """
+
+        if single_file:
+            self.sys_prompt = f"""
+            You are an expert programmer working on an Machine Learning task using Python.
+            You are currently working on: {self.working_dir}.
+            
+            Your can leverage your capabilities by using the specific functions listed below:
+            
+            - You should write all code into a single script, but you can have multiple functions and classes.
+            - Writing clean, efficient, and well-documented code to a script using functions `create_file`.
+            - Use function `preview_csv_data` to preview the CSV data if the task include CSV dataset or examples.
+            - Generate the commands to run and test the current script, and the dependencies list required for this script.
+            - You only write Python scripts, don't write Jupiter notebooks which require interactive execution.
+            - Make sure the code has met the task description, and the suggested methods.
+            - Make sure the output format and the output file path is correct.
+            """
+
         self.search_prompt = """
-        9. Performing web searches use function `web_search` to get up-to-date information or additional context.
+        - Performing web searches use function `web_search` to get up-to-date information or additional context.
         """
+
         self.json_mode_prompt = """
 
         The output format should be in JSON format, include:
@@ -86,6 +107,27 @@ class CodeAgent:
         }
         
         """
+
+        if single_file:
+            self.json_mode_prompt = """
+        
+            The output format should be in JSON format, include:
+            
+            1. The dependency list that the project needs to run.
+            2. And the command and the parameters to run and test the script.
+            
+            Example JSON output:
+            
+            {
+               "dependency":[
+                  "torch",
+                  "scikit-learn"
+               ],
+               "command":"python /path/to/your/project.py",
+            }
+            
+            """
+
         self.functions = [
             schema_read_file,
             schema_create_file,
@@ -122,7 +164,7 @@ class CodeAgent:
         """
         task_prompt = textwrap.dedent(f"""
             You are required to complete task: {task_dict.get('task')}.\n
-            You should: {task_dict.get('description')}
+            Task description: {task_dict.get('description')}
             """)
 
         with self.console.status(f"Coder is working on the task: {task_dict.get('task')}..."):

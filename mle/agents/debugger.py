@@ -27,7 +27,7 @@ def process_debug_report(debug_report):
 
 class DebugAgent:
 
-    def __init__(self, model, console=None):
+    def __init__(self, model, console=None, analyze_only=False):
         """
         DebugAgent: the agent to run the generated the code and then debug it. The return of the
         agent is an instruction to the user to modify the code based on the logs and web search.
@@ -35,6 +35,7 @@ class DebugAgent:
         Args:
             model: the model to use.
             console: the console to use.
+            analyze_only: if only analyze the code without execution
         """
         config_data = get_config()
         self.console = console
@@ -47,21 +48,21 @@ class DebugAgent:
 
         Your can leverage your capabilities by using the specific functions listed below:
 
-        1. Install the code dependencies using function `execute_command` based on the Developer's dependencies list.
-        2. Execute the code using function `execute_command` to test the code based on the Developer's instructions.
-        3. If the program returns errors, you need to debug the code based on the logs, you may need to first read the
+        - Install the code dependencies using function `execute_command` based on the Developer's dependencies list.
+        - Execute the code using function `execute_command` to test the code based on the Developer's instructions.
+        - If the program returns errors, you need to debug the code based on the logs, you may need to first read the
          structure of the project using function `list_files`.
-        4. Then you may need to call `read_file` function to read the content of the code files, locate the error line
+        - Then you may need to call `read_file` function to read the content of the code files, locate the error line
          and the reasons.
-        5. You don't need to care about the best practices and code styles, you only care about the errors in the code.
-        6. If the developer's input includes the error message, you don't need to execute the code, you can directly
-         analyze the error messages and give the reason and suggestions.
+        - You don't need to care about the best practices and code styles, you only care about the errors in the code.
 
         """
+
         self.search_prompt = """
-        7. You need to debug the code based on the error logs, you may need to call `web_search` function to search for
+        - You need to debug the code based on the error logs, you may need to call `web_search` function to search for
          the solutions or reasons for the errors if needed.
         """
+
         self.json_mode_prompt = """
         
         Example JSON output if a program runs without errors:
@@ -84,26 +85,28 @@ class DebugAgent:
             "suggestion":"Failed to find the target file. Please check the file path."
            ]
         }
-        
-        Example JSON output if the error message is provided (no running status required):
-        {
-           "status":"",
-           "changes":[
-               {
-                     "file":"xxx.py",
-                     "line":15,
-                     "issue":"xxx",
-                     "suggestion":"xxx"
-               }
-           ],
-           "suggestion":"Incorrect file imports. Please replace the import statement with 'from xxx import xxx'."
-        }
         """
+
         self.functions = [
             schema_read_file,
             schema_list_files,
             schema_execute_command
         ]
+
+        if analyze_only:
+            self.sys_prompt = """
+            You are a program error debugger working on a Python project. You target is to 
+            analyze the running logs and the source code to locate the errors. And give the 
+            suggestions to the developer to fix the errors.
+
+            Your can leverage your capabilities by using the specific functions listed below:
+
+            - Read and understand the running logs and the error messages.
+            - Read the content of the source code files using function `read_file`, to locate the error line.
+            - Give the suggestions to the developer to fix the errors.
+            - Install missing dependencies using function `execute_command` based on the error logs.
+            - If there is no error based on the exit code, you don't need to do anything but return the success status.
+            """
 
         if config_data.get('search_key'):
             self.functions.append(schema_web_search)
@@ -111,6 +114,35 @@ class DebugAgent:
 
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
+
+    def analyze_with_log(self, commands, logs):
+        """
+        Analyze the logs.
+        :param commands: the commands to execute.
+        :param logs: the logs to analyze.
+        :return:
+        """
+        analyze_prompt = f"""
+        The command to execute the code: {commands} \n
+        The logs to analyze: {logs} \n
+        """
+
+        self.chat_history.append({"role": "user", "content": analyze_prompt})
+        try:
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
+        except Exception as e:
+            print(f"Error occurred while querying the model: {e}")
+            return {}
+
+        self.chat_history.append({"role": "assistant", "content": text})
+        report_dict = json.loads(text)
+        print_in_box(process_debug_report(report_dict), self.console, title="MLE Debugger", color="yellow")
+        return report_dict
 
     def analyze(self, code_report):
         """
