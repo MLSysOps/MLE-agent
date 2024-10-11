@@ -50,7 +50,7 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
                 overview = kaggle.get_competition_overview(competition)
                 summary = SummaryAgent(model, console=console)
-                ml_requirement =  summary.kaggle_request_summarize(overview)
+                ml_requirement = summary.kaggle_request_summarize(overview)
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

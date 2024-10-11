@@ -15,16 +15,15 @@ def kaggle_login():
     kaggle_file = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
 
     try:
-        # login by `~/.kaggle/kaggle.json`
         with open(kaggle_file, "r") as f:
             kaggle_data = json.load(f)
         if questionary.confirm(
-            f"Find the kaggle token in `{kaggle_file}` "
-            f"(username: {kaggle_data['username']}).\n"
-            "Would you like to integrate this token?"
+                f"Find the kaggle token in `{kaggle_file}` "
+                f"(username: {kaggle_data['username']}).\n"
+                "Would you like to integrate this token?"
         ).ask():
             return kaggle_data["username"], kaggle_data["key"]
-    finally:
+    except FileNotFoundError:
         pass
 
     # login by manual input token
@@ -64,7 +63,7 @@ class KaggleIntegration:
         return tuple([comp.ref for comp in competitions])
 
     def download_competition_dataset(
-        self, competition: str, download_dir: str = "./data"
+            self, competition: str, download_dir: str = "./data"
     ):
         """
         Downloads and extracts the dataset for a specific competition.

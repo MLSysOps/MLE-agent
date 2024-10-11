@@ -9,9 +9,8 @@ from pathlib import Path
 from rich.console import Console
 
 import mle
-import mle.workflow as workflow
 from mle.server import app
-from mle.model import load_model
+import mle.workflow as workflow
 from mle.utils import Memory
 from mle.utils.system import (
     get_config,
@@ -119,7 +118,7 @@ def kaggle(model):
     """
     if not check_config(console):
         return
-    
+
     config = get_config()
     if "integration" not in config.keys():
         config["integration"] = {}
