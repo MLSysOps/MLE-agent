@@ -11,7 +11,7 @@
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
 <a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 
-[📚 Tutorials](https://docs.repx.app/) | 
+[📚 Docs](https://mle-agent-site.vercel.app/) | 
 [🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) | 
 👋 Join us on <a href="https://discord.gg/SgxBpENGRG" target="_blank">Discord</a>
 
