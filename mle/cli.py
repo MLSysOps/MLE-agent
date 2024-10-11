@@ -9,9 +9,8 @@ from pathlib import Path
 from rich.console import Console
 
 import mle
-import mle.workflow as workflow
 from mle.server import app
-from mle.model import load_model
+import mle.workflow as workflow
 from mle.utils import Memory
 from mle.utils.system import (
     get_config,
@@ -113,29 +112,47 @@ def report(ctx, repo, model, user, visualize):
 
 @cli.command()
 @click.option('--model', default=None, help='The model to use for the chat.')
-def kaggle(model):
+@click.option('--auto', is_flag=True, help='Use auto mode to generate the coding plan.')
+@click.option('--description', default=None, help='The description of the competition.')
+@click.option('--datasets', default=None, help='The .csv dataset home to use for the competition.')
+@click.option('--submission', default='./submission.csv', help='the path of the kaggle submission .csv file.')
+@click.option('--sub_example', default=None, help='the path to the kaggle submission example .csv file.')
+@click.option('--comp_id', default=None, help='the kaggle competition id.')
+def kaggle(model, auto, description=None, datasets=None, sub_example=None, submission='.', comp_id=None):
     """
     kaggle: kaggle competition workflow.
+
+    Example command for auto mode:
+    mle kaggle --auto --datasets "/Users/huangyz0918/desktop/spaceship-titanic/prepared/public/train.csv,/Users/huangyz0918/desktop/spaceship-titanic/prepared/public/test.csv"
+     --description "/Users/huangyz0918/desktop/spaceship-titanic/prepared/public/description.md" --submission "./submission.csv"
+     --sub_example "/Users/huangyz0918/desktop/spaceship-titanic/prepared/public/sample_submission.csv" --comp_id "spaceship-titanic"
     """
     if not check_config(console):
         return
-    
-    config = get_config()
-    if "integration" not in config.keys():
-        config["integration"] = {}
 
-    if "kaggle" not in config.get("integration", {}).keys():
-        from mle.integration.kaggle import kaggle_login
-        username, key = kaggle_login()
-        config["integration"]["kaggle"] = {
-            "key": key,
-            "username": username,
-        }
-        write_config(config)
+    if auto:
+        if datasets is None:
+            datasets = questionary.text(
+                "Please provide the dataset home path"
+            ).ask()
+        datasets = datasets.split(',')
 
-    username = config["integration"]["kaggle"].get("username")
-    key = config["integration"]["kaggle"].get("key")
-    return workflow.kaggle(os.getcwd(), model, username, key)
+        if description is None:
+            description = questionary.text(
+                "Please provide the competition description."
+            ).ask()
+
+        return workflow.auto_kaggle(
+            os.getcwd(),
+            datasets,
+            description,
+            submission=submission,
+            model=model,
+            sub_examples=sub_example,
+            competition_id=comp_id
+        )
+
+    return workflow.kaggle(os.getcwd(), model)
 
 
 @cli.command()
@@ -265,17 +282,5 @@ def integrate(reset):
             token = google_calendar_login()
             config["integration"]["google_calendar"] = {
                 "token": pickle.dumps(token, fix_imports=False),
-            }
-            write_config(config)
-
-    elif platform == "Kaggle":
-        from mle.integration.kaggle import kaggle_login
-        if not reset and get_config().get("integration").get("kaggle"):
-            print("Kaggle is already integrated.")
-        else:
-            username, key = kaggle_login()
-            config["integration"]["kaggle"] = {
-                "key": key,
-                "username": username,
             }
             write_config(config)

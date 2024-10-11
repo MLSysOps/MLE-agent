@@ -1,70 +1,41 @@
 import os
 import json
 import requests
-import importlib
 import questionary
-
 from zipfile import ZipFile
-
-
-def kaggle_login():
-    """
-    Kaggle login by retrieving the username and API key.
-    :returns: A tuple containing the Kaggle username and API key.
-    """
-    kaggle_file = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
-
-    try:
-        # login by `~/.kaggle/kaggle.json`
-        with open(kaggle_file, "r") as f:
-            kaggle_data = json.load(f)
-        if questionary.confirm(
-            f"Find the kaggle token in `{kaggle_file}` "
-            f"(username: {kaggle_data['username']}).\n"
-            "Would you like to integrate this token?"
-        ).ask():
-            return kaggle_data["username"], kaggle_data["key"]
-    finally:
-        pass
-
-    # login by manual input token
-    username = questionary.text("What is your Kaggle username?").ask()
-    key = questionary.password("What is your Kaggle key?").ask()
-    return username, key
 
 
 class KaggleIntegration:
 
-    def __init__(self, username: str, token: str):
+    def __init__(self):
         """
         Initializes KaggleIntegration with the provided credentials.
-        :param username: Kaggle username.
-        :param token: Kaggle API key.
         """
-        os.environ["KAGGLE_USERNAME"] = username
-        os.environ["KAGGLE_KEY"] = token
 
-        dependency = "kaggle"
-        spec = importlib.util.find_spec(dependency)
-        if spec is not None:
-            self.client = importlib.import_module(dependency).api
-        else:
-            raise ImportError(
-                "It seems you didn't install kaggle. In order to enable the Kaggle related features, "
-                "please make sure kaggle Python package has been installed. "
-                "More information, please refer to: https://www.kaggle.com/docs/api"
-            )
+        kaggle_file = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
+
+        if not os.path.exists(kaggle_file):
+            username = questionary.text("What is your Kaggle username?").ask()
+            key = questionary.password("What is your Kaggle token?").ask()
+            if username and key:
+                os.makedirs(os.path.dirname(kaggle_file), exist_ok=True)
+                with open(kaggle_file, "w") as f:
+                    json.dump({"username": username, "key": key}, f)
+
+        from kaggle.api.kaggle_api_extended import KaggleApi
+        self.api = KaggleApi()
+        self.api.authenticate()
 
     def list_competition(self):
         """
         Lists all Kaggle competitions.
         :return: A tuple containing references of all competitions.
         """
-        competitions = self.client.competitions_list()
+        competitions = self.api.competitions_list()
         return tuple([comp.ref for comp in competitions])
 
     def download_competition_dataset(
-        self, competition: str, download_dir: str = "./data"
+            self, competition: str, download_dir: str = "./data"
     ):
         """
         Downloads and extracts the dataset for a specific competition.
@@ -76,7 +47,7 @@ class KaggleIntegration:
             competition = competition.split("/")[-1]
 
         os.makedirs(download_dir, exist_ok=True)
-        self.client.competition_download_files(competition, path=download_dir)
+        self.api.competition_download_files(competition, path=download_dir)
 
         # Unzip downloaded files
         for file in os.listdir(download_dir):
@@ -85,24 +56,19 @@ class KaggleIntegration:
                     zip_ref.extractall(download_dir)
         return download_dir
 
-    def get_competition_overview(self, competition: str):
+    def fetch_competition_overview(self, competition: str):
         """
-        Fetches competition content using Jina Reader and returns it as a dictionary.
+        Fetches competition overview information using the Kaggle API.
         :param competition: The URL or name of the Kaggle competition.
+        :return: A dictionary containing competition overview information, or None if not found.
         """
-        SECTIONS = ["overview", "data"]
-        text_dict = {}
-        for section in SECTIONS:
-            for _ in range(3):  # Retry 3 times if the request fails
-                try:
-                    reader_url = f"https://r.jina.ai/{competition}/{section}"
-                    response = requests.get(reader_url)
-                    response.raise_for_status()
-                    text_dict[section] = response.text
-                except requests.exceptions.HTTPError:
-                    continue
-        return {
-            "url": competition,
-            "overview": text_dict["overview"],
-            "data": text_dict["data"],
-        }
+        overview = None
+        for _ in range(3):  # Retry 3 times if the request fails
+            try:
+                reader_url = f"https://r.jina.ai/{competition}/{overview}"
+                response = requests.get(reader_url)
+                response.raise_for_status()
+                overview = response.text
+            except requests.exceptions.HTTPError:
+                continue
+        return overview.encode('utf-8', 'ignore').decode('utf-8')

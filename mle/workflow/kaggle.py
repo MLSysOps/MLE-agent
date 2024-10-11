@@ -3,21 +3,109 @@ Kaggle Mode: the mode to generate ML pipeline for kaggle competitions.
 """
 import os
 import questionary
+from typing import List
 from rich.console import Console
+
 from mle.model import load_model
-from mle.utils import ask_text, WorkflowCache
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
+from mle.function import execute_command
 from mle.integration import KaggleIntegration
+from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache, print_in_box
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
 
 
-def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
+def auto_kaggle(
+        work_dir: str,
+        datasets: List[str],
+        description: str,
+        submission='./submission.csv',
+        sub_examples=None,
+        competition_id=None,
+        model=None
+):
     """
     The workflow of the kaggle mode.
+    :param work_dir: the working directory.
+    :param datasets: the datasets to use.
+    :param description: the description of the competition, can be a path to a local .md file or a string.
+    :param submission: the path of the kaggle submission file.
+    :param sub_examples: the path to the kaggle submission example file.
+    :param competition_id: the competition id.
+    :param model: the model to use.
+    """
+    console = Console()
+    model = load_model(work_dir, model)
+
+    # initialize the agents
+    advisor = AdviseAgent(model, console)
+    summarizer = SummaryAgent(model, console=console)
+    coder = CodeAgent(model, work_dir, console=console, single_file=True)
+    debugger = DebugAgent(model, console, analyze_only=True)
+
+    if is_markdown_file(description):
+        description = read_markdown(description)
+
+    with console.status("MLE Agent is processing the kaggle competition overview..."):
+        requirements = summarizer.kaggle_request_summarize(description, sub_examples, submission)
+        requirements += f"\n\nLOCAL DATASET PATH:\n"
+        for dataset in datasets:
+            requirements += f" - {dataset}\n"
+
+    suggestions = advisor.suggest(requirements, process=False)
+    requirements += f"""
+    \nIMPLEMENTATION PLAN:
+    
+    - Suggestion Summary: {suggestions.get('suggestion')}\n
+    - ML Task: {suggestions.get('task')}\n
+    - Model or Algorithm: {suggestions.get('model_or_algorithm')}
+    - Training Strategy: {suggestions.get('training_method')}
+    """
+
+    coder.read_requirement(requirements)
+    if competition_id is None:
+        competition_id = "kaggle competition"
+
+    coding_task = {
+        "task": competition_id,
+        "description": requirements
+    }
+    print_in_box(requirements, console, title="Kaggle Competition Requirement", color="green")
+    code_report = coder.code(coding_task)
+    while True:
+        with console.status("MLE Debug Agent is executing and debugging the code..."):
+            running_cmd = code_report.get('command')
+            logs = execute_command(running_cmd)
+            debug_report = debugger.analyze_with_log(running_cmd, logs)
+        if debug_report.get('status') == 'success':
+            # check the submission file
+            if not os.path.exists(submission):
+                console.log(f"The submission file ({submission}) is not found. Launch the coder to improve...")
+                code_report = coder.debug(
+                    coding_task,
+                    {
+                        "status": "error",
+                        "changes": [
+                            f"make sure the submission file is generated in {submission}",
+                            f"make sure the submission file is in the correct format. You can refer to the example submission file: {sub_examples}"
+                        ],
+                        "suggestion": f"Please update the code related to generating the submission file."
+                    }
+                )
+            else:
+                break
+        else:
+            code_report = coder.debug(coding_task, debug_report)
+
+
+def kaggle(work_dir: str, model=None):
+    """
+    The workflow of the kaggle mode.
+    :param work_dir: the working directory.
+    :param model: the model to use.
     """
     console = Console()
     cache = WorkflowCache(work_dir, 'kaggle')
     model = load_model(work_dir, model)
-    kaggle = KaggleIntegration(kaggle_username, kaggle_token)
+    integration = KaggleIntegration()
 
     if not cache.is_empty():
         step = ask_text(f"MLE has finished the following steps: \n{cache}\n"
@@ -35,10 +123,10 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         if competition is None or dataset is None:
             competition = questionary.select(
                 "Please select a Kaggle competition to join:",
-                choices=kaggle.list_competition()
+                choices=integration.list_competition()
             ).ask()
             with console.status("MLE Agent is downloading the kaggle competition dataset..."):
-                dataset = kaggle.download_competition_dataset(
+                dataset = integration.download_competition_dataset(
                     competition, os.path.join(os.getcwd(), 'data'))
         ca.store("competition", competition)
         ca.store("dataset", dataset)
@@ -48,9 +136,8 @@ def kaggle(work_dir: str, model=None, kaggle_username=None, kaggle_token=None):
         ml_requirement = ca.resume("ml_requirement")
         if ml_requirement is None:
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
-                overview = kaggle.get_competition_overview(competition)
                 summary = SummaryAgent(model, console=console)
-                ml_requirement =  summary.kaggle_request_summarize(overview)
+                ml_requirement = summary.kaggle_request_summarize(integration.fetch_competition_overview(competition))
         ca.store("ml_requirement", ml_requirement)
 
     # advisor agent gives suggestions in a report

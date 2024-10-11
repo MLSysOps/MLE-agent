@@ -3,7 +3,6 @@ Report Mode: the mode to generate the AI report based on the user's requirements
 """
 import os
 import pickle
-import questionary
 from rich.console import Console
 from mle.model import load_model
 from mle.agents import SummaryAgent, ReportAgent
