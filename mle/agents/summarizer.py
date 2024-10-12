@@ -137,8 +137,8 @@ class SummaryAgent:
     def kaggle_request_summarize(
             self,
             kaggle_overview: str,
-            exp_submission: str = None,
-            submission_file: str = "./submission.csv"):
+            exp_submission: str = None
+    ):
         """
         Summarize the kaggle requests.
         :params: kaggle_overview: the overview json of kaggle competition
@@ -159,8 +159,7 @@ class SummaryAgent:
 
         if exp_submission:
             kaggle_overview += f"""
-            \n\n EXAMPLE SUBMISSION FILE: {exp_submission}\n
-            SUBMISSION FILE LOCATION: {submission_file}
+            \n\n EXAMPLE SUBMISSION FILE: {exp_submission}
             """
 
         chat_history = [

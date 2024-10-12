@@ -29,7 +29,7 @@ def process_report(requirement: str, suggestions: dict):
 
 class AdviseAgent:
 
-    def __init__(self, model, console=None):
+    def __init__(self, model, console=None, mode='normal'):
         """
         AdviseAgent: the agent to suggest which machine learning task/model/dataset to use based on the user's
         requirements. The return of the agent is an instruction to the user to modify the code based on the logs and
@@ -51,24 +51,24 @@ class AdviseAgent:
         
         Your capabilities include:
 
-        1. Read and understand the dataset information and user's requirements, the requirements may include the task,
+        - Read and understand the dataset information and user's requirements, the requirements may include the task,
          the model (or method), and the evaluation metrics, etc. You should always follow the user's requirements.
-        2. You should briefly analyze the user's dataset, and give a summary of the dataset, the dataset input can be
+        - You should briefly analyze the user's dataset, and give a summary of the dataset, the dataset input can be
          a public dataset name or a path to a local CSV file. You can use the function `preview_csv_data` to preview
          the CSV files or not if the dataset is a public dataset.
-        3. And then you should always use the function `search_arxiv` or `search_papers_with_code` to search the
+        - And then you should always use the function `search_arxiv` or `search_papers_with_code` to search the
          state-of-the-art machine learning tasks/models/algorithms that can be used to solve the user's requirements,
           and stay up-to-date with the latest.
-        4. If the user does not provide the details (task/model/algorithm/dataset/metric), you should always suggest.
-        5. You should provide the paper reference links of the task/model/algorithm/metric you suggest. You use the
+        - If the user does not provide the details (task/model/algorithm/dataset/metric), you should always suggest.
+        - You should provide the paper reference links of the task/model/algorithm/metric you suggest. You use the
          search results from the function `search_arxiv` or `search_papers_with_code` by generated search keywords.
-        6. The suggestion should be as detailed as possible, include the SOTA methods for data processing, feature
+        - The suggestion should be as detailed as possible, include the SOTA methods for data processing, feature
          extraction, model selection, training/sering methods and evaluation metrics. And the reasons why you suggest.
-        7. You should help user to decide which framework/tools to use for the project, such as PyTorch, TensorFlow,
+        - You should help user to decide which framework/tools to use for the project, such as PyTorch, TensorFlow,
          MLFlow, W&B, etc.
         """
         self.search_prompt = """
-        7. You should also use function `web_search` to search for articles, papers, or tutorials related to the
+        - You should also use function `web_search` to search for articles, papers, or tutorials related to the
          task/model/algorithm/metric to help you decide which one to use.
         """
         self.json_mode_prompt = """
@@ -89,6 +89,37 @@ class AdviseAgent:
         }
         
         """
+
+        # precise means the user has provided specific requirements with metrics, models, etc.
+        if mode == 'precise':
+            self.sys_prompt = f"""
+            You are an Machine learning expert tasked with advising on the best ML task/model/algorithm to use.
+            
+            Your capabilities include:
+            
+            - Based on the requirements, give suggestions on how to maximize the performance of the task metrics.
+            - Use the function `search_arxiv` or `search_papers_with_code` to search the state-of-the-art machine learning
+               tasks/models/algorithms that can be used to solve the user's requirements, and stay up-to-date with the latest.
+            - You should help user to decide which framework/tools to use to implement the project, such as PyTorch, TensorFlow, etc.
+            - You should apply some tricks to improve the performance of the model, detail the implementation steps of each trick.
+                       
+            """
+
+            self.json_mode_prompt = """
+
+            JSON Output Format:
+
+            {
+                "task":"xxxxx",
+                "model_or_algorithm":"xxxx",
+                "frameworks": ["xxxx", "xxxx"],
+                "training_method": "xxxx",
+                "suggestion": "Based on the user requirement, we suggest you to... and why...",
+                "tricks": ["xxx", ...]
+            }
+
+            """
+
         self.functions = [
             schema_web_search,
             schema_search_arxiv,
@@ -102,12 +133,12 @@ class AdviseAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
-    def suggest(self, requirement, process=True):
+    def suggest(self, requirement, return_raw=False):
         """
         Handle the query from the model query response.
         Args:
             requirement: the user requirement.
-            process: whether to process the report.
+            return_raw: whether to process the report.
         """
         with self.console.status("MLE Advisor is thinking the best strategy to help you..."):
             self.chat_history.append({"role": "user", "content": requirement})
@@ -124,7 +155,7 @@ class AdviseAgent:
             except json.JSONDecodeError as e:
                 suggestions = clean_json_string(text)
 
-        if not process:
+        if return_raw:
             return suggestions
 
         return process_report(requirement, suggestions)

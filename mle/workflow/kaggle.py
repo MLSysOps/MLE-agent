@@ -36,7 +36,7 @@ def auto_kaggle(
     model = load_model(work_dir, model)
 
     # initialize the agents
-    advisor = AdviseAgent(model, console)
+    advisor = AdviseAgent(model, console, mode="precise")
     summarizer = SummaryAgent(model, console=console)
     coder = CodeAgent(model, work_dir, console=console, single_file=True)
     debugger = DebugAgent(model, console, analyze_only=True)
@@ -45,20 +45,25 @@ def auto_kaggle(
         description = read_markdown(description)
 
     with console.status("MLE Agent is processing the kaggle competition overview..."):
-        requirements = summarizer.kaggle_request_summarize(description, sub_examples, submission)
+        requirements = summarizer.kaggle_request_summarize(description, sub_examples)
         requirements += f"\n\nLOCAL DATASET PATH:\n"
         for dataset in datasets:
             requirements += f" - {dataset}\n"
 
-    suggestions = advisor.suggest(requirements, process=False)
+        requirements += f"\nSUBMISSION FILE PATH: {submission}\n"
+
+    suggestions = advisor.suggest(requirements, return_raw=True)
     requirements += f"""
-    \nIMPLEMENTATION PLAN:
+    \nIMPLEMENTATION SUGGESTIONS:
     
-    - Suggestion Summary: {suggestions.get('suggestion')}\n
-    - ML Task: {suggestions.get('task')}\n
-    - Model or Algorithm: {suggestions.get('model_or_algorithm')}
-    - Training Strategy: {suggestions.get('training_method')}
-    """
+- Suggestion summary: {suggestions.get('suggestion')}
+- ML task: {suggestions.get('task')}
+- Model or algorithm: {suggestions.get('model_or_algorithm')}
+- Training strategy: {suggestions.get('training_method')}
+- Tricks to increase performance:
+"""
+    for trick in suggestions.get('tricks'):
+        requirements += f"\n  - {trick}"
 
     coder.read_requirement(requirements)
     if competition_id is None:
