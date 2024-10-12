@@ -103,8 +103,7 @@ Then, you can visit http://localhost:3000/ to generate your report locally.
 ### :trophy: Start with Kaggle Competition
 
 MLE agent can participate in Kaggle competitions and finish coding and debugging from data preparation to model training
-independently.
-For more details, see the [MLE-Agent Tutorials](https://mle-agent-site.vercel.app/tutorial/Start_a_kaggle_task).
+independently. Here is the basic command to start a Kaggle competition:
 
 ```bash
 cd <project name>
@@ -124,7 +123,7 @@ mle kaggle --auto \
 --comp_id "<competition_id>"
 ```
 
-Please make sure you have joined the competition before running the command.
+Please make sure you have joined the competition before running the command. For more details, see the [MLE-Agent Tutorials](https://mle-agent-site.vercel.app/tutorial/Start_a_kaggle_task).
 
 ## Roadmap
 
