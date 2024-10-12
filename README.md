@@ -22,12 +22,14 @@
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
 
-- 🤖 Autonomous Baseline Creation: Automatically builds ML/AI baselines.
+- 🤖 Autonomous Baseline: Automatically builds ML/AI baselines and solutions based on your requirements.
+- 🏅End-to-end ML Task: Participates in Kaggle competitions and completes tasks independently.
 - 🔍 [Arxiv](https://arxiv.org/) and [Papers with Code](https://paperswithcode.com/) Integration: Access best practices and state-of-the-art methods.
 - 🐛 Smart Debugging: Ensures high-quality code through automatic debugger-coder interactions.
 - 📂 File System Integration: Organizes your project structure efficiently.
 - 🧰 Comprehensive Tools Integration: Includes AI/ML functions and MLOps tools for a seamless workflow.
 - ☕ Interactive CLI Chat: Enhances your projects with an easy-to-use chat interface.
+- 🧠 Smart Advisor: Provides personalized suggestions and recommendations for your ML/AI project.
 - 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
 
 
@@ -35,8 +37,9 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ## Milestones
 
+- :rocket: 09/24/2024: Release the `0.4.2` with enhanced `Auto-Kaggle` mode to complete an end-to-end Kaggle competition.
 - :rocket: 09/10/2024: Release the `0.4.0` with new CLIs like `MLE report`, `MLE kaggle`, `MLE integration` and many new models like `Mistral`.
-- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc (v0.3.0)
+- :rocket: 07/25/2024: Release the `0.3.0` with huge refactoring, many integrations, etc. (v0.3.0)
 - :rocket: 07/11/2024: Release the `0.2.0` with multiple agents interaction (v0.2.0)
 - 👨‍🍼 **07/03/2024: Kaia is born**
 - :rocket: 06/01/2024: Release the first rule-based version of MLE agent (v0.1.0)
@@ -93,6 +96,20 @@ cd <project name>
 mle kaggle
 ```
 
+Or you can let the agents finish the Kaggle task without human interaction if you have the dataset and submission file ready:
+
+```bash
+cd <project name>
+mle kaggle --auto \
+--datasets "<path_to_dataset1>,<path_to_dataset2>" \
+--description "<description_file_path_or_text>" \
+--submission "<submission_file_path>" \
+--sub_example "<submission_example_file_path>" \ 
+--comp_id "<competition_id>"
+```
+
+Please make sure you have joined the competition before running the command.
+
 ## Roadmap
 
 The following is a list of the tasks we plan to do, welcome to propose something new!
@@ -107,7 +124,7 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [x] Leverage the built-in functions to complete ML engineering tasks
   - [x] Interactive chat: A human-in-the-loop mode to help improve the existing ML projects
   - [x] Kaggle mode: to finish a Kaggle task without humans
-  - [ ] Summary and reflect the whole ML/AI pipeline
+  - [x] Summary and reflect the whole ML/AI pipeline
   - [ ] Integration with Cloud data and testing and debugging platforms
   - [x] Local RAG support to make personal ML/AI coding assistant
   - [ ] Function zoo: generate AI/ML functions and save them for future usage
@@ -147,8 +164,6 @@ The following is a list of the tasks we plan to do, welcome to propose something
   - [ ] Wandb experiment monitoring
   - [ ] MLflow management
   - [ ] DBT data transform
-</details>
-
 </details>
 
 ## Contributing
