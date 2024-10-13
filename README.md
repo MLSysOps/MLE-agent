@@ -115,7 +115,7 @@ ready:
 ```bash
 cd <project name>
 mle kaggle --auto \
---datasets "<path_to_dataset1>,<path_to_dataset2>" \
+--datasets "<path_to_dataset1>,<path_to_dataset2>,..." \
 --description "<description_file_path_or_text>" \
 --submission "<submission_file_path>" \
 --sub_example "<submission_example_file_path>" \ 
