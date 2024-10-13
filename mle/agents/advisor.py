@@ -102,7 +102,9 @@ class AdviseAgent:
                tasks/models/algorithms that can be used to solve the user's requirements, and stay up-to-date with the latest.
             - You should help user to decide which framework/tools to use to implement the project, such as PyTorch, TensorFlow, etc.
             - You should apply some tricks to improve the performance of the model, detail the implementation steps of each trick.
-                       
+            - You can use `schema_preview_csv_data` to preview the dataset if the dataset is a local CSV file.
+            - You can use `list_files` to preview the dataset (e.g., image/video/audio files) if the dataset is a local directory.
+
             """
 
             self.json_mode_prompt = """

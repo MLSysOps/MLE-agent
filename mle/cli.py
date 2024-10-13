@@ -118,7 +118,17 @@ def report(ctx, repo, model, user, visualize):
 @click.option('--submission', default='./submission.csv', help='the path of the kaggle submission .csv file.')
 @click.option('--sub_example', default=None, help='the path to the kaggle submission example .csv file.')
 @click.option('--comp_id', default=None, help='the kaggle competition id.')
-def kaggle(model, auto, description=None, datasets=None, sub_example=None, submission='.', comp_id=None):
+@click.option('--debug_max_attempt', default=5, help='the max attempt for debugging.')
+def kaggle(
+        model,
+        auto,
+        description=None,
+        datasets=None,
+        sub_example=None,
+        submission='.',
+        comp_id=None,
+        debug_max_attempt=5
+):
     """
     kaggle: kaggle competition workflow.
 
@@ -149,7 +159,8 @@ def kaggle(model, auto, description=None, datasets=None, sub_example=None, submi
             submission=submission,
             model=model,
             sub_examples=sub_example,
-            competition_id=comp_id
+            competition_id=comp_id,
+            debug_max_attempt=debug_max_attempt
         )
 
     return workflow.kaggle(os.getcwd(), model)

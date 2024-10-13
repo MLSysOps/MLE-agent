@@ -18,6 +18,7 @@ def auto_kaggle(
         datasets: List[str],
         description: str,
         submission='./submission.csv',
+        debug_max_attempt=5,
         sub_examples=None,
         competition_id=None,
         model=None
@@ -28,6 +29,7 @@ def auto_kaggle(
     :param datasets: the datasets to use.
     :param description: the description of the competition, can be a path to a local .md file or a string.
     :param submission: the path of the kaggle submission file.
+    :param debug_max_attempt: the max attempt for debugging.
     :param sub_examples: the path to the kaggle submission example file.
     :param competition_id: the competition id.
     :param model: the model to use.
@@ -75,7 +77,12 @@ def auto_kaggle(
     }
     print_in_box(requirements, console, title="Kaggle Competition Requirement", color="green")
     code_report = coder.code(coding_task)
+    debug_attempt = 0
     while True:
+        if debug_attempt > debug_max_attempt:
+            console.log(f"Debug the code failed with max {debug_max_attempt} attempts. Please check the code manually.")
+            break
+
         with console.status("MLE Debug Agent is executing and debugging the code..."):
             running_cmd = code_report.get('command')
             logs = execute_command(running_cmd)
@@ -98,6 +105,7 @@ def auto_kaggle(
             else:
                 break
         else:
+            debug_attempt += 1
             code_report = coder.debug(coding_task, debug_report)
 
 
