@@ -5,11 +5,11 @@ from mle.function import *
 from mle.integration import GitHubIntegration
 
 
-class SummaryAgent:
+class GitHubSummaryAgent:
 
     def __init__(self, model, github_repo: str = None, username: str = None, github_token: str = None, console=None):
         """
-        SummaryAgent: summary the workspace provided by the user.
+        GitHubSummaryAgent: summary the workspace provided by the user.
 
         Args:
             model: the model to use.
