@@ -10,8 +10,8 @@ from rich.console import Console
 
 import mle
 from mle.server import app
-import mle.workflow as workflow
 from mle.utils import Memory
+import mle.workflow as workflow
 from mle.utils.system import (
     get_config,
     write_config,
