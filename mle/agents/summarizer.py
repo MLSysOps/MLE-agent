@@ -244,7 +244,6 @@ class GitSummaryAgent:
         Git path: {self.git_path}
         """
         readme_content = self.git.get_readme()
-        # TODO: get structure from repo
         repo_files = self.git.get_structure(include_invisible=False)
 
         info_str += f"""

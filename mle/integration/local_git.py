@@ -144,3 +144,18 @@ class GitIntegration:
         if len(content):
             return list(content.values())[0]
         return None
+
+    def get_structure(self, path='', include_invisible=False):
+        """
+        Scan and return the file structure and file names of the Git repository as a list of paths.
+        :param path: The path to start scanning from (default is root)
+        :param branch: The branch to scan (if None, the repository's default branch will be used)
+        :param include_invisible: Whether to include invisible files/folders (starting with .) (default is False)
+        :return: A list of file paths in the repository
+        """
+        file_structure = []
+        for root, _, files in os.walk(os.path.join(self.repo_path, path)):
+            for file in files:
+                if include_invisible or not file.startswith('.'):
+                    file_structure.append(os.path.relpath(os.path.join(root, file), self.repo_path))
+        return file_structure
