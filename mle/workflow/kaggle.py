@@ -10,7 +10,7 @@ from mle.model import load_model
 from mle.function import execute_command
 from mle.integration import KaggleIntegration
 from mle.utils import ask_text, read_markdown, is_markdown_file, WorkflowCache, print_in_box
-from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, SummaryAgent
+from mle.agents import CodeAgent, DebugAgent, AdviseAgent, PlanAgent, GitHubSummaryAgent
 
 
 def auto_kaggle(
@@ -39,7 +39,7 @@ def auto_kaggle(
 
     # initialize the agents
     advisor = AdviseAgent(model, console, mode="precise")
-    summarizer = SummaryAgent(model, console=console)
+    summarizer = GitHubSummaryAgent(model, console=console)
     coder = CodeAgent(model, work_dir, console=console, single_file=True)
     debugger = DebugAgent(model, console, analyze_only=True)
 
@@ -149,7 +149,7 @@ def kaggle(work_dir: str, model=None):
         ml_requirement = ca.resume("ml_requirement")
         if ml_requirement is None:
             with console.status("MLE Agent is fetching the kaggle competition overview..."):
-                summary = SummaryAgent(model, console=console)
+                summary = GitHubSummaryAgent(model, console=console)
                 ml_requirement = summary.kaggle_request_summarize(integration.fetch_competition_overview(competition))
         ca.store("ml_requirement", ml_requirement)
 
