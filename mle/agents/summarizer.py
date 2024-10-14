@@ -243,7 +243,6 @@ class GitSummaryAgent:
         info_str = f"""
         Git path: {self.git_path}
         """
-        # TODO: get readme from repo
         readme_content = self.git.get_readme()
         # TODO: get structure from repo
         repo_files = self.git.get_structure(include_invisible=False)

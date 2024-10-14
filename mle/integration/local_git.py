@@ -1,6 +1,9 @@
 from git import Repo, NULL_TREE
 from datetime import datetime, timedelta
 
+import os
+import fnmatch
+
 
 class GitIntegration:
     def __init__(self, path):
@@ -111,3 +114,33 @@ class GitIntegration:
 
         except Exception as e:
             return f"An error occurred: {str(e)}"
+
+    def get_source_code(self, file_pattern="*"):
+        """
+        Process source code files in the repository.
+        :param file_pattern: Wildcard pattern to filter files (e.g., "*.py" for Python files)
+        :return: Dictionary with file paths as keys and file contents as values
+        """
+
+        def get_contents(path="", file_pattern=file_pattern):
+            for root, _, files in os.walk(os.path.join(self.repo_path, path)):
+                for filename in fnmatch.filter(files, file_pattern):
+                    file_path = os.path.join(root, filename)
+                    with open(file_path, 'r') as f:
+                        yield {
+                            'path': os.path.relpath(file_path, self.repo_path),
+                            'name': filename,
+                            'content': f.read()
+                        }
+        
+        return {file['path']: file['content'] for file in get_contents()}
+
+    def get_readme(self):
+        """
+        Get readme content of the repository.
+        :return: The readme content
+        """
+        content = self.get_source_code("README.md")
+        if len(content):
+            return list(content.values())[0]
+        return None
