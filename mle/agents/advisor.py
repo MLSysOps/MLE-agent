@@ -126,7 +126,8 @@ class AdviseAgent:
             schema_web_search,
             schema_search_arxiv,
             schema_search_papers_with_code,
-            schema_preview_csv_data
+            schema_preview_csv_data,
+            schema_list_files
         ]
         if config_data.get('search_key'):
             self.functions.append(schema_web_search)
