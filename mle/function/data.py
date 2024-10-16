@@ -14,7 +14,7 @@ def preview_csv_data(path: str, limit_rows: int = 5) -> str:
     try:
         df = pd.read_csv(path)
         num_rows, num_cols = df.shape
-        summary = [f"-> {path} has {num_rows} rows and {num_cols} columns."]
+        summary = [f"CSV file in `{path}` has {num_rows} rows and {num_cols} columns."]
         summary.append("Here is some information about the columns:")
         for col in sorted(df.columns):
             dtype = df[col].dtype
