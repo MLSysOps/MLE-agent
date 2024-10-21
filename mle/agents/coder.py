@@ -56,6 +56,8 @@ class CodeAgent:
         - Writing clean, efficient, and well-documented code using function `create_file` and `write_file`.
         - Exam the project to re-use the existing code snippets as much as possible, you may need to use
          functions like `list_files`, `read_file` and `write_file`.
+        - Use function `preview_zip_structure` to preview the structure of the file if the task include zip file processing.
+        - Use function `unzip_data` to extract the compressed file if the task include compressed file processing.
         - Writing the code into the file when creating new files, do not create empty files.
         - Use function `preview_csv_data` to preview the CSV data if the task include CSV data processing.
         - Decide whether the task requires execution and debugging before moving to the next or not.
@@ -73,6 +75,8 @@ class CodeAgent:
             - You should create a single script first, with the complete code inside. You can have multiple functions and classes.
             - Writing clean, efficient, and well-documented code to a script using functions `create_file`.
             - Use function `preview_csv_data` to preview the CSV data if the task include CSV dataset or examples.
+            - Use function `preview_zip_structure` to preview the structure of the file if the task include zip file processing.
+            - Use function `unzip_data` to extract the compressed file if the task include compressed file processing.
             - Generate the commands to run and test the current script, and the dependencies list required for this script.
             - You only write Python scripts, don't write Jupiter notebooks which require interactive execution.
             - Make sure the code has met the task description, and the suggested methods.
@@ -134,7 +138,9 @@ class CodeAgent:
             schema_write_file,
             schema_list_files,
             schema_create_directory,
-            schema_preview_csv_data
+            schema_preview_csv_data,
+            schema_preview_zip_structure,
+            schema_unzip_data
         ]
 
         if config_data.get('search_key'):
@@ -150,11 +156,7 @@ class CodeAgent:
         :param advisor_report:
         :return:
         """
-        req_details = f"""
-        The overall project information:\n
-        {advisor_report}
-        """
-        self.chat_history.append({"role": "system", "content": req_details})
+        self.chat_history.append({"role": "system", "content": advisor_report})
 
     def code(self, task_dict: dict):
         """
