@@ -247,6 +247,41 @@ schema_preview_csv_data = {
             'limit_rows': {
                 'type': 'integer',
                 'description': 'The number of rows to preview, should not be a very large number. Default is 3.'
+            },
+            'limit_columns': {
+                'type': 'integer',
+                'description': 'The number of columns to preview, should not be a very large number. Default is None.'
+            }
+        }
+    }
+}
+
+schema_preview_zip_structure = {
+    'name': 'preview_zip_structure',
+    'description': 'Preview the structure of a zip file with limits on output and option to show hidden files. '
+                   'Use this function when there is a need to preview the contents of a zip file.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'zip_path': {
+                'type': 'string',
+                'description': 'The path to the zip file'
+            },
+            'max_files': {
+                'type': 'integer',
+                'description': 'The maximum number of files to display, default is 50.'
+            },
+            'max_dirs': {
+                'type': 'integer',
+                'description': 'The maximum number of directories to display, default is 20.'
+            },
+            'max_output_length': {
+                'type': 'integer',
+                'description': 'The maximum length of the output string, default is 1000.'
+            },
+            'show_hidden': {
+                'type': 'boolean',
+                'description': 'If True, show hidden files and directories (starting with a dot), default is False.'
             }
         }
     }
@@ -284,7 +319,8 @@ FUNCTIONS = [
     ask_question,
     ask_yes_no,
     ask_choices,
-    preview_csv_data
+    preview_csv_data,
+    preview_zip_structure
 ]
 
 SEARCH_FUNCTIONS = [
