@@ -1,8 +1,76 @@
 import os
+import py7zr
+import gzip
+import bz2
+import lzma
+import shutil
+import tarfile
 import zipfile
 import textwrap
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
+
+
+def unzip_data(compressed_file_path: str, extract_path: str):
+    """
+    Unzip a compressed file, supporting various formats (.zip, .7z, .tar, .gz, .bz2, .xz).
+
+    :param compressed_file_path: Path to the compressed file
+    :param extract_path: Path where the contents will be extracted
+    :return: String with the path to the unzipped contents
+    """
+    if not os.path.exists(compressed_file_path):
+        raise FileNotFoundError(f"The file {compressed_file_path} does not exist.")
+
+    # Create the extraction directory if it doesn't exist
+    os.makedirs(extract_path, exist_ok=True)
+
+    file_extension = os.path.splitext(compressed_file_path)[1].lower()
+    file_name = os.path.splitext(os.path.basename(compressed_file_path))[0]
+
+    # Create a subdirectory with the name of the compressed file
+    specific_extract_path = os.path.join(extract_path, file_name)
+    os.makedirs(specific_extract_path, exist_ok=True)
+
+    try:
+        if file_extension == '.zip':
+            with zipfile.ZipFile(compressed_file_path, 'r') as zip_ref:
+                zip_ref.extractall(specific_extract_path)
+
+        elif file_extension == '.7z':
+            with py7zr.SevenZipFile(compressed_file_path, mode='r') as z:
+                z.extractall(specific_extract_path)
+
+        elif file_extension in ['.tar', '.gz', '.bz2', '.xz']:
+            if file_extension == '.gz':
+                open_func = gzip.open
+            elif file_extension == '.bz2':
+                open_func = bz2.open
+            elif file_extension == '.xz':
+                open_func = lzma.open
+            else:
+                open_func = open
+
+            with open_func(compressed_file_path, 'rb') as f:
+                if tarfile.is_tarfile(compressed_file_path) or file_extension in ['.gz', '.bz2', '.xz']:
+                    with tarfile.open(fileobj=f) as tar:
+                        tar.extractall(path=specific_extract_path)
+                else:
+                    # For single file compression (non-tar)
+                    output_filename = os.path.splitext(os.path.basename(compressed_file_path))[0]
+                    output_path = os.path.join(specific_extract_path, output_filename)
+                    with open(output_path, 'wb') as out_f:
+                        shutil.copyfileobj(f, out_f)
+
+        else:
+            raise ValueError(f"Unsupported file format: {file_extension}")
+
+        print(f"Successfully extracted {compressed_file_path} to {specific_extract_path}")
+        return specific_extract_path
+
+    except Exception as e:
+        print(f"Error extracting {compressed_file_path}: {str(e)}")
+        raise
 
 
 def preview_zip_structure(zip_path, max_files=50, max_dirs=20, max_output_length=1000, show_hidden=False):

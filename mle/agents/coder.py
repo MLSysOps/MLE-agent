@@ -136,7 +136,8 @@ class CodeAgent:
             schema_list_files,
             schema_create_directory,
             schema_preview_csv_data,
-            schema_preview_zip_structure
+            schema_preview_zip_structure,
+            schema_unzip_data
         ]
 
         if config_data.get('search_key'):

@@ -287,6 +287,25 @@ schema_preview_zip_structure = {
     }
 }
 
+schema_unzip_data = {
+    'name': 'unzip_data',
+    'description': 'Unzip a compressed file, supporting various formats (.zip, .7z, .tar, .gz, .bz2, .xz) to a specified directory. '
+                   'Use this function when there is a need to extract a compressed file.',
+    'parameters': {
+        'type': 'object',
+        'properties': {
+            'compressed_file_path': {
+                'type': 'string',
+                'description': 'The path to the compressed file to extract'
+            },
+            'extract_path': {
+                'type': 'string',
+                'description': 'The directory to extract the compressed file to'
+            }
+        }
+    }
+}
+
 # Mapping of function names to function schemas
 FUNCTION_NAMES = [
     'read_file',
@@ -303,7 +322,8 @@ FUNCTION_NAMES = [
     'ask_yes_no',
     'ask_choices',
     'preview_csv_data',
-    'preview_zip_structure'
+    'preview_zip_structure',
+    'unzip_data'
 ]
 
 FUNCTIONS = [
@@ -321,7 +341,8 @@ FUNCTIONS = [
     ask_yes_no,
     ask_choices,
     preview_csv_data,
-    preview_zip_structure
+    preview_zip_structure,
+    unzip_data
 ]
 
 SEARCH_FUNCTIONS = [
