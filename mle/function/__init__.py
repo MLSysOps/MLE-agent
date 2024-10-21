@@ -178,6 +178,10 @@ schema_execute_command = {
             'command': {
                 'type': 'string',
                 'description': 'The command to execute in the system shell'
+            },
+            'max_lines': {
+                'type': 'integer',
+                'description': 'The maximum number of output lines to keep, default is 30'
             }
         }
     }
