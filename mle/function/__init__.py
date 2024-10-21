@@ -302,7 +302,8 @@ FUNCTION_NAMES = [
     'ask_question',
     'ask_yes_no',
     'ask_choices',
-    'preview_csv_data'
+    'preview_csv_data',
+    'preview_zip_structure'
 ]
 
 FUNCTIONS = [
