@@ -68,6 +68,10 @@ schema_list_files = {
             'path': {
                 'type': 'string',
                 'description': 'The file system path to check and list contents from'
+            },
+            'limit': {
+                'type': 'integer',
+                'description': 'The maximum number of items to list, default is 50'
             }
         }
     }
@@ -300,7 +304,7 @@ schema_unzip_data = {
             },
             'extract_path': {
                 'type': 'string',
-                'description': 'The directory to extract the compressed file to'
+                'description': 'The directory to extract the compressed file to, default is the current directory'
             }
         }
     }

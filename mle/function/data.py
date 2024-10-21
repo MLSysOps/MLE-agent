@@ -7,23 +7,30 @@ import shutil
 import tarfile
 import zipfile
 import textwrap
+import tempfile
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
 
-def unzip_data(compressed_file_path: str, extract_path: str):
+def unzip_data(compressed_file_path, extract_path=None):
     """
     Unzip a compressed file, supporting various formats (.zip, .7z, .tar, .gz, .bz2, .xz).
+    If no extract_path is provided, it creates a temporary directory.
 
     :param compressed_file_path: Path to the compressed file
-    :param extract_path: Path where the contents will be extracted
+    :param extract_path: Path where the contents will be extracted. If None, a temp directory is used.
     :return: String with the path to the unzipped contents
     """
     if not os.path.exists(compressed_file_path):
         raise FileNotFoundError(f"The file {compressed_file_path} does not exist.")
 
-    # Create the extraction directory if it doesn't exist
-    os.makedirs(extract_path, exist_ok=True)
+    # If no extract_path is provided, create a temporary directory
+    if extract_path is None:
+        extract_path = tempfile.mkdtemp()
+        print(f"No extract path provided. Using temporary directory: {extract_path}")
+    else:
+        # Create the extraction directory if it doesn't exist
+        os.makedirs(extract_path, exist_ok=True)
 
     file_extension = os.path.splitext(compressed_file_path)[1].lower()
     file_name = os.path.splitext(os.path.basename(compressed_file_path))[0]
@@ -174,7 +181,3 @@ def preview_csv_data(path: str, limit_rows: int = 5, limit_columns: int = None) 
         return textwrap.dedent("\n".join(summary)).strip()
     except Exception as e:
         return f"Cannot read CSV data: {e}"
-
-
-if __name__ == "__main__":
-    print(preview_zip_structure("/Users/huangyz0918/Downloads/stat202A_hw.zip"))

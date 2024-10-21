@@ -48,21 +48,42 @@ def write_file(path, content):
         return f"Error writing to file: {str(e)}"
 
 
-def list_files(path):
+def list_files(path, limit=50):
     """
-    Lists all files and directories under the given path if it is a directory.
-    If the path is a file, returns None.
+    Lists files and directories under the given path if it is a directory,
+    up to a specified limit.
 
     Args:
     path (str): The file system path to check and list contents from.
+    limit (int): Maximum number of items to list. Defaults to 50.
 
-    Returns: A string containing the list of file and directory names under the given path, or None if the path is a file.
+    Returns: A string containing the list of file and directory names under
+             the given path, or a message if the path is a file or if the
+             number of items exceeds the limit.
     """
     if os.path.isfile(path):
         return "The given path is a file. Please provide a path of a directory."
 
-    files = os.listdir(path)
-    return "\n".join(files)
+    try:
+        files = os.listdir(path)
+    except PermissionError:
+        return "Permission denied to access this directory."
+    except FileNotFoundError:
+        return "The specified directory does not exist."
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
+    total_files = len(files)
+
+    if total_files > limit:
+        files = files[:limit]
+        output = "\n".join(files)
+        output += f"\n\n... and {total_files - limit} more items (total of {total_files} items)"
+    else:
+        output = "\n".join(files)
+        output += f"\n\nTotal items: {total_files}"
+
+    return output
 
 
 def create_directory(path: str):
