@@ -244,7 +244,7 @@ class GitSummaryAgent:
         Git path: {self.git_path}
         """
         readme_content = self.git.get_readme()
-        repo_files = self.git.get_structure(include_invisible=False)
+        repo_files = self.git.get_structure()
 
         info_str += f"""
 
@@ -283,8 +283,8 @@ class GitSummaryAgent:
             summary = json.loads(text)
             summary.update({"git_path": self.git_path})
 
-            # TODO: get user activity
-            user_activity = self.git.get_user_activity(self.username, detailed=False)
+            # get user activity
+            user_activity = self.git.get_user_activity(self.email)
             summary.update({"user_activity": user_activity})
 
         return summary
