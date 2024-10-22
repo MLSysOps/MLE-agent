@@ -111,9 +111,9 @@ def report(ctx, repo, model, user, visualize):
 
 @cli.command()
 @click.pass_context
-@click.option('--path', default="./", help='The path to the local git repo.')
+@click.argument('path', default='./')
 @click.option('--email', default=None, help='The email of the user.')
-def report_local(path, email):
+def report_local(ctx, path, email):
     """
     report_local: generate report with LLM for local git repo.
     """
@@ -121,11 +121,11 @@ def report_local(path, email):
         return
 
     if email is None:
-        user = questionary.text(
+        email = questionary.text(
             "What is your Git email? (e.g., huangyz0918@gmail.com)"
         ).ask()
 
-    return workflow.report_local(os.getcwd(), path, user)
+    return workflow.report_local(os.getcwd(), path, email)
     
 
 @cli.command()
