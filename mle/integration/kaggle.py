@@ -62,13 +62,17 @@ class KaggleIntegration:
         :param competition: The URL or name of the Kaggle competition.
         :return: A dictionary containing competition overview information, or None if not found.
         """
-        overview = None
         for _ in range(3):  # Retry 3 times if the request fails
             try:
-                reader_url = f"https://r.jina.ai/{competition}/{overview}"
-                response = requests.get(reader_url)
+                reader_url = f"https://r.jina.ai/{competition}/overview/description"
+                response = requests.get(
+                    reader_url,
+                    timeout=30,
+                    headers={"X-Return-Format": "markdown"},
+                )
                 response.raise_for_status()
                 overview = response.text
+                break
             except requests.exceptions.HTTPError:
                 continue
         return overview.encode('utf-8', 'ignore').decode('utf-8')
