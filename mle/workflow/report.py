@@ -5,7 +5,7 @@ import os
 import pickle
 from rich.console import Console
 from mle.model import load_model
-from mle.agents import SummaryAgent, ReportAgent
+from mle.agents import GitHubSummaryAgent, ReportAgent
 from mle.utils.system import get_config, write_config, check_config
 from mle.integration import GoogleCalendarIntegration, github_login
 
@@ -60,7 +60,7 @@ def report(
             google_calendar = GoogleCalendarIntegration(google_token)
             events = google_calendar.get_events()
 
-    summarizer = SummaryAgent(
+    summarizer = GitHubSummaryAgent(
         model,
         github_repo=github_repo,
         username=github_username,
