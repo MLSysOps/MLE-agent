@@ -1,19 +1,27 @@
 import os
 
 
-def read_file(file_path: str):
+def read_file(file_path: str, limit: int = 2000):
     """
     Reads the contents of a file and returns it as a string.
 
     Args:
     file_path (str): The path to the file that needs to be read.
+    limit (int, optional): Maximum number of lines to read.
 
     Returns:
     str: The contents of the file as a string.
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
+            if limit <= 0:
+                return file.read()
+            lines = []
+            for i, line in enumerate(file):
+                if i >= limit:
+                    break
+                lines.append(line)
+            return ''.join(lines)
     except FileNotFoundError:
         return f"File not found: {file_path}"
 
