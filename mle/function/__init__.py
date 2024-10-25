@@ -15,6 +15,10 @@ schema_read_file = {
             'file_path': {
                 'type': 'string',
                 'description': 'The path of the file to read'
+            },
+            'limit': {
+                'type': 'integer',
+                'description': 'Maximum number of lines to read. Default is 2000.'
             }
         }
     }
