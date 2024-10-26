@@ -2,14 +2,14 @@ import json
 from rich.console import Console
 
 from mle.function import *
-from mle.integration import GitHubIntegration
+from mle.integration import GitHubIntegration, GitIntegration
 
 
-class SummaryAgent:
+class GitHubSummaryAgent:
 
     def __init__(self, model, github_repo: str = None, username: str = None, github_token: str = None, console=None):
         """
-        SummaryAgent: summary the workspace provided by the user.
+        GitHubSummaryAgent: summary the workspace provided by the user.
 
         Args:
             model: the model to use.
@@ -172,3 +172,119 @@ class SummaryAgent:
             function_call='auto',
             functions=[schema_preview_csv_data]
         )
+
+
+class GitSummaryAgent:
+
+    def __init__(self, model, git_path: str = None, git_email: str = None, console=None):
+        """
+        GitSummaryAgent: summarize the local Git repository provided by the user.
+
+        Args:
+            model: the model to use.
+            git_path: the path to the local Git repository.
+            git_email: the email of the user.
+            console: the console to use.
+        """
+        self.report = None
+        self.model = model
+        self.email = git_email
+        self.chat_history = []
+        self.git_path = git_path
+        self.git = GitIntegration(git_path)
+        self.console = console
+        if not self.console:
+            self.console = Console()
+        self.sys_prompt = """
+        You are a software expert tasked with summarizing the Git repository information provided by the user. The
+         project may contain the dataset, the source code, and the documentation, etc.
+
+        Your capabilities include:
+
+        1. You need to summarize the basic project information, including the project name, the project description,
+            the technical stacks, etc.
+        2. You need to further analyze the project structure and the README file to understand the project business goal
+         and the purpose. And give a deep understanding of the project, draw a summary in the description.
+        3. You should read the README.md file and see if the project includes a dataset (or using a public dataset).
+         if so, you'd better give a brief introduction to the dataset.
+        4. Based on the information provided, you need to guess the technical hard parts and give suggestions.
+        5. You may use function `search_arxiv` and `search_github_repos` to search for the related papers and github
+         repos of the project using the project keywords and tech stacks. Do not directly search the project name.
+
+        """
+        self.json_mode_prompt = """
+
+        JSON Output Format:
+
+        {
+            "summary": "The project is a ...",
+            "business_goal": ["The project aims to build an image classification model...", ...],
+            "dataset": [{"name": "CIFAR-10", "description": "The project uses CIFAR-10 dataset to train
+             the classification model. The dataset includes 10 classes of images...""}, ...],
+            "tech_stack": ["Python", "PyTorch", "MLFlow", ...],
+            "related_work": [{"title": "xxxx", "link":"https://arxiv.org/abs/xxx.xxxx"}, {"title": "xxx", "link": "https://github.com/xxx"}, ...],
+        }
+
+        """
+        self.functions = [
+            schema_search_arxiv,
+            schema_search_github_repos,
+            schema_search_papers_with_code
+        ]
+
+        self.sys_prompt += self.json_mode_prompt
+        self.chat_history.append({"role": 'system', "content": self.sys_prompt})
+
+    def process_knowledge(self):
+        """
+        Process the knowledge from the Git repo.
+        Args: None
+        """
+        info_str = f"""
+        Git path: {self.git_path}
+        """
+        readme_content = self.git.get_readme()
+        repo_files = self.git.get_structure()
+
+        info_str += f"""
+
+        README CONTENT:
+        {readme_content}
+
+        """
+
+        info_str += f"""
+
+        PROJECT STRUCTURE:
+        """
+
+        for file in repo_files:
+            info_str += f"""
+            {file}
+            """
+
+        return info_str
+
+    def summarize(self, start_date=None, end_date=None):
+        """
+        Handle the query from the model query response.
+        Args: None
+        """
+        with self.console.status("MLE summarizer is summarizing the project..."):
+            self.chat_history.append({"role": "user", "content": self.process_knowledge()})
+            text = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+                response_format={"type": "json_object"}
+            )
+
+            self.chat_history.append({"role": "assistant", "content": text})
+            summary = json.loads(text)
+            summary.update({"git_path": self.git_path})
+
+            # get user activity
+            user_activity = self.git.get_user_activity(self.email, start_date, end_date)
+            summary.update({"user_activity": user_activity})
+
+        return summary

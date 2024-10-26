@@ -85,7 +85,6 @@ def report(ctx, repo, model, user, visualize):
             future2.result()
     else:
         if repo is None:
-            # TODO: support local project report
             repo = questionary.text(
                 "What is your GitHub repository? (e.g., MLSysOps/MLE-agent)"
             ).ask()
@@ -109,6 +108,27 @@ def report(ctx, repo, model, user, visualize):
             return workflow.report(work_dir, repo, user, model)
         return workflow.report(os.getcwd(), repo, user, model)
 
+
+@cli.command()
+@click.pass_context
+@click.argument('path', default='./')
+@click.option('--email', default=None, help='The email of the user.')
+@click.option('--start-date', default=None, help='The start date of the user activity (YYYY-MM-DD).')
+@click.option('--end-date', default=None, help='The end date of the user activity (YYYY-MM-DD).')
+def report_local(ctx, path, email, start_date, end_date):
+    """
+    report_local: generate report with LLM for local git repo.
+    """
+    if not check_config(console):
+        return
+
+    if email is None:
+        email = questionary.text(
+            "What is your Git email? (e.g., huangyz0918@gmail.com)"
+        ).ask()
+
+    return workflow.report_local(os.getcwd(), path, email, start_date=start_date, end_date=end_date)
+    
 
 @cli.command()
 @click.option('--model', default=None, help='The model to use for the chat.')
