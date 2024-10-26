@@ -268,7 +268,7 @@ class GitSummaryAgent:
     def summarize(self, start_date=None, end_date=None):
         """
         Handle the query from the model query response.
-        Args: 
+        Args:
             start_date: the start date of the user activity.
             end_date: the end date of the user activity.
         """
