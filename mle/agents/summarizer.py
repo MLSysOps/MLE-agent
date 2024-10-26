@@ -265,7 +265,7 @@ class GitSummaryAgent:
 
         return info_str
 
-    def summarize(self):
+    def summarize(self, start_date=None, end_date=None):
         """
         Handle the query from the model query response.
         Args: None
@@ -284,7 +284,7 @@ class GitSummaryAgent:
             summary.update({"git_path": self.git_path})
 
             # get user activity
-            user_activity = self.git.get_user_activity(self.email)
+            user_activity = self.git.get_user_activity(self.email, start_date, end_date)
             summary.update({"user_activity": user_activity})
 
         return summary

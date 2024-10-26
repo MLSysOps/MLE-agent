@@ -11,6 +11,8 @@ def report_local(
         git_path: str,
         email: str,
         okr_str: str = None,
+        start_date: str = None,
+        end_date: str = None,
         model=None
 ):
     """
@@ -35,5 +37,5 @@ def report_local(
     )
     reporter = ReportAgent(model, console)
 
-    git_summary = summarizer.summarize()
+    git_summary = summarizer.summarize(start_date=start_date, end_date=end_date)
     return reporter.gen_report(git_summary, events, okr=okr_str)

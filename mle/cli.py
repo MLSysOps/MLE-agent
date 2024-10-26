@@ -113,7 +113,9 @@ def report(ctx, repo, model, user, visualize):
 @click.pass_context
 @click.argument('path', default='./')
 @click.option('--email', default=None, help='The email of the user.')
-def report_local(ctx, path, email):
+@click.option('--start-date', default=None, help='The start date of the user activity (YYYY-MM-DD).')
+@click.option('--end-date', default=None, help='The end date of the user activity (YYYY-MM-DD).')
+def report_local(ctx, path, email, start_date, end_date):
     """
     report_local: generate report with LLM for local git repo.
     """
@@ -125,7 +127,7 @@ def report_local(ctx, path, email):
             "What is your Git email? (e.g., huangyz0918@gmail.com)"
         ).ask()
 
-    return workflow.report_local(os.getcwd(), path, email)
+    return workflow.report_local(os.getcwd(), path, email, start_date=start_date, end_date=end_date)
     
 
 @cli.command()
