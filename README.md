@@ -92,12 +92,23 @@ mle start
 MLE agent can help you summarize your weekly report, including development progress, communication notes, reference, and
 to-do lists.
 
+#### Mode 1: Web Application to Generate Report from GitHub
+
 ```bash
 cd <project name>
 mle report
 ```
 
 Then, you can visit http://localhost:3000/ to generate your report locally.
+
+#### Mode 2: CLI Tool to Generate Report from Local Git Repository
+```bash
+cd <project name>
+mle report-local --email=<git email> --start-date=YYYY-MM-DD --end-date=YYYY-MM-DD <path_to_git_repo>
+```
+
+- `--start-date` and `--end-date` are optional parameters. If omitted, the command will generate a report for the default date range of the last 7 days.
+- Replace `<git email>` with your Git email and `<path_to_git_repo>` with the path to your local Git repository.
 
 ### :trophy: Start with Kaggle Competition
 
