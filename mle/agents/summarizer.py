@@ -268,7 +268,9 @@ class GitSummaryAgent:
     def summarize(self, start_date=None, end_date=None):
         """
         Handle the query from the model query response.
-        Args: None
+        Args:
+            start_date: the start date of the user activity.
+            end_date: the end date of the user activity.
         """
         with self.console.status("MLE summarizer is summarizing the project..."):
             self.chat_history.append({"role": "user", "content": self.process_knowledge()})
