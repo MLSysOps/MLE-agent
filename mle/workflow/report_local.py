@@ -21,6 +21,8 @@ def report_local(
     :param git_path: the path to the local Git repository.
     :param email: the email address.
     :param okr_str: the OKR string.
+    :param start_date: the start date.
+    :param end_date: the end date.
     :param model: the model to use.
     :return:
     """
