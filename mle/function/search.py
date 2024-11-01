@@ -112,7 +112,7 @@ def search_papers_with_code(query: str, k: int = 8) -> str:
     if 'results' not in data:
         return "No results found for the given query."
 
-    results = data['results'][:k]  # Get top-k results
+    results = data['results'][:int(k)]  # Get top-k results
     result_strings = []
 
     for result in results:
