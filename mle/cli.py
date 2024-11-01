@@ -228,7 +228,7 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude', 'MistralAI', 'DeepSeek']
+        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek']
     ).ask()
 
     api_key = None
@@ -252,6 +252,12 @@ def new(name):
 
     elif platform == 'DeepSeek':
         api_key = questionary.password("What is your DeepSeek API key?").ask()
+        if not api_key:
+            console.log("API key is required. Aborted.")
+            return
+
+    elif platform == 'Gemini':
+        api_key = questionary.password("What is your Gemini API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
