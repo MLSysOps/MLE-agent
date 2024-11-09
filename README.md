@@ -13,10 +13,9 @@
 
 [📚 Docs](https://mle-agent-site.vercel.app/) |
 [🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) |
-👋 Join us on <a href="https://discord.gg/SgxBpENGRG" target="_blank">Discord</a>
+👋 Join us on <a href="https://discord.gg/d9vcY7PA8Z" target="_blank">Discord</a>
 
 </div>
-
 ## Overview
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
