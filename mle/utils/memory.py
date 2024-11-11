@@ -3,6 +3,9 @@ import os.path
 from datetime import datetime
 from typing import List, Dict
 
+import lancedb
+from lancedb.embeddings import get_registry
+
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -11,7 +14,8 @@ from mle.utils import get_config
 chromadb.logger.setLevel(chromadb.logging.ERROR)
 
 
-class Memory:
+class ChromaDBMemory:
+
     def __init__(
             self,
             project_path: str,
@@ -152,3 +156,90 @@ class Memory:
         Notice: You may need to set the environment variable `ALLOW_RESET` to `TRUE` to enable this function.
         """
         self.client.reset()
+
+
+class LanceDBMemory:
+
+    def __init__(
+        self,
+        project_path: str,
+        *,
+        embedding_model: str = "openai",    
+    ):
+        """
+        Memory: A base class for memory and external knowledge management.
+        Args:
+            project_path: the path to store the data.
+            embedding_model: the embedding model to use.
+        """
+        self.db_name = '.mle'
+        self.table_name = 'memory'
+        self.client = lancedb.connect(uri=self.db_name)
+
+        config = get_config(project_path)
+        if embedding_model == "openai":
+            self.text_embedding = get_registry().get(embedding_model).create(api_key=config["api_key"])
+
+    def add(self, texts: List[str], table_name: str = None, ids: List[str] = None) -> List[str]:
+        """
+        Adds a list of text items to the specified memory table in the database.
+
+        Args:
+            texts (List[str]): A list of text strings to be added.
+            table_name (str, optional): The name of the table to add data to. Defaults to self.table_name.
+            ids (List[str], optional): A list of unique IDs for the text items. 
+                If not provided, random UUIDs are generated.
+
+        Returns:
+            List[str]: A list of IDs associated with the added text items.
+        """
+        if isinstance(texts, str):
+            texts = (texts, )
+        embeds = self.text_embedding.compute_source_embeddings(texts)
+
+        if table_name is None:
+            table_name = self.table_name
+
+        if ids is None:
+            ids = [str(uuid.uuid4()) for _ in range(len(texts))]
+
+        if table_name not in self.client.table_names():
+            self.client.create_table(table_name, data=[
+                {"vector": embed, "text": text, "id": idx}
+                for idx, text, embed in zip(ids, texts, embeds)
+            ])
+        else:
+            self.client.open_table(table_name).add(
+                data=[
+                    {"vector": embed, "text": text, "id": idx}
+                    for idx, text, embed in zip(ids, texts, embeds)
+                ]
+            )
+
+        return ids
+
+    def query(self, query_texts: List[str], table_name: str = None, n_results: int = 5) -> List[List[dict]]:
+        """
+        Queries the specified memory table for similar text embeddings.
+
+        Args:
+            query_texts (List[str]): A list of query text strings.
+            table_name (str, optional): The name of the table to query. Defaults to self.table_name.
+            n_results (int, optional): The maximum number of results to retrieve per query. Default is 5.
+
+        Returns:
+            List[List[dict]]: A list of results for each query text, each result being a dictionary with 
+            keys such as "vector", "text", and "id".
+        """
+        if table_name is None:
+            table_name = self.table_name
+        table = self.client.open_table(table_name)
+
+        query_embeds = self.text_embedding.compute_source_embeddings(query_texts)
+
+        results = []
+        for query in query_embeds:
+            result = table.search(query).limit(n_results).to_list()
+            results.append(result)
+
+        return results

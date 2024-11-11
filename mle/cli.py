@@ -10,7 +10,6 @@ from rich.console import Console
 
 import mle
 from mle.server import app
-from mle.utils import Memory
 import mle.workflow as workflow
 from mle.utils.system import (
     get_config,
@@ -277,9 +276,6 @@ def new(name):
             'search_key': search_api_key,
             'integration': {},
         }, outfile, default_flow_style=False)
-
-    # init the memory
-    Memory(project_dir)
 
 
 @cli.command()
