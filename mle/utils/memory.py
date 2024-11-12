@@ -218,7 +218,7 @@ class LanceDBMemory:
             n_results (int): The maximum number of results to retrieve per query. Default is 5.
 
         Returns:
-            List[List[dict]]: A list of results for each query text, each result being a dictionary with 
+            List[List[dict]]: A list of results for each query text, each result being a dictionary with
             keys such as "vector", "text", and "id".
         """
         table_name = table_name or self.table_name
