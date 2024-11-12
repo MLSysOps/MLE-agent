@@ -16,6 +16,7 @@
 👋 Join us on <a href="https://discord.gg/d9vcY7PA8Z" target="_blank">Discord</a>
 
 </div>
+
 ## Overview
 
 MLE-Agent is designed as a pairing LLM agent for machine learning engineers and researchers. It is featured by:
