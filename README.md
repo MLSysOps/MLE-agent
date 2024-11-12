@@ -9,7 +9,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/mle-agent)
 [![Downloads](https://static.pepy.tech/badge/mle-agent)](https://pepy.tech/project/mle-agent)
 ![GitHub License](https://img.shields.io/github/license/MLSysOps/MLE-agent)
-<a href="https://discord.gg/SgxBpENGRG"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
+<a href="https://discord.gg/d9vcY7PA8Z"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=flat" alt="Join our Discord community"></a>
 
 [📚 Docs](https://mle-agent-site.vercel.app/) |
 [🐞 Report Issues](https://github.com/MLSysOps/MLE-agent/issues/new) |
