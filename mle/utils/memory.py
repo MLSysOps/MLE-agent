@@ -160,10 +160,7 @@ class ChromaDBMemory:
 
 class LanceDBMemory:
 
-    def __init__(
-        self,
-        project_path: str,
-    ):
+    def __init__(self, project_path: str):
         """
         Memory: A base class for memory and external knowledge management.
         Args:
@@ -180,11 +177,11 @@ class LanceDBMemory:
             raise NotImplementedError
 
     def add(
-        self,
-        texts: List[str],
-        metadata: Optional[List[Dict]] = None,
-        table_name: Optional[str] = None,
-        ids: Optional[List[str]] = None,
+            self,
+            texts: List[str],
+            metadata: Optional[List[Dict]] = None,
+            table_name: Optional[str] = None,
+            ids: Optional[List[str]] = None,
     ) -> List[str]:
         """
         Adds a list of text items to the specified memory table in the database.
@@ -200,12 +197,12 @@ class LanceDBMemory:
             List[str]: A list of IDs associated with the added text items.
         """
         if isinstance(texts, str):
-            texts = (texts, )
+            texts = (texts,)
 
         if metadata is None:
             metadata = [None, ] * len(texts)
         elif isinstance(metadata, dict):
-            metadata = (metadata, )
+            metadata = (metadata,)
         else:
             assert len(texts) == len(metadata)
 

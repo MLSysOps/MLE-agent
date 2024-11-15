@@ -1,5 +1,7 @@
 import os
 import re
+
+import toolz
 import yaml
 import click
 import pickle
@@ -18,8 +20,11 @@ from mle.utils.system import (
     startup_web,
     print_in_box,
 )
+from mle.utils import LanceDBMemory, list_files, read_file
+from mle.utils import CodeChunker
 
 console = Console()
+memory = LanceDBMemory(os.getcwd())
 
 
 @click.group()
@@ -127,7 +132,7 @@ def report_local(ctx, path, email, start_date, end_date):
         ).ask()
 
     return workflow.report_local(os.getcwd(), path, email, start_date=start_date, end_date=end_date)
-    
+
 
 @cli.command()
 @click.option('--model', default=None, help='The model to use for the chat.')
@@ -187,14 +192,31 @@ def kaggle(
 
 @cli.command()
 @click.option('--model', default=None, help='The model to use for the chat.')
-def chat(model):
+@click.option('--build_mem', is_flag=True, help='Build and enable the local memory for the chat.')
+def chat(model, build_mem):
     """
     chat: start an interactive chat with LLM to work on your ML project.
     """
     if not check_config(console):
         return
 
-    return workflow.chat(os.getcwd(), model)
+    if build_mem:
+        working_dir = os.getcwd()
+        table_name = 'mle_chat_' + working_dir.split('/')[-1]
+        source_files = list_files(working_dir, ['*.py'])  # TODO: support more file types
+
+        chunker = CodeChunker(os.path.join(working_dir, '.mle', 'cache'), 'py')
+        with console.status("processing the code memory..."):
+            for file_path in source_files:
+                raw_code = read_file(file_path)
+                chunks = chunker.chunk(raw_code, token_limit=100)
+                memory.add(
+                    texts=list(chunks.values()),
+                    table_name=table_name,
+                    metadata=[{'file': file_path, 'chunk_key': k} for k, _ in chunks.items()]
+                )
+
+    return workflow.chat(os.getcwd(), model=model, memory=memory)
 
 
 @cli.command()

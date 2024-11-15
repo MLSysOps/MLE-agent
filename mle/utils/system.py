@@ -4,41 +4,15 @@ import uuid
 import yaml
 import base64
 import shutil
+import fnmatch
 import requests
 import platform
 import subprocess
 import importlib.util
-from typing import Dict, Any, Optional, Callable
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.console import Console
-
-
-def dict_to_markdown(data: Dict[str, Any], file_path: str) -> None:
-    """
-    Write a dictionary to a markdown file.
-    :param data: the dictionary to write.
-    :param file_path: the file path to write the dictionary to.
-    :return:
-    """
-
-    def write_item(k, v, indent_level=0):
-        if isinstance(v, dict):
-            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
-            for sub_key, sub_value in v.items():
-                write_item(sub_key, sub_value, indent_level + 1)
-        elif isinstance(v, list):
-            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
-            for item in v:
-                md_file.write(f"{'  ' * indent_level}- {item}\n")
-        else:
-            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
-            md_file.write(f"{'  ' * indent_level}{v}\n")
-
-    with open(file_path, 'w') as md_file:
-        for key, value in data.items():
-            write_item(key, value)
-            md_file.write("\n")
+from typing import Dict, Any, Optional, Callable, List, Union
 
 
 def print_in_box(text: str, console: Optional[Console] = None, title: str = "", color: str = "white") -> None:
@@ -175,6 +149,85 @@ def extract_file_name(text: str) -> Optional[str]:
         return None
 
 
+def read_file(filepath: str, limit: Optional[int] = None) -> Optional[str]:
+    """
+    Read and return file contents as string, with optional length limit.
+
+    Args:
+        filepath (str): Path to the file to read
+        limit (Optional[int]): Maximum number of characters to read
+
+    Returns:
+        Optional[str]: File contents or None if file is invalid
+    """
+    if not os.path.isfile(filepath):
+        return None
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            if limit:
+                return f.read(limit)
+            return f.read()
+    except (IOError, UnicodeDecodeError):
+        return None
+
+
+def list_files(
+        directory: str,
+        patterns: Optional[Union[str, List[str]]] = None,
+        include_hidden: bool = False
+) -> List[str]:
+    """
+    List all files in a directory, optionally filtered by wildcard patterns and visibility.
+    Files in hidden directories are considered hidden.
+
+    Args:
+        directory (str): Path to the directory to search
+        patterns (Optional[Union[str, List[str]]]): Single pattern or list of wildcard patterns
+        include_hidden (bool): Whether to include hidden files and files in hidden directories
+
+    Returns:
+        List[str]: List of absolute file paths
+
+    Example:
+        list_files("/path/to/dir", ["*.txt", "*.pdf"], include_hidden=False)
+    """
+    if not os.path.isdir(directory):
+        raise ValueError(f"Directory not found: {directory}")
+
+    if isinstance(patterns, str):
+        patterns = [patterns]
+
+    def is_hidden_path(path: str) -> bool:
+        """Check if the path or any of its parents are hidden (start with '.')"""
+        parts = os.path.abspath(path).split(os.sep)
+        # Skip the first empty part for absolute paths and drive letter for Windows
+        start_idx = 1 if parts[0] == '' else 0
+        return any(part.startswith('.') for part in parts[start_idx:])
+
+    result = []
+
+    for root, _, files in os.walk(directory):
+        # Skip this directory if it's hidden and we're not including hidden files
+        if not include_hidden and is_hidden_path(root):
+            continue
+
+        for file in files:
+            filepath = os.path.abspath(os.path.join(root, file))
+
+            # Skip hidden files if include_hidden is False
+            if not include_hidden and (file.startswith('.') or is_hidden_path(filepath)):
+                continue
+
+            if patterns:
+                if any(fnmatch.fnmatch(filepath, pattern) for pattern in patterns):
+                    result.append(filepath)
+            else:
+                result.append(filepath)
+
+    return result
+
+
 def list_dir_structure(start_path: str) -> str:
     """
     List all files and directories under the given path.
@@ -272,8 +325,6 @@ def get_user_id():
     Get the unique user id of the current machine.
     """
     system = platform.system()
-    username = None
-    hostname = None
 
     if system == "Windows":
         username = os.getenv('USERNAME', 'root')
@@ -302,16 +353,18 @@ def get_session_id():
 
 
 def get_langfuse_observer(
-    secret_key: Optional[str] = None,
-    public_key: Optional[str] = None,
-    user_id: Optional[str] = None,
-    session_id: Optional[str] = None,
-    host: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        public_key: Optional[str] = None,
+        user_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        host: Optional[str] = None,
 ):
     """
     Get the Langfuse observer.
     :param secret_key: Langfuse secret key.
     :param public_key: Langfuse public key.
+    :param user_id: Optional user id, defaulting to the unique user id of the current machine.
+    :param session_id: Optional session id, defaulting to the session id of the current process.
     :param host: Optional host address, defaulting to 'https://us.cloud.langfuse.com'.
     """
     spec = importlib.util.find_spec("langfuse")
@@ -366,6 +419,7 @@ def get_langfuse_observer(
                 session_id=session_id,
             )
             return _fn(*args, **kwargs)
+
         return query
 
     return _observe

@@ -1,14 +1,12 @@
-import sys
-import json
 from rich.console import Console
 
 from mle.function import *
-from mle.utils import get_config, print_in_box, WorkflowCache
+from mle.utils import get_config, WorkflowCache
 
 
 class ChatAgent:
 
-    def __init__(self, model, working_dir='.', console=None):
+    def __init__(self, model, memory=None, working_dir='.', console=None):
         """
         ChatAgent assists users with planning and debugging ML projects.
 
@@ -18,7 +16,10 @@ class ChatAgent:
         config_data = get_config()
 
         self.model = model
+        self.memory = memory
         self.chat_history = []
+        if working_dir == '.':
+            working_dir = os.getcwd()
         self.working_dir = working_dir
         self.cache = WorkflowCache(working_dir, 'baseline')
 
@@ -56,7 +57,9 @@ class ChatAgent:
             schema_search_papers_with_code,
             schema_web_search,
             schema_execute_command,
-            schema_preview_csv_data
+            schema_preview_csv_data,
+            schema_unzip_data,
+            schema_preview_zip_structure
         ]
 
         if config_data.get('search_key'):
@@ -116,7 +119,20 @@ class ChatAgent:
             user_prompt: the user prompt.
         """
         text = ''
+        if self.memory:
+            table_name = 'mle_chat_' + self.working_dir.split('/')[-1]
+            query = self.memory.query([user_prompt], table_name=table_name, n_results=1)  # TODO: adjust the n_results.
+            user_prompt += f"""
+            \nThese information can be useful for the conversation:
+                 
+            """
+
+            for t in query[0]:
+                text, metadata = t.get('text'), t.get('metadata')
+                user_prompt += f"**File**: {metadata.get('file')}\n**Snippet**: {text}\n"
+
         self.chat_history.append({"role": "user", "content": user_prompt})
+
         for content in self.model.stream(
                 self.chat_history,
                 function_call='auto',
