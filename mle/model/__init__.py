@@ -4,12 +4,14 @@ from .mistral import *
 from .ollama import *
 from .openai import *
 from .gemini import *
+from .azureopenai import *
 
 from mle.utils import get_config
 
 
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
+MODEL_AZUREOPENAI = "AzureOpenAI"
 MODEL_CLAUDE = 'Claude'
 MODEL_MISTRAL = 'MistralAI'
 MODEL_DEEPSEEK = 'DeepSeek'
@@ -60,6 +62,8 @@ def load_model(project_dir: str, model_name: str=None, observable=True):
         model = OllamaModel(model=model_name)
     if config['platform'] == MODEL_OPENAI:
         model = OpenAIModel(api_key=config['api_key'], model=model_name)
+    elif config['platform'] == MODEL_AZUREOPENAI:
+        model = AzureOpenAIModel(api_key=config['api_key'],model=model_name,endpoint=config('endpoint'))
     if config['platform'] == MODEL_CLAUDE:
         model = ClaudeModel(api_key=config['api_key'], model=model_name)
     if config['platform'] == MODEL_MISTRAL:
