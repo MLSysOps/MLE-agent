@@ -10,6 +10,7 @@ from rich.console import Console
 
 import mle
 from mle.server import app
+from mle.utils import Memory
 import mle.workflow as workflow
 from mle.utils.system import (
     get_config,
@@ -41,7 +42,9 @@ def start(ctx, mode, model):
     """
     if not check_config(console):
         return
-
+    
+    config = get_config(os.getcwd())
+    model_instance = load_model(os.getcwd(),model=model)
     if mode == 'baseline':
         # Baseline mode
         return workflow.baseline(os.getcwd(), model)
@@ -227,12 +230,18 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek']
+        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek','AzureOpenAI']
     ).ask()
 
     api_key = None
     if platform == 'OpenAI':
         api_key = questionary.password("What is your OpenAI API key?").ask()
+        if not api_key:
+            console.log("API key is required. Aborted.")
+            return
+
+    elif platform == 'AzureOpenAI':
+        api_key = questionary.password("What is your AzureOpenAI API key?").ask()
         if not api_key:
             console.log("API key is required. Aborted.")
             return
@@ -276,6 +285,9 @@ def new(name):
             'search_key': search_api_key,
             'integration': {},
         }, outfile, default_flow_style=False)
+
+    # init the memory
+    Memory(project_dir)
 
 
 @cli.command()
