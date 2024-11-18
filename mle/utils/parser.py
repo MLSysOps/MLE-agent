@@ -4,6 +4,10 @@ import subprocess
 from typing import Dict, Tuple, Union, List
 from tree_sitter import Language, Parser, Node
 
+import warnings
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 
 def return_simple_line_numbers_with_code(code: str) -> str:
     code_lines = code.split('\n')

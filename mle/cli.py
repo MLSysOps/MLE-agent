@@ -1,7 +1,5 @@
 import os
 import re
-
-import toolz
 import yaml
 import click
 import pickle
@@ -9,6 +7,7 @@ import uvicorn
 import questionary
 from pathlib import Path
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn, TextColumn, BarColumn
 
 import mle
 from mle.server import app
@@ -206,9 +205,20 @@ def chat(model, build_mem):
         source_files = list_files(working_dir, ['*.py'])  # TODO: support more file types
 
         chunker = CodeChunker(os.path.join(working_dir, '.mle', 'cache'), 'py')
-        with console.status("processing the code memory..."):
+        with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console,
+        ) as progress:
+            process_task = progress.add_task("Processing files...", total=len(source_files))
+
             for file_path in source_files:
                 raw_code = read_file(file_path)
+                progress.update(process_task, advance=1, description=f"Adding memory...")
+
                 chunks = chunker.chunk(raw_code, token_limit=100)
                 memory.add(
                     texts=list(chunks.values()),

@@ -72,9 +72,9 @@ class ChatAgent:
             advisor_report = self.cache.resume_variable("advisor_report")
             self.sys_prompt += f"""
             The overall project information: \n
-            {'Dataset: ' + dataset if dataset else ''} \n
-            {'Requirement: ' + ml_requirement if ml_requirement else ''} \n
-            {'Advisor: ' + advisor_report if advisor_report else ''} \n
+            {'Dataset: ' + str(dataset) if dataset else ''} \n
+            {'Requirement: ' + str(ml_requirement) if ml_requirement else ''} \n
+            {'Advisor: ' + str(advisor_report) if advisor_report else ''} \n
             """
 
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
@@ -87,9 +87,8 @@ class ChatAgent:
         Returns:
             str: The generated greeting message.
         """
-        system_prompt = """
-        You are a Chatbot designed to collaborate with users on planning and debugging ML projects.
-        Your goal is to provide concise and friendly greetings within 50 words, including:
+        greet_prompt = """
+        Can you provide concise and friendly greetings within 50 words, including:
         1. Infer about the project's purpose or objective.
         2. Summarize the previous conversations if it existed.
         2. Offering a brief overview of the assistance and support you can provide to the user, such as:
@@ -99,7 +98,7 @@ class ChatAgent:
            - Providing resources and references for further learning.
         Make sure your greeting is inviting and sets a positive tone for collaboration.
         """
-        self.chat_history.append({"role": "system", "content": system_prompt})
+        self.chat_history.append({"role": "user", "content": greet_prompt})
         greets = self.model.query(
             self.chat_history,
             function_call='auto',
@@ -123,14 +122,12 @@ class ChatAgent:
             table_name = 'mle_chat_' + self.working_dir.split('/')[-1]
             query = self.memory.query([user_prompt], table_name=table_name, n_results=1)  # TODO: adjust the n_results.
             user_prompt += f"""
-            \nThese information can be useful for the conversation:
-                 
+            \nThese reference files and their snippets may be useful for the question:\n\n
             """
 
             for t in query[0]:
-                text, metadata = t.get('text'), t.get('metadata')
-                user_prompt += f"**File**: {metadata.get('file')}\n**Snippet**: {text}\n"
-
+                snippet, metadata = t.get('text'), t.get('metadata')
+                user_prompt += f"**File**: {metadata.get('file')}\n**Snippet**: {snippet}\n"
         self.chat_history.append({"role": "user", "content": user_prompt})
 
         for content in self.model.stream(
