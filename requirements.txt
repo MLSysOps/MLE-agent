@@ -7,7 +7,6 @@ kaggle
 fastapi
 uvicorn
 requests
-chromadb
 GitPython
 tree-sitter==0.21.3
 onnxruntime
