@@ -217,7 +217,11 @@ def chat(model, build_mem):
 
             for file_path in source_files:
                 raw_code = read_file(file_path)
-                progress.update(process_task, advance=1, description=f"Adding memory...")
+                progress.update(
+                    process_task,
+                    advance=1,
+                    description=f"Adding {os.path.basename(file_path)} to memory..."
+                )
 
                 chunks = chunker.chunk(raw_code, token_limit=100)
                 memory.add(
