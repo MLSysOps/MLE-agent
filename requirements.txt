@@ -7,7 +7,6 @@ kaggle
 fastapi
 uvicorn
 requests
-chromadb
 GitPython
 tree-sitter==0.21.3
 onnxruntime
@@ -23,3 +22,4 @@ google-api-python-client~=2.143.0
 google-auth-httplib2~=0.2.0
 google-auth-oauthlib~=1.2.1
 lancedb~=0.15.0
+tantivy~=0.22.0
