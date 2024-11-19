@@ -9,6 +9,7 @@ uvicorn
 requests
 chromadb
 GitPython
+tree-sitter==0.21.3
 onnxruntime
 questionary
 pandas~=2.2.2

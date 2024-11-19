@@ -1,7 +1,6 @@
 """
 Chat Mode: the mode to have an interactive chat with LLM to work on ML project.
 """
-import os
 import questionary
 from rich.live import Live
 from rich.panel import Panel
@@ -12,11 +11,11 @@ from mle.utils import print_in_box, WorkflowCache
 from mle.agents import ChatAgent
 
 
-def chat(work_dir: str, model=None):
+def chat(work_dir: str, memory=None, model=None):
     console = Console()
     cache = WorkflowCache(work_dir, 'chat')
     model = load_model(work_dir, model)
-    chatbot = ChatAgent(model)
+    chatbot = ChatAgent(model, memory=memory)
 
     if not cache.is_empty():
         if questionary.confirm(f"Would you like to continue the previous conversation?\n").ask():

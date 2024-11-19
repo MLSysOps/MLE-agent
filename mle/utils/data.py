@@ -1,6 +1,34 @@
 import re
 import os
 import json
+from typing import Dict, Any
+
+
+def dict_to_markdown(data: Dict[str, Any], file_path: str) -> None:
+    """
+    Write a dictionary to a markdown file.
+    :param data: the dictionary to write.
+    :param file_path: the file path to write the dictionary to.
+    :return:
+    """
+
+    def write_item(k, v, indent_level=0):
+        if isinstance(v, dict):
+            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
+            for sub_key, sub_value in v.items():
+                write_item(sub_key, sub_value, indent_level + 1)
+        elif isinstance(v, list):
+            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
+            for item in v:
+                md_file.write(f"{'  ' * indent_level}- {item}\n")
+        else:
+            md_file.write(f"{'##' * (indent_level + 1)} {k}\n")
+            md_file.write(f"{'  ' * indent_level}{v}\n")
+
+    with open(file_path, 'w') as md_file:
+        for key, value in data.items():
+            write_item(key, value)
+            md_file.write("\n")
 
 
 def is_markdown_file(file_path):
