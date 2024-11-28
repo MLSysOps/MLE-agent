@@ -19,11 +19,10 @@ from mle.utils.system import (
     startup_web,
     print_in_box,
 )
-from mle.utils import LanceDBMemory, list_files, read_file
 from mle.utils import CodeChunker
+from mle.utils import LanceDBMemory, list_files, read_file
 
 console = Console()
-memory = LanceDBMemory(os.getcwd())
 
 
 @click.group()
@@ -199,6 +198,7 @@ def chat(model, build_mem):
     if not check_config(console):
         return
 
+    memory = LanceDBMemory(os.getcwd())
     if build_mem:
         working_dir = os.getcwd()
         table_name = 'mle_chat_' + working_dir.split('/')[-1]
