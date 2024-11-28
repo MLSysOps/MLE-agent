@@ -1,7 +1,7 @@
 rich
 click
 py7zr~=0.22.0
-openai~=1.34.0
+openai
 pyyaml
 kaggle
 fastapi
