@@ -25,6 +25,19 @@ class LanceDBMemory:
         else:
             raise NotImplementedError
 
+    def _open_table(self, table_name: str = None):
+        """
+        Open a LanceDB table by table name. (Return None if not exists) 
+        Args:
+            table_name (Optional[str]): The name of the table. Defaults to self.table_name.
+        """
+        table_name = table_name or self.table_name
+        try:
+            table = self.client.open_table(table_name)
+        except FileNotFoundError:
+            return None
+        return table
+
     def add(
             self,
             texts: List[str],
@@ -73,7 +86,7 @@ class LanceDBMemory:
             table = self.client.create_table(table_name, data=data)
             table.create_fts_index("id")
         else:
-            self.client.open_table(table_name).add(data=data)
+            self._open_table(table_name).add(data=data)
 
         return ids
 
@@ -90,8 +103,10 @@ class LanceDBMemory:
             List[List[dict]]: A list of results for each query text, each result being a dictionary with
             keys such as "vector", "text", and "id".
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return []
+
         query_embeds = self.text_embedding.compute_source_embeddings(query_texts)
 
         results = [table.search(query).limit(n_results).to_list() for query in query_embeds]
@@ -107,8 +122,10 @@ class LanceDBMemory:
         Returns:
             List[str]: A list of all IDs in the table.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return []
+
         return [item["id"] for item in table.search(query_type="fts").to_list()]
 
     def get(self, record_id: str, table_name: Optional[str] = None):
@@ -122,8 +139,10 @@ class LanceDBMemory:
         Returns:
             List[dict]: A list containing the matching record, or an empty list if not found.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return []
+
         return table.search(query_type="fts") \
             .where(f"id = '{record_id}'") \
             .limit(1).to_list()
@@ -141,8 +160,10 @@ class LanceDBMemory:
         Returns:
             List[dict]: A list of records matching the metadata criteria.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return []
+
         return table.search(query_type="fts") \
             .where(f"metadata.{key} = '{value}'") \
             .limit(n_results).to_list()
@@ -158,8 +179,10 @@ class LanceDBMemory:
         Returns:
             bool: True if the deletion was successful, False otherwise.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return True
+
         return table.delete(f"id = '{record_id}'")
 
     def delete_by_metadata(self, key: str, value: str, table_name: Optional[str] = None):
@@ -174,8 +197,10 @@ class LanceDBMemory:
         Returns:
             bool: True if deletion was successful, False otherwise.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return True
+
         return table.delete(f"metadata.{key} = '{value}'")
 
     def drop(self, table_name: Optional[str] = None) -> bool:
@@ -189,6 +214,10 @@ class LanceDBMemory:
             bool: True if the table was successfully dropped, False otherwise.
         """
         table_name = table_name or self.table_name
+        table = self._open_table(table_name)
+        if table is None:
+            return True
+
         return self.client.drop_table(table_name)
 
     def count(self, table_name: Optional[str] = None) -> int:
@@ -201,8 +230,10 @@ class LanceDBMemory:
         Returns:
             int: The number of records in the table.
         """
-        table_name = table_name or self.table_name
-        table = self.client.open_table(table_name)
+        table = self._open_table(table_name)
+        if table is None:
+            return 0
+
         return table.count_rows()
 
     def reset(self) -> None:
