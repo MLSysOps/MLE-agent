@@ -27,7 +27,7 @@ class LanceDBMemory:
 
     def _open_table(self, table_name: str = None):
         """
-        Open a LanceDB table by table name. (Return None if not exists) 
+        Open a LanceDB table by table name. (Return None if not exists)
         Args:
             table_name (Optional[str]): The name of the table. Defaults to self.table_name.
         """
