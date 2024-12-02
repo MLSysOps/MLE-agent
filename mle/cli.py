@@ -353,3 +353,70 @@ def integrate(reset):
                 "token": pickle.dumps(token, fix_imports=False),
             }
             write_config(config)
+
+
+@cli.command()
+@click.option('--add', default=None, help='Add files or directories into the local memory.')
+@click.option('--rm', default=None, help='Remove files or directories into the local memory.')
+@click.option('--update', default=None, help='Update files or directories into the local memory.')
+def memory(add, rm, update):
+    memory = LanceDBMemory(os.getcwd())
+    path = add or rm or update
+    if path is None:
+        return
+
+    source_files = []
+    if os.path.isdir(path):
+        source_files = list_files(path, ['*.py'])
+    else:
+        source_files = [path]
+
+    working_dir = os.getcwd()
+    table_name = 'mle_chat_' + working_dir.split('/')[-1]
+    chunker = CodeChunker(os.path.join(working_dir, '.mle', 'cache'), 'py')
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        process_task = progress.add_task("Processing files...", total=len(source_files))
+
+        for file_path in source_files:
+            raw_code = read_file(file_path)
+            progress.update(
+                process_task,
+                advance=1,
+                description=f"Process {os.path.basename(file_path)} for memory..."
+            )
+
+            if add:
+                # add file into memory
+                chunks = chunker.chunk(raw_code, token_limit=100)
+                memory.add(
+                    texts=list(chunks.values()),
+                    table_name=table_name,
+                    metadata=[{'file': file_path, 'chunk_key': k} for k, _ in chunks.items()]
+                )
+            elif rm:
+                # remove file from memory
+                memory.delete_by_metadata(
+                    key="file",
+                    value=file_path,
+                    table_name=table_name,
+                )
+            elif update:
+                # update file into memory
+                chunks = chunker.chunk(raw_code, token_limit=100)
+                memory.delete_by_metadata(
+                    key="file",
+                    value=file_path,
+                    table_name=table_name,
+                )
+                memory.add(
+                    texts=list(chunks.values()),
+                    table_name=table_name,
+                    metadata=[{'file': file_path, 'chunk_key': k} for k, _ in chunks.items()]
+                )
