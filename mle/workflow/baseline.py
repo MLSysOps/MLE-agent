@@ -46,7 +46,7 @@ def baseline(work_dir: str, model=None):
         dataset = ca.resume("dataset")
         if dataset is None:
             advisor = AdviseAgent(model, console)
-            dataset = ask_text("Please provide your dataset information (a public dataset name or a local file path)")
+            dataset = ask_text("Please provide your dataset information (a public dataset name or a local absolute filepath)")
             if not dataset:
                 print_in_box("The dataset is empty. Aborted", console, title="Error", color="red")
                 return
