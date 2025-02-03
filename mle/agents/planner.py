@@ -94,7 +94,7 @@ class PlanAgent:
                 self.chat_history,
                 response_format={"type": "json_object"}
             )
-
+            
             self.chat_history.append({"role": "assistant", "content": text})
 
         try:
