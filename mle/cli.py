@@ -198,12 +198,12 @@ def chat(model, build_mem):
     if not check_config(console):
         return
 
-    memory = LanceDBMemory(os.getcwd())
-    if build_mem:
-        working_dir = os.getcwd()
-        table_name = 'mle_chat_' + working_dir.split('/')[-1]
-        source_files = list_files(working_dir, ['*.py'])  # TODO: support more file types
+    working_dir = os.getcwd()
+    table_name = 'mle_chat_' + working_dir.split('/')[-1]
+    memory = LanceDBMemory(os.getcwd()) if os.path.exists(table_name) or build_mem else None
 
+    if build_mem:
+        source_files = list_files(working_dir, ['*.py'])  # TODO: support more file types
         chunker = CodeChunker(os.path.join(working_dir, '.mle', 'cache'), 'py')
         with Progress(
                 SpinnerColumn(),

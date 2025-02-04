@@ -23,7 +23,9 @@ class LanceDBMemory:
         if config["platform"] == "OpenAI":
             self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
         else:
-            raise NotImplementedError
+            # TODO: update default text embedding model
+            self.text_enbedding = get_registry().get("sentence-transformers").create(
+                name="BAAI/bge-small-en-v1.5", device="cpu")
 
     def add(
             self,
