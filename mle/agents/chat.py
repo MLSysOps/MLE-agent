@@ -99,11 +99,12 @@ class ChatAgent:
         Make sure your greeting is inviting and sets a positive tone for collaboration.
         """
         self.chat_history.append({"role": "user", "content": greet_prompt})
-        greets = self.model.query(
-            self.chat_history,
-            function_call='auto',
-            functions=self.functions,
-        )
+        with self.console.status("MLE is thinking...\n"):
+            greets = self.model.query(
+                self.chat_history,
+                function_call='auto',
+                functions=self.functions,
+            )
 
         self.chat_history.append({"role": "assistant", "content": greets})
         return greets

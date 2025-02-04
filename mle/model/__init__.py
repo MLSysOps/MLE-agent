@@ -42,7 +42,7 @@ class ObservableModel:
 
     @_observe
     def stream(self, *args, **kwargs):
-        return self.model.query(*args, **kwargs)
+        return self.model.stream(*args, **kwargs)
 
 
 def load_model(project_dir: str, model_name: str=None, observable=True):
