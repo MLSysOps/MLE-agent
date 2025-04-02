@@ -4,6 +4,7 @@ from .mistral import *
 from .ollama import *
 from .openai import *
 from .gemini import *
+from .vllm import *
 
 from mle.utils import get_config
 
@@ -14,6 +15,7 @@ MODEL_CLAUDE = 'Claude'
 MODEL_MISTRAL = 'MistralAI'
 MODEL_DEEPSEEK = 'DeepSeek'
 MODEL_GEMINI = 'Gemini'
+MODEL_VLLM = 'VLLM'
 
 
 class ObservableModel:
@@ -68,6 +70,8 @@ def load_model(project_dir: str, model_name: str=None, observable=True):
         model = DeepSeekModel(api_key=config['api_key'], model=model_name)
     if config['platform'] == MODEL_GEMINI:
         model = GeminiModel(api_key=config['api_key'], model=model_name)
+    if config['platform'] == MODEL_VLLM:
+        model = VLLMModel(base_url=config.get('base_url', 'http://localhost:8000/v1'), model=model_name)
 
     if observable:
         return ObservableModel(model)
