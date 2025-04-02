@@ -1,6 +1,6 @@
+import os
 import importlib.util
 import json
-import requests
 from typing import List, Dict, Any, Optional
 
 from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
@@ -8,177 +8,178 @@ from mle.model.common import Model
 
 
 class VLLMModel(Model):
-    def __init__(self, base_url=None, model=None, temperature=0.7):
-        """
-        Initialize the VLLM model.
+    """VLLM model implementation using OpenAI-compatible API."""
+
+    def __init__(self, base_url: Optional[str] = None,
+                 model: Optional[str] = None,
+                 temperature: float = 0.7) -> None:
+        """Initialize the VLLM model.
+
         Args:
-            base_url (str): The URL of the VLLM server.
-            model (str): The model name (should match what's loaded in VLLM server).
-            temperature (float): The temperature value.
+            base_url: The URL of the VLLM server.
+            model: The model name.
+            temperature: The sampling temperature.
         """
         super().__init__()
-        
-        self.base_url = base_url or "http://localhost:8000/v1"
-        self.model = model or "mistralai/Mistral-7B-Instruct-v0.3"
+
+        dependency = "openai"
+        spec = importlib.util.find_spec(dependency)
+        if spec is not None:
+            self.openai = importlib.import_module(dependency).OpenAI
+        else:
+            raise ImportError(
+                "OpenAI package not found. Please install it using: "
+                "pip install openai"
+            )
+
+        self.model = model if model else 'mistralai/Mistral-7B-Instruct-v0.3'
         self.model_type = 'VLLM'
         self.temperature = temperature
+        self.client = self.openai(
+            api_key="EMPTY",  
+            base_url=base_url or os.getenv("VLLM_BASE_URL",
+                                         "http://localhost:8000/v1"),
+            timeout=60.0,
+            max_retries=2,
+        )
         self.func_call_history = []
-        
-        # Check if server is accessible
-        try:
-            response = requests.get(f"{self.base_url}/models")
-            if response.status_code != 200:
-                raise ConnectionError(f"Failed to connect to VLLM server at {self.base_url}")
-            
-            # Optional: Get actual loaded model list and check if our model exists
-            available_models = response.json().get("data", [])
-            model_ids = [model.get("id") for model in available_models]
-            
-            if available_models and self.model not in model_ids:
-                # If specified model is not in available list, use first available model
-                print(f"Warning: Model '{self.model}' not found in VLLM server. Available models: {model_ids}")
-                if model_ids:
-                    self.model = model_ids[0]
-                    print(f"Using available model: {self.model}")
-                
-        except Exception as e:
-            raise ConnectionError(f"Failed to connect to VLLM server at {self.base_url}: {str(e)}")
 
-    def normalize_chat_history(self, chat_history):
-        """
-        Normalize the chat history to ensure proper message sequence.
+    def normalize_chat_history(self, chat_history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Normalize chat history to ensure it follows the required format.
+
+        Args:
+            chat_history: The original chat history.
+
+        Returns:
+            Normalized chat history list.
         """
         normalized = []
-        last_role = None
-        
+
+        # Handle system message first
+        system_messages = [msg for msg in chat_history if msg["role"] == "system"]
+        if system_messages:
+            normalized.append(system_messages[0])
+
+        # Add other messages in order
         for msg in chat_history:
-            role = msg.get("role", "")
-            
-            # Handle system messages
-            if role == "system":
-                if normalized:  # System messages must be at the beginning
-                    continue
-                normalized.append(msg)
+            if msg["role"] == "system":
                 continue
-                
-            # Ensure user/assistant alternation
-            if role in ["user", "assistant"]:
-                if last_role == role:  # Skip consecutive messages with same role
-                    continue
+
+            if msg["role"] in ["user", "assistant", "function"]:
                 normalized.append(msg)
-                last_role = role
-                
-            # Handle function messages
-            elif role == "function":
-                # Convert function return to assistant message
-                normalized.append({
-                    "role": "assistant",
-                    "content": f"Function '{msg.get('name', '')}' returned: {msg.get('content', '')}"
-                })
-                last_role = "assistant"
-        
-        # Ensure conversation ends with user message
-        if normalized and normalized[-1]["role"] == "assistant":
-            normalized.pop()
-            
+
         return normalized
 
-    def query(self, chat_history, **kwargs):
-        """
-        Query the VLLM model.
-        Args:
-            chat_history: The chat history to provide context.
-            **kwargs: Additional parameters to pass to the API.
-        Returns:
-            str: The model's response.
-        """
-        # Normalize chat history
-        normalized_history = self.normalize_chat_history(chat_history)
-        
-        payload = {
-            "model": self.model,
-            "messages": normalized_history,
-            "temperature": self.temperature,
-            "stream": False
-        }
-        
-        # 添加其他参数
-        payload.update(kwargs)
-        
-        # 发送请求
-        response = requests.post(
-            f"{self.base_url}/chat/completions",
-            json=payload
-        )
-        
-        if response.status_code == 200:
-            completion = response.json()
-            return completion["choices"][0]["message"]["content"]
-        else:
-            raise Exception(f"VLLM API error: {response.text}")
+    def query(self, chat_history: List[Dict[str, Any]], **kwargs) -> str:
+        """Query the LLM model.
 
-    def stream(self, chat_history, **kwargs):
-        """
-        Stream the output from the LLM model.
         Args:
             chat_history: The context (chat history).
+            **kwargs: Additional parameters for the API call.
+
+        Returns:
+            Model's response as string.
+
+        Raises:
+            Exception: If the API call fails.
         """
-        parameters = kwargs.copy()
-        
-        # VLLM uses OpenAI-compatible API
-        payload = {
-            "model": self.model,
-            "messages": chat_history,
-            "temperature": self.temperature,
-            "stream": True
-        }
-        
-        # Handle function calling if present in kwargs
-        if "functions" in parameters:
-            payload["functions"] = parameters.pop("functions")
-        if "function_call" in parameters:
-            payload["function_call"] = parameters.pop("function_call")
-        if "tools" in parameters:
-            payload["tools"] = parameters.pop("tools")
-        if "tool_choice" in parameters:
-            payload["tool_choice"] = parameters.pop("tool_choice")
-            
-        # Add any remaining parameters
-        payload.update(parameters)
-        
-        response = requests.post(f"{self.base_url}/chat/completions", json=payload, stream=True)
-        
-        if response.status_code != 200:
-            raise Exception(f"VLLM API error: {response.status_code}")
-            
-        arguments = ''
-        function_name = ''
-        
-        for line in response.iter_lines():
-            if not line:
-                continue
-                
-            if line.startswith(b"data: "):
-                data = line[6:] 
-                if data == b"[DONE]":
-                    break
-                    
-                try:
-                    chunk = json.loads(data)
-                    delta = chunk["choices"][0]["delta"]
-                    
-                    if "function_call" in delta:
-                        if "name" in delta["function_call"]:
-                            function_name = process_function_name(delta["function_call"]["name"])
-                        if "arguments" in delta["function_call"]:
-                            arguments += delta["function_call"]["arguments"]
-                            
-                    if chunk["choices"][0].get("finish_reason") == "function_call":
-                        result = get_function(function_name)(**json.loads(arguments))
-                        chat_history.append({"role": "function", "content": result, "name": function_name})
-                        yield from self.stream(chat_history, **kwargs)
-                    else:
-                        if "content" in delta and delta["content"]:
-                            yield delta["content"]
-                except Exception as e:
-                    print(f"Error processing stream: {e}")
+        try:
+            normalized_history = self.normalize_chat_history(chat_history)
+            parameters = kwargs
+            completion = self.client.chat.completions.create(
+                model=self.model,
+                messages=normalized_history,
+                temperature=self.temperature,
+                stream=False,
+                **parameters
+            )
+
+            resp = completion.choices[0].message
+            if resp.function_call:
+                function_name = process_function_name(resp.function_call.name)
+                arguments = json.loads(resp.function_call.arguments)
+                print("[MLE FUNC CALL]: ", function_name)
+                self.func_call_history.append({
+                    "name": function_name,
+                    "arguments": arguments
+                })
+
+                # Avoid multiple search function calls
+                search_attempts = [
+                    item for item in self.func_call_history
+                    if item['name'] in SEARCH_FUNCTIONS
+                ]
+                if len(search_attempts) > 3:
+                    parameters['function_call'] = "none"
+
+                result = get_function(function_name)(**arguments)
+                chat_history.append({
+                    "role": "assistant",
+                    "function_call": dict(resp.function_call)
+                })
+                chat_history.append({
+                    "role": "function",
+                    "content": result,
+                    "name": function_name
+                })
+                return self.query(chat_history, **parameters)
+            return resp.content
+
+        except Exception as e:
+            error_msg = f"VLLM API error: {str(e)}"
+            print(f"Error during VLLM query: {error_msg}")
+            if hasattr(e, 'response'):
+                print(f"Response status: {e.response.status_code}")
+                print(f"Response body: {e.response.text}")
+            raise Exception(error_msg)
+
+    def stream(self, chat_history: List[Dict[str, Any]], **kwargs) -> str:
+        """Stream the output from the LLM model.
+
+        Args:
+            chat_history: The context (chat history).
+            **kwargs: Additional parameters for the API call.
+
+        Yields:
+            Chunks of the model's response.
+
+        Raises:
+            Exception: If the streaming fails.
+        """
+        try:
+            arguments = ''
+            function_name = ''
+            for chunk in self.client.chat.completions.create(
+                    model=self.model,
+                    messages=chat_history,
+                    temperature=self.temperature,
+                    stream=True,
+                    **kwargs
+            ):
+                delta = chunk.choices[0].delta
+                if delta.function_call:
+                    if delta.function_call.name:
+                        function_name = process_function_name(
+                            delta.function_call.name
+                        )
+                    if delta.function_call.arguments:
+                        arguments += delta.function_call.arguments
+
+                if chunk.choices[0].finish_reason == "function_call":
+                    result = get_function(function_name)(**json.loads(arguments))
+                    chat_history.append({
+                        "role": "function",
+                        "content": result,
+                        "name": function_name
+                    })
+                    yield from self.stream(chat_history, **kwargs)
+                else:
+                    yield delta.content
+
+        except Exception as e:
+            error_msg = f"VLLM streaming error: {str(e)}"
+            print(f"Error during VLLM streaming: {error_msg}")
+            if hasattr(e, 'response'):
+                print(f"Response status: {e.response.status_code}")
+                print(f"Response body: {e.response.text}")
+            raise Exception(error_msg)
