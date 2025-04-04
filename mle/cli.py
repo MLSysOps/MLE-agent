@@ -255,7 +255,7 @@ def web(host, port):
 @click.argument('name')
 def new(name):
     """
-    new: create a new machine learning project with the given NAME.
+    new: create a new project.
     """
     if not name:
         console.log("Please provide a valid project name. Aborted.")
@@ -263,10 +263,12 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek']
+        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek', 'VLLM']
     ).ask()
 
     api_key = None
+    base_url = None
+    model_name = None
     if platform == 'OpenAI':
         api_key = questionary.password("What is your OpenAI API key?").ask()
         if not api_key:
@@ -297,6 +299,15 @@ def new(name):
             console.log("API key is required. Aborted.")
             return
 
+    elif platform == 'VLLM':
+        base_url = questionary.text(
+            "What is your VLLM server URL? (default: http://localhost:8000/v1)"
+        ).ask() or "http://localhost:8000/v1"
+        
+        model_name = questionary.text(
+            "What is the model name loaded in your VLLM server? (default: mistralai/Mistral-7B-Instruct-v0.3B)"
+        ).ask() or "mistralai/Mistral-7B-Instruct-v0.3"
+
     search_api_key = questionary.password("What is your Tavily API key? (if no, the web search will be disabled)").ask()
     if search_api_key:
         os.environ["SEARCH_API_KEY"] = search_api_key
@@ -311,6 +322,8 @@ def new(name):
             'api_key': api_key,
             'search_key': search_api_key,
             'integration': {},
+            'base_url': base_url,
+            'model': model_name,
         }, outfile, default_flow_style=False)
 
 
