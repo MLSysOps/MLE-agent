@@ -1,10 +1,10 @@
 import os
-import importlib.util
 import json
+import importlib.util
 from typing import List, Dict, Any, Optional
 
-from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 from mle.model.common import Model
+from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 
 
 class VLLMModel(Model):
@@ -36,9 +36,9 @@ class VLLMModel(Model):
         self.model_type = 'VLLM'
         self.temperature = temperature
         self.client = self.openai(
-            api_key="EMPTY",  
+            api_key="EMPTY",
             base_url=base_url or os.getenv("VLLM_BASE_URL",
-                                         "http://localhost:8000/v1"),
+                                           "http://localhost:8000/v1"),
             timeout=60.0,
             max_retries=2,
         )
