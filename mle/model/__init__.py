@@ -15,7 +15,7 @@ MODEL_CLAUDE = 'Claude'
 MODEL_MISTRAL = 'MistralAI'
 MODEL_DEEPSEEK = 'DeepSeek'
 MODEL_GEMINI = 'Gemini'
-MODEL_VLLM = 'VLLM'
+MODEL_VLLM = 'vLLM'
 
 
 class ObservableModel:
@@ -71,7 +71,7 @@ def load_model(project_dir: str, model_name: str=None, observable=True):
     if config['platform'] == MODEL_GEMINI:
         model = GeminiModel(api_key=config['api_key'], model=model_name)
     if config['platform'] == MODEL_VLLM:
-        model = VLLMModel(base_url=config.get('base_url', 'http://localhost:8000/v1'), model=model_name)
+        model = vLLMModel(base_url=config.get('base_url', 'http://localhost:8000/v1'), model=model_name)
 
     if observable:
         return ObservableModel(model)

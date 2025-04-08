@@ -263,7 +263,7 @@ def new(name):
 
     platform = questionary.select(
         "Which language model platform do you want to use?",
-        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek', 'VLLM']
+        choices=['OpenAI', 'Ollama', 'Claude', 'Gemini', 'MistralAI', 'DeepSeek', 'vLLM']
     ).ask()
 
     api_key = None
@@ -299,13 +299,13 @@ def new(name):
             console.log("API key is required. Aborted.")
             return
 
-    elif platform == 'VLLM':
+    elif platform == 'vLLM':
         base_url = questionary.text(
-            "What is your VLLM server URL? (default: http://localhost:8000/v1)"
+            "What is your vLLM server URL? (default: http://localhost:8000/v1)"
         ).ask() or "http://localhost:8000/v1"
         
         model_name = questionary.text(
-            "What is the model name loaded in your VLLM server? (default: mistralai/Mistral-7B-Instruct-v0.3B)"
+            "What is the model name loaded in your vLLM server? (default: mistralai/Mistral-7B-Instruct-v0.3B)"
         ).ask() or "mistralai/Mistral-7B-Instruct-v0.3"
 
     search_api_key = questionary.password("What is your Tavily API key? (if no, the web search will be disabled)").ask()

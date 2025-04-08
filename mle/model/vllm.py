@@ -1,22 +1,22 @@
 import os
-import importlib.util
 import json
+import importlib.util
 from typing import List, Dict, Any, Optional
 
-from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 from mle.model.common import Model
+from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 
 
-class VLLMModel(Model):
-    """VLLM model implementation using OpenAI-compatible API."""
+class vLLMModel(Model):
+    """vLLM model implementation using OpenAI-compatible API."""
 
     def __init__(self, base_url: Optional[str] = None,
                  model: Optional[str] = None,
                  temperature: float = 0.7) -> None:
-        """Initialize the VLLM model.
+        """Initialize the vLLM model.
 
         Args:
-            base_url: The URL of the VLLM server.
+            base_url: The URL of the vLLM server.
             model: The model name.
             temperature: The sampling temperature.
         """
@@ -33,12 +33,12 @@ class VLLMModel(Model):
             )
 
         self.model = model if model else 'mistralai/Mistral-7B-Instruct-v0.3'
-        self.model_type = 'VLLM'
+        self.model_type = 'vLLM'
         self.temperature = temperature
         self.client = self.openai(
-            api_key="EMPTY",  
-            base_url=base_url or os.getenv("VLLM_BASE_URL",
-                                         "http://localhost:8000/v1"),
+            api_key="EMPTY",
+            base_url=base_url or os.getenv("vLLM_BASE_URL",
+                                           "http://localhost:8000/v1"),
             timeout=60.0,
             max_retries=2,
         )
@@ -126,8 +126,8 @@ class VLLMModel(Model):
             return resp.content
 
         except Exception as e:
-            error_msg = f"VLLM API error: {str(e)}"
-            print(f"Error during VLLM query: {error_msg}")
+            error_msg = f"vLLM API error: {str(e)}"
+            print(f"Error during vLLM query: {error_msg}")
             if hasattr(e, 'response'):
                 print(f"Response status: {e.response.status_code}")
                 print(f"Response body: {e.response.text}")
@@ -177,8 +177,8 @@ class VLLMModel(Model):
                     yield delta.content
 
         except Exception as e:
-            error_msg = f"VLLM streaming error: {str(e)}"
-            print(f"Error during VLLM streaming: {error_msg}")
+            error_msg = f"vLLM streaming error: {str(e)}"
+            print(f"Error during vLLM streaming: {error_msg}")
             if hasattr(e, 'response'):
                 print(f"Response status: {e.response.status_code}")
                 print(f"Response body: {e.response.text}")
