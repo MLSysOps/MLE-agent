@@ -305,7 +305,7 @@ def new(name):
         base_url = questionary.text(
             "What is your vLLM server URL? (default: http://localhost:8000/v1)"
         ).ask() or "http://localhost:8000/v1"
-        
+
         model_name = questionary.text(
             "What is the model name loaded in your vLLM server? (default: mistralai/Mistral-7B-Instruct-v0.3B)"
         ).ask() or "mistralai/Mistral-7B-Instruct-v0.3"
@@ -439,7 +439,7 @@ def memory(add, rm, update):
 
 @cli.command()
 @click.option('--component', type=click.Choice([
-    'advisor', 'planner', 'coder', 'debugger', 'reporter', 'chat', 
+    'advisor', 'planner', 'coder', 'debugger', 'reporter', 'chat',
     'github_summarizer', 'git_summarizer'
 ]), help='Component to view traces for')
 @click.option('--limit', default=5, help='Maximum number of traces to show')
@@ -449,23 +449,23 @@ def traces(component, limit, full_output):
     if not component:
         console.print("[yellow]Please specify a component to view traces for.[/yellow]")
         return
-    
+
     memory = ComponentMemory(os.getcwd())
     traces = memory.get_recent_traces(component, limit)
-    
+
     if not traces:
         console.print(f"[yellow]No traces found for component: {component}[/yellow]")
         return
-    
+
     console.print(f"[green]Recent {component} traces:[/green]")
-    
+
     for i, trace in enumerate(traces):
         console.print(f"\n[bold cyan]Trace #{i+1}[/bold cyan] ({trace['timestamp']})")
         console.print(f"Status: {trace['status']}")
-        
+
         if trace['execution_time']:
             console.print(f"Execution Time: {trace['execution_time']:.2f} seconds")
-        
+
         # Show context information
         if trace['context']:
             context = trace['context']
@@ -473,7 +473,7 @@ def traces(component, limit, full_output):
                 console.print("\n[bold]Context:[/bold]")
                 for key, value in context.items():
                     console.print(f"  {key}: {value}")
-        
+
         # Show full input
         console.print("\n[bold]Input:[/bold]")
         if isinstance(trace['input_data'], str):
@@ -488,7 +488,7 @@ def traces(component, limit, full_output):
                 console.print(input_str)
             else:
                 console.print(input_str[:500] + ("..." if len(input_str) > 500 else ""))
-        
+
         # Show full output
         console.print("\n[bold]Output:[/bold]")
         if isinstance(trace['output_data'], str):
@@ -503,11 +503,11 @@ def traces(component, limit, full_output):
                 console.print(output_str)
             else:
                 console.print(output_str[:500] + ("..." if len(output_str) > 500 else ""))
-        
+
         console.print("-" * 50)
-    
+
     # Show command for seeing full output
     if not full_output and traces:
         console.print("[yellow]Tip: Use --full-output flag to see complete trace data[/yellow]")
-    
+
     memory.close()
