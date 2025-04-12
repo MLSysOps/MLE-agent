@@ -2,7 +2,7 @@ from rich.console import Console
 
 from mle.function import *
 from mle.utils import get_config, WorkflowCache
-
+from mle.utils.component_memory import trace_component
 
 class ChatAgent:
 
@@ -107,7 +107,7 @@ class ChatAgent:
 
         self.chat_history.append({"role": "assistant", "content": greets})
         return greets
-
+    @trace_component("chat")
     def chat(self, user_prompt):
         """
         Handle the response from the model streaming.

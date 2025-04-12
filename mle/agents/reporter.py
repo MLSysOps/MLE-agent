@@ -1,7 +1,7 @@
 import json
 from rich.console import Console
 from time import gmtime, strftime
-
+from mle.utils.component_memory import trace_component
 
 class ReportAgent:
 
@@ -138,7 +138,8 @@ class ReportAgent:
 
         self.knowledge = info_prompt
         return info_prompt
-
+    
+    @trace_component("reporter")
     def gen_report(self, github_summary: dict, calendar_events: list = None, okr: str = None):
         """
         Handle the query from the model query response.
