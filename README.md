@@ -216,7 +216,7 @@ Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribu
 
 ```bibtex
 @misc{zhang2024mleagent,
-title = {MLE-Agent: Your intelligent companion for seamless AI engineering and research},
+title = {MLE-Agent: Your Intelligent Companion for Seamless AI Engineering and Research},
 author = {Zhang, Huaizheng and Huang, Yizheng},
 year = {2024},
 note = {\url{https://github.com/MLSysOps/MLE-agent}},
