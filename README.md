@@ -212,6 +212,17 @@ Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribu
 
 [![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
 
+## Citation
+
+```bibtex
+@misc{zhang2024mleagent,
+title = {MLE-Agent: Your intelligent companion for seamless AI engineering and research},
+author = {Zhang, Huaizheng and Huang, Yizheng},
+year = {2024},
+note = {\url{https://github.com/MLSysOps/MLE-agent}},
+}
+```
+
 ## License
 
 Check [MIT License](LICENSE) file for more information.
