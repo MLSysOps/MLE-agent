@@ -1,5 +1,12 @@
-import importlib.util
+import re
+import os
 import json
+import logging
+import importlib.util
+from rich.live import Live
+from rich.panel import Panel
+from rich.console import Console
+from rich.markdown import Markdown
 
 from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 from mle.model.common import Model
@@ -26,11 +33,11 @@ class DeepSeekModel(Model):
                 "please make sure openai Python package has been installed. "
                 "More information, please refer to: https://openai.com/product"
             )
-        self.model = model if model else "deepseek-coder"
+        self.model = model if model else "reasoning_content"
         self.model_type = 'DeepSeek'
         self.temperature = temperature
         self.client = self.openai(
-            api_key=api_key, base_url="https://api.deepseek.com/beta"
+            api_key=api_key, base_url="https://api.deepseek.com"
         )
         self.func_call_history = []
 
@@ -58,6 +65,12 @@ class DeepSeekModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        if "reasoning_content" in self.model or "deepseek-r1" in self.model:
+            # https://api-docs.deepseek.com/guides/reasoning_model
+            if "functions" in kwargs:
+                kwargs.pop("functions")
+                logging.warning("DeepSeek R1 does not support function call.")
+
         functions = kwargs.get("functions", None)
         tools = self._convert_functions_to_tools(functions) if functions else None
         parameters = kwargs
@@ -86,7 +99,29 @@ class DeepSeekModel(Model):
                 chat_history.append({"role": "tool", "content": result, "name": function_name, "tool_call_id":tool_call.id})
                 return self.query(chat_history, **parameters)
         else:
-            return resp.content
+            thinking = ""
+            completion = ""
+
+            if hasattr(resp, "reasoning_content"):
+                thinking = resp.reasoning_content
+                completion = resp.content
+            else:
+                pattern_match = re.match(r"(?:<think>(.*?)</think>)?(.*)", resp.content, re.DOTALL)
+                if pattern_match:
+                    thinking = pattern_match.group(1) if pattern_match.group(1) is not None else ""
+                    completion = pattern_match.group(2) if pattern_match.group(2) is not None else ""
+
+            if os.getenv("MLE_DEBUG", "False") == "True":
+                with Live(console=Console()) as live:
+                    live.update(
+                        Panel(
+                            Markdown(thinking.strip(), style="dim"),
+                            title="[bold]DeepSeek Thinking[/bold]",
+                            border_style="grey50",
+                            style="dim",
+                        ), refresh=True)
+
+            return completion.strip()
 
     def stream(self, chat_history, **kwargs):
         """
@@ -94,8 +129,16 @@ class DeepSeekModel(Model):
         Args:
             chat_history: The context (chat history).
         """
+        if "reasoning_content" in self.model or "deepseek-r1" in self.model:
+            # https://api-docs.deepseek.com/guides/reasoning_model
+            if "functions" in kwargs:
+                kwargs.pop("functions")
+                logging.warning("DeepSeek R1 does not support function call.")
+
         arguments = ""
         function_name = ""
+        thinking_content = ""
+        thinking_console = Live(console=Console())
         for chunk in self.client.chat.completions.create(
             model=self.model,
             messages=chat_history,
@@ -113,4 +156,14 @@ class DeepSeekModel(Model):
                     chat_history.append({"role": "tool", "content": result, "name": function_name})
                     yield from self.stream(chat_history, **kwargs)
             else:
-                yield chunk.choices[0].delta.content
+                if hasattr(chunk.choices[0].delta, "reasoning_content"):
+                    thinking_content += chunk.choices[0].delta.reasoning_content
+                    if os.getenv("MLE_DEBUG", "False") == "True":
+                        thinking_console.update(Panel(
+                            Markdown(thinking_content.strip(), style="dim"),
+                            title="[bold]DeepSeek Thinking[/bold]",
+                            border_style="grey50",
+                            style="dim",
+                        ), refresh=True)
+                else:
+                    yield chunk.choices[0].delta.content
