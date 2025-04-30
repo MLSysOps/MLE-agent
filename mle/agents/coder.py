@@ -4,7 +4,7 @@ from rich.console import Console
 
 from mle.function import *
 from mle.utils import get_config, print_in_box, clean_json_string
-
+from mle.utils.component_memory import trace_component
 
 def process_summary(summary_dict: dict):
     """
@@ -148,7 +148,8 @@ class CodeAgent:
 
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
-
+        
+    @trace_component("coder")
     def read_requirement(self, advisor_report: str):
         """
         Read the user requirement and the advisor report.
@@ -157,6 +158,7 @@ class CodeAgent:
         """
         self.chat_history.append({"role": "system", "content": advisor_report})
 
+    @trace_component("coder")
     def code(self, task_dict: dict):
         """
         Handle the query from the model query response.
@@ -181,7 +183,8 @@ class CodeAgent:
             code_summary = clean_json_string(text)
             code_summary.update({'task': task_dict.get('task'), 'task_description': task_dict.get('description')})
         return code_summary
-
+    
+    @trace_component("coder")
     def debug(self, task_dict: dict, debug_report: dict):
         """
         Handle the query from the model query response.

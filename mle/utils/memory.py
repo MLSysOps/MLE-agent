@@ -23,7 +23,9 @@ class LanceDBMemory:
         if config["platform"] == "OpenAI":
             self.text_embedding = get_registry().get("openai").create(api_key=config["api_key"])
         else:
-            raise NotImplementedError
+            self.text_embedding = get_registry().get("sentence-transformers").create(
+            name="sentence-transformers/paraphrase-MiniLM-L6-v2"
+        )
 
     def _open_table(self, table_name: str = None):
         """

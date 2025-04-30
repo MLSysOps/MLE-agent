@@ -4,6 +4,7 @@ from rich.console import Console
 
 from mle.function import *
 from mle.utils import get_config, print_in_box, clean_json_string
+from mle.utils.component_memory import trace_component
 
 
 def process_report(requirement: str, suggestions: dict):
@@ -136,6 +137,7 @@ class AdviseAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
+    @trace_component("advisor")
     def suggest(self, requirement, return_raw=False):
         """
         Handle the query from the model query response.
@@ -163,6 +165,7 @@ class AdviseAgent:
 
         return process_report(requirement, suggestions)
 
+    @trace_component("advisor")
     def interact(self, requirement):
         """
         Interact with the user to ask and suggest.
