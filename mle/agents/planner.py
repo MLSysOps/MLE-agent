@@ -4,6 +4,7 @@ import questionary
 from rich.console import Console
 
 from mle.utils import print_in_box, clean_json_string
+from mle.utils.component_memory import trace_component
 
 
 def process_plan(plan_dict: dict):
@@ -82,6 +83,7 @@ class PlanAgent:
         self.sys_prompt += self.json_mode_prompt
         self.chat_history.append({"role": 'system', "content": self.sys_prompt})
 
+    @trace_component("planner")
     def plan(self, user_prompt):
         """
         Handle the query from the model query response.
@@ -102,6 +104,7 @@ class PlanAgent:
         except json.JSONDecodeError as e:
             return clean_json_string(text)
 
+    @trace_component("planner")
     def interact(self, user_prompt):
         """
         Handle the query from the model query response.

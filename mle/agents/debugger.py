@@ -4,7 +4,7 @@ from mle.function import *
 from mle.utils import get_config, print_in_box
 
 from rich.console import Console
-
+from mle.utils.component_memory import trace_component
 
 def process_debug_report(debug_report):
     """
@@ -143,7 +143,7 @@ class DebugAgent:
         report_dict = json.loads(text)
         print_in_box(process_debug_report(report_dict), self.console, title="MLE Debugger", color="yellow")
         return report_dict
-
+    @trace_component("debugger")
     def analyze(self, code_report):
         """
         Handle the query from the model query response.
