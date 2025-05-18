@@ -208,16 +208,12 @@ Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file if you want to contribu
 
 - [Discord community](https://discord.gg/SgxBpENGRG). If you have any questions, please ask in the Discord community.
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=MLSysOps/MLE-agent&type=Date)](https://star-history.com/#MLSysOps/MLE-agent&Date)
-
 ## Citation
 
 ```bibtex
 @misc{zhang2024mleagent,
 title = {MLE-Agent: Your Intelligent Companion for Seamless AI Engineering and Research},
-author = {Zhang, Huaizheng and Huang, Yizheng},
+author = {Zhang, Huaizheng* and Huang, Yizheng*},
 year = {2024},
 note = {\url{https://github.com/MLSysOps/MLE-agent}},
 }
