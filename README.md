@@ -32,6 +32,12 @@ MLE-Agent is designed as a pairing LLM agent for machine learning engineers and 
 - 🧠 Smart Advisor: Provides personalized suggestions and recommendations for your ML/AI project.
 - 📊 Weekly Report: Automatically generates detailed summaries of your weekly works.
 
+|Workflow|Agent|
+|:--:|:--:|
+|<img width="726" alt="Screenshot 2025-06-18 at 2 54 55 PM" src="https://github.com/user-attachments/assets/2e47310d-97e0-4e12-87ff-4cdbd627a295" />|<img width="728" alt="Screenshot 2025-06-18 at 2 55 04 PM" src="https://github.com/user-attachments/assets/646e98d9-8bf6-45dc-98f8-e025939823b8" />|
+
+## Video Demo
+
 https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ## Milestones
