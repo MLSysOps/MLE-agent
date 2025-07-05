@@ -54,11 +54,19 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ### Installation
 
+- pip installation
 ```bash
 pip install mle-agent -U
-# or from source
+```
+
+- uv installation
+
+```bash
 git clone git@github.com:MLSysOps/MLE-agent.git
-pip install -e .
+
+uv venv --python=python3.11 venv_py311
+
+uv pip install -e .
 ```
 
 ### Usage
