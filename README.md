@@ -54,20 +54,52 @@ https://github.com/user-attachments/assets/dac7be90-c662-4d0d-8d3a-2bc4df9cffb9
 
 ### Installation
 
-- pip installation
-```bash
-pip install mle-agent -U
-```
-
-- uv installation
+#### From PyPI
 
 ```bash
-git clone git@github.com:MLSysOps/MLE-agent.git
+# With pip:
+pip install -U mle-agent
 
-uv venv --python=python3.11 venv_py311
-
-uv pip install -e .
+# With uv:
+uv pip install -U mle-agent
 ```
+
+#### From source
+
+<ol>
+<li>Clone the repo
+
+```bash
+git clone https://github.com/MLSysOps/MLE-agent.git
+cd MLE-agent
+```
+</li>
+
+<li> Create & activate a virtual env
+
+**Option 1**: uv (recommended)
+```bash
+uv venv .venv
+source .venv/bin/activate      # Linux/macOS
+.\.venv\Scripts\activate.bat   # Windows (cmd)
+.\.venv\Scripts\Activate.ps1   # Windows (PowerShell)
+```
+**Option 2**: virtualenv + pip
+```bash
+python -m venv .venv
+source .venv/bin/activate      # Linux/macOS
+.\.venv\Scripts\activate       # Windows
+```
+</li>
+
+<li> Editable install
+
+```bash
+pip install -e .               # or: pip install -e .
+```
+
+</li>
+</ol>
 
 ### Usage
 

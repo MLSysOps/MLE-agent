@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=38.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mle-agent"
+version = "0.4.3"
+description = "MLE-agent: An agent to automate your MLE processes"
+readme = "README.md"
+requires-python = ">=3.8.1"
+license = "Apache-2.0"
+authors = [
+  { name = "Yizheng Huang", email = "huangyz0918@gmail.com" },
+  { name = "Huaizheng Zhang" }
+]
+keywords = ["LLM", "deep learning", "MLOps", "shell", "neural networks"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Education",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent"
+]
+dependencies = [
+  "rich>=13.6.0",
+  "click>=7.1.1",
+  "py7zr~=1.0 ; python_version >= '3.9'",
+  "py7zr<0.20 ; python_version < '3.9'",
+  "openai~=1.70.0",
+  "pyyaml~=6.0",
+  "kaggle>=1.5.12",
+  "fastapi~=0.103.1",
+  "uvicorn~=0.28.0",
+  "requests~=2.32.3",
+  "GitPython~=3.1",
+  "questionary~=1.10.0",
+  "pandas>=2.2.2 ; python_version >= '3.9'",
+  "pandas==2.0.3 ; python_version < '3.9'",
+  "tavily-python~=0.6.0",
+  "langfuse~=2.36.2",
+  "google-api-python-client~=2.143.0",
+  "google-auth-httplib2~=0.2.0",
+  "google-auth-oauthlib~=1.2.1",
+  "lancedb==0.15.0 ; python_version >= '3.9'",
+  "lancedb==0.6.13 ; python_version < '3.9'",
+  "tree-sitter>=0.21.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/MLSysOps/MLE-agent"
+Download = "https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip"
+
+[project.scripts]
+mle-agent = "mle.cli:cli"
+mle = "mle.cli:cli"
+
+[tool.setuptools.packages.find]
+include = ["mle*"]
+
+[tool.setuptools.package-data]
+# Include all files in the package directory
+mle = ["py.typed", "data/*", "config/*", "templates/*"]
