@@ -11,7 +11,7 @@ requires-python = ">=3.8.1"
 license = "Apache-2.0"
 authors = [
   { name = "Yizheng Huang", email = "huangyz0918@gmail.com" },
-  { name = "Huaizheng Zhang" }
+  { name = "Huaizheng Zhang" },
 ]
 keywords = ["LLM", "deep learning", "MLOps", "shell", "neural networks"]
 classifiers = [
@@ -22,7 +22,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: Information Technology",
   "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent"
+  "Operating System :: OS Independent",
 ]
 dependencies = [
   "rich>=13.6.0",
