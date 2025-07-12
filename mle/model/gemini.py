@@ -117,6 +117,7 @@ class GeminiModel(Model):
         is_final_turn = False 
 
         for turn in range(MAX_TOOL_TURNS):
+            print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1}/{MAX_TOOL_TURNS})")
             current_config = json_only_config if is_final_turn else base_config
             is_final_turn = False
 
