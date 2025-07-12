@@ -132,7 +132,7 @@ class GeminiModel(Model):
                     if part.function_call:
                         function_call = part.function_call
                         break
-            
+
             if function_call:                
                 prompt.append(response.candidates[0].content)
                 function_name = process_function_name(function_call.name)
