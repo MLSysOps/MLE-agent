@@ -124,7 +124,6 @@ class AdviseAgent:
             """
 
         self.functions = [
-            schema_web_search,
             schema_search_arxiv,
             schema_search_papers_with_code,
             schema_preview_csv_data,
