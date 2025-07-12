@@ -12,7 +12,7 @@ pip install -e .[bench]
 
 Then run the following command to set up the MLE-Bench:
 ```shell
-python ./install.py
+mle-exp init
 ```
 
 ## Usage

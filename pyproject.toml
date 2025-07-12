@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=38.6.0", "wheel"]
+requires = ["setuptools>=65.5.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -54,7 +54,7 @@ dependencies = [
 
 [project.optional-dependencies]
 bench = [
-    "mlebench @ git+https://github.com/openai/mle-bench.git@main ; python_version >= '3.11' and python_version < '3.13'",
+  "mlebench @ git+https://github.com/openai/mle-bench.git@main ; python_version >= '3.11' and python_version < '3.13'",
 ]
 
 [project.urls]
@@ -64,9 +64,10 @@ Download = "https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip"
 [project.scripts]
 mle-agent = "mle.cli:cli"
 mle = "mle.cli:cli"
+mle-exp = "exp.cli:cli"
 
 [tool.setuptools.packages.find]
-include = ["mle*"]
+include = ["mle*", "exp*"]
 
 [tool.setuptools.package-data]
 # Include all files in the package directory
@@ -74,6 +75,6 @@ mle = ["py.typed", "data/*", "config/*", "templates/*"]
 
 [tool.uv]
 override-dependencies = [
-    # Skip the package only on Windows – the rule is ignored everywhere else
+  # Skip the package only on Windows – the rule is ignored everywhere else
   "tensorflow-io-gcs-filesystem >= 0.37 ; sys_platform != 'win32'",
 ]
