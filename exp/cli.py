@@ -174,7 +174,7 @@ def prepare(
             overwrite_leaderboard=overwrite_leaderboard,
             skip_verification=skip_verification,
         )
-    except RuntimeError as e:
+    except Exception as e:
         click.echo(f"Error during preparing: {e}", err=True)
         sys.exit(1)
 
@@ -212,7 +212,7 @@ def grade(
     try:
         ctx.obj["registry"].set_data_dir(Path(data_dir))
         grade_api(submission, output_dir)
-    except RuntimeError as e:
+    except Exception as e:
         click.echo(f"Error during grading: {e}", err=True)
         sys.exit(1)
 
@@ -242,6 +242,8 @@ def grade_sample(
     try:
         ctx.obj["registry"].set_data_dir(Path(data_dir))
 
+        print(submission, type(submission))
+
         report = grade_sample_api(
             submission, competition_id,
         )
@@ -249,6 +251,6 @@ def grade_sample(
             "Competition report:\n%s",
             json.dumps(report.to_dict(), indent=4)
         )
-    except RuntimeError as e:
+    except Exception as e:
         click.echo(f"Error during grading: {e}", err=True)
         sys.exit(1)

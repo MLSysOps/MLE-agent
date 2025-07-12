@@ -2,11 +2,17 @@
 
 ## Installation
 
-Requirements:
-You need to have [Git LFS](https://git-lfs.github.com/) installed to clone the repository.
+You need to install [Git LFS](https://git-lfs.github.com/) to set up, and your Python version must be >= 3.11.
 
 ```shell
+GIT_LFS_SKIP_SMUDGE=1 pip install -e .[bench]
+
+# In Windows CMD
 set GIT_LFS_SKIP_SMUDGE=1
+pip install -e .[bench]
+
+# In Windows PowerShell
+$env:GIT_LFS_SKIP_SMUDGE=1
 pip install -e .[bench]
 ```
 
@@ -20,21 +26,21 @@ mle-exp init
 - Prepare the dataset:
 ```shell
 # Prepare all dataset
-python ./cli.py bench prepare --all
+mle-exp prepare --all
 
 # Prepare lite dataset (smaller version of the dataset)
-python ./cli.py bench prepare --lite
+mle-exp prepare --lite
 
 # Prepare a specific dataset
-python ./cli.py bench prepare -c <competition-id>
+mle-exp prepare -c <competition-id>
 ```
 
 - Grade individual submissions
 ```shell
-python ./cli.py bench grade-sample <PATH_TO_SUBMISSION> spaceship-titanic
+mle-exp grade-sample <PATH_TO_SUBMISSION> <competition-id>
 ```
 
-More commands can be check use:
+More commands can be checked using:
 ```shell
-python ./cli.py bench --help
+mle-exp --help
 ```

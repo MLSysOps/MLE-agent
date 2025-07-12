@@ -28,8 +28,10 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 REPO_URL = "https://github.com/openai/mle-bench.git"
+_LFS_SIGNATURE = "https://git-lfs.github.com/spec/v1"
 BRANCH = "main"
-SUBDIR = "experiments"
+EXP_DIR = "experiments"
+LFS_SEARCH_DIR = "mlebench/competitions"
 
 
 def is_init() -> bool:
@@ -41,8 +43,23 @@ def is_init() -> bool:
         if spec is None or not spec.origin:
             return False
 
-        mlebench_exp_dir = Path(spec.origin).parents[1] / SUBDIR
-        return mlebench_exp_dir.exists() and mlebench_exp_dir.is_dir()
+        pkg_root = Path(spec.origin).parents[1]
+        # Check if the experiments directory created by `init`
+        mlebench_exp_dir = pkg_root / EXP_DIR
+        if not (mlebench_exp_dir.exists() and mlebench_exp_dir.is_dir()):
+            return False
+        # Check if all git-lfs files are present
+        for file_path in (pkg_root / LFS_SEARCH_DIR).rglob("*"):
+            if file_path.is_file():
+                try:
+                    # Open and read the beginning of the file
+                    with file_path.open('r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read(512)  # Read first 512 bytes
+                        if _LFS_SIGNATURE in content:
+                            return False
+                except Exception:
+                    continue  # Skip unreadable files
+        return True
     except ImportError:
         return False
 
@@ -90,7 +107,9 @@ def init(force=False) -> int:
 
     # Find the mlebench package directory
     spec = importlib.util.find_spec("mlebench")
-    dest_exp_dir = Path(spec.origin).parents[1] / SUBDIR
+    pkg_root = Path(spec.origin).parents[1]
+    dest_exp_dir = pkg_root / EXP_DIR
+    dest_lfs_dir = pkg_root / LFS_SEARCH_DIR
 
     # Wipe any existing experiments/ copy
     if dest_exp_dir.exists():
@@ -114,21 +133,32 @@ def init(force=False) -> int:
 
         # Sparse-checkout just the experiments folder
         repo.git.sparse_checkout("init", "--cone")
-        repo.git.sparse_checkout("set", SUBDIR)
+        repo.git.sparse_checkout("set", EXP_DIR, LFS_SEARCH_DIR)
         repo.git.checkout(BRANCH)
 
         # Pull the large-file objects
-        logger.info("Pulling Git LFS objects for experiments/ …")
-        subprocess.run(git_lfs_cmd + ["pull", "--include", SUBDIR], cwd=repo_dir, check=True)
+        logger.info(f"Pulling Git LFS objects for {EXP_DIR}/, {LFS_SEARCH_DIR}/ …")
+        subprocess.run(
+            git_lfs_cmd + ["pull", "--include", EXP_DIR, "--include", LFS_SEARCH_DIR],
+            cwd=repo_dir,
+            check=True
+        )
 
-        src_exp_dir = repo_dir / SUBDIR
+        src_exp_dir = repo_dir / EXP_DIR
         if not src_exp_dir.is_dir():
-            logger.error("experiments/ folder was not found in the clone.")
+            logger.error(f"{EXP_DIR}/ folder was not found in the clone.")
+            return 1
+
+        src_lfs_dir = repo_dir / LFS_SEARCH_DIR
+        if not src_lfs_dir.is_dir():
+            logger.error(f"{LFS_SEARCH_DIR}/ folder was not found in the clone.")
             return 1
 
         # Copy into site-packages
         logger.info(f"Copying {src_exp_dir} → {dest_exp_dir}")
         shutil.copytree(src_exp_dir, dest_exp_dir)
+        logger.info(f"Copying {src_lfs_dir} → {dest_lfs_dir}")
+        shutil.copytree(src_lfs_dir, dest_lfs_dir, dirs_exist_ok=True)
 
     # Quick sanity check: make sure at least one non-pointer file exists
     some_file = next(dest_exp_dir.rglob("*"), None)

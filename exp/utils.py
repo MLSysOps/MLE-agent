@@ -19,17 +19,19 @@ def get_logger(name: str = __name__, level: int = logging.INFO) -> logging.Logge
         logging.Logger: Configured logger instance.
     """
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    formatter = logging.Formatter('[%(asctime)s] [%(name)s:%(lineno)d] - %(levelname)s - %(message)s')
 
-    # Create console handler
+    # Remove all handlers (avoids duplicates from earlier logging setup)
+    while logger.hasHandlers():
+        logger.removeHandler(logger.handlers[0])
+
     ch = logging.StreamHandler()
     ch.setLevel(level)
 
-    # Create formatter and add it to the handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
 
-    # Add the handler to the logger
     logger.addHandler(ch)
+
+    logger.propagate = False
 
     return logger
