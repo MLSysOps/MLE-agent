@@ -8,7 +8,7 @@ version = "0.4.3"
 description = "MLE-agent: An agent to automate your MLE processes"
 readme = "README.md"
 requires-python = ">=3.8.1"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 authors = [
   { name = "Yizheng Huang", email = "huangyz0918@gmail.com" },
   { name = "Huaizheng Zhang" }
