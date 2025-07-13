@@ -341,7 +341,7 @@ class Mem0:
         Returns:
             Any: Result of the memory client's reset operation.
         """
-        return self.client.reset(agent_id=self.agent_id)
+        return self.client.reset()
 
 
 class HybridMemory:
@@ -368,7 +368,7 @@ class HybridMemory:
     def add(
         self,
         messages: List[Dict[str, str]],
-        metadata: Dict[str, Any],
+        metadata: Dict[str, Any] = None,
         prompt: str = None,
     ):
         
@@ -384,7 +384,7 @@ class HybridMemory:
             messages=messages,
             metadata=metadata,
             prompt=prompt,
-            infer=True,
+            infer=prompt is not None,
         )
 
     def query(
@@ -450,7 +450,6 @@ class HybridMemory:
         for item in last_n_items:
             self.fast_memory.add(
                 texts=[item["memory"]],
-                metadata=item["metadata"],
             )
         return last_n_items
 
@@ -473,7 +472,7 @@ class HybridMemory:
         # This method performs a full in-memory sort of all memory entries,  which
         # may result in significant memory and CPU usage if the memory store is
         # large. Use with caution when the number of stored memory items is large.
-        items = self.slow_memory.get_all(n_results=limit)
+        items = self.slow_memory.get_all(n_results=limit)["results"]
 
         # TODO: ranking items with manual function iteratively
         items = sorted(
@@ -486,7 +485,6 @@ class HybridMemory:
         for item in topk_items:
             self.fast_memory.add(
                 texts=[item["memory"]],
-                metadata=item["metadata"],
             )
         return topk_items
     
