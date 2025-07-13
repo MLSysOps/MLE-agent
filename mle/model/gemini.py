@@ -114,12 +114,12 @@ class GeminiModel(Model):
         )
 
         final_response_content = None
-        is_final_turn = False 
+        json_output_required = False 
 
         for turn in range(MAX_TOOL_TURNS):
             print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1})")
-            current_config = json_only_config if is_final_turn else base_config
-            is_final_turn = False
+            current_config = json_only_config if json_output_required else base_config
+            json_output_required = False
 
             response = self.client.models.generate_content(
                 model=self.model,
@@ -155,8 +155,7 @@ class GeminiModel(Model):
                 )
                 prompt.append(types.Content(role='tool', parts=[function_response_part]))
                 
-                is_final_turn = True
-                continue
+                json_output_required = True
             else:
                 final_response_content = response.text
                 break
