@@ -248,7 +248,7 @@ class LanceDBMemory:
 
 class Mem0:
 
-    def __init__(self, token: str = None, cfg: dict = None):
+    def __init__(self, agent_id: str = "default", token: str = None, cfg: dict = None):
         """
         Initialize the Mem0 instance with either an API token or a local configuration.
 
@@ -258,11 +258,12 @@ class Mem0:
         """
         self.token = token
         self.cfg = cfg
+        self.agent_id = agent_id
 
         if self.token:
             self.client = MemoryClient(api_key=self.token)
         else:
-            self.client = Memory.from_config(self.cfg)
+            self.client = Memory()  # Memory.from_config(self.cfg)
 
     def add(
         self,
@@ -270,7 +271,7 @@ class Mem0:
         metadata: Optional[Dict[str, object]] = None,
         *,
         prompt: str = None,
-        infer: bool = True,
+        infer: bool = False,
     ):
         """
         Add messages and optional metadata to the memory.
@@ -278,8 +279,10 @@ class Mem0:
         Args:
             messages (List[Dict[str, str]]): List of message dictionaries to store.
             metadata (Dict[str, object], optional): Additional metadata to associate with the messages.
-            prompt (str, optional): Optional prompt to guide memory inference.
-            infer (bool): Whether to enable inference-based embedding or storage.
+            prompt (str, optional): Prompt to use for the memory creation. Defaults to None.
+            infer (bool, optional): If True (default), an LLM is used to extract key facts from
+                'messages' and decide whether to add, update, or delete related memories.
+                If False, 'messages' are added as raw memories directly.
 
         Returns:
             Any: Result of the underlying client's add operation.
@@ -289,6 +292,7 @@ class Mem0:
             metadata=metadata,
             prompt=prompt,
             infer=infer,
+            agent_id=self.agent_id,
         )
 
     def query(
@@ -307,6 +311,7 @@ class Mem0:
             Any: Search results from the memory client.
         """
         self.client.search(
+            agent_id=self.agent_id,
             query_text=query_text,
             limit=n_results,
         )
@@ -326,7 +331,7 @@ class Mem0:
         Returns:
             Any: All matching memory entries.
         """
-        return self.client.get_all(filters=filters, n_results=n_results)
+        return self.client.get_all(agent_id=self.agent_id, filters=filters, limit=n_results)
 
     def reset(self):
         """
@@ -335,4 +340,4 @@ class Mem0:
         Returns:
             Any: Result of the memory client's reset operation.
         """
-        return self.client.reset()
+        return self.client.reset(agent_id=self.agent_id)
