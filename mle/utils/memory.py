@@ -354,6 +354,7 @@ class HybridMemory:
         slow_memory (Mem0): The long-term, slower-access memory backend.
         fast_memory (LanceDBMemory): The short-term, fast-access vector memory backend.
     """
+
     def __init__(self, slow_memory: Mem0, fast_memory: LanceDBMemory):
         """
         Initialize the HybridMemory with given slow and fast memory backends.
@@ -371,7 +372,6 @@ class HybridMemory:
         metadata: Dict[str, Any] = None,
         prompt: str = None,
     ):
-        
         """
         Add a set of messages to the slow memory store with optional prompt context.
 
@@ -442,18 +442,22 @@ class HybridMemory:
         # TODO: ranking memory items with timestamp iteratively
         items = sorted(
             items,
-            key=lambda x: datetime.fromisoformat(x.get("updated_at") or x.get("created_at")),
-            reverse=True
+            key=lambda x: datetime.fromisoformat(
+                x.get("updated_at") or x.get("created_at")
+            ),
+            reverse=True,
         )
 
-        last_n_items = items[: last_n]
+        last_n_items = items[:last_n]
         for item in last_n_items:
             self.fast_memory.add(
                 texts=[item["memory"]],
             )
         return last_n_items
 
-    def topk_consolidate(self, k: int, metadata_key: str, reverse=False, limit: int = 1000):
+    def topk_consolidate(
+        self, k: int, metadata_key: str, reverse=False, limit: int = 1000
+    ):
         """
         Consolidate top-K entries from slow memory based on a metadata key.
 
@@ -476,18 +480,16 @@ class HybridMemory:
 
         # TODO: ranking items with manual function iteratively
         items = sorted(
-            items,
-            key=lambda x: x["metadata"].get(metadata_key),
-            reverse=reverse
+            items, key=lambda x: x["metadata"].get(metadata_key), reverse=reverse
         )
 
-        topk_items = items[: k]
+        topk_items = items[:k]
         for item in topk_items:
             self.fast_memory.add(
                 texts=[item["memory"]],
             )
         return topk_items
-    
+
     def prompt_based_consolidate(self, prompt: str):
         """
         Consolidate memory items into fast memory based on prompt relevance.
