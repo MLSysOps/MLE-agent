@@ -117,7 +117,7 @@ class GeminiModel(Model):
         is_final_turn = False 
 
         for turn in range(MAX_TOOL_TURNS):
-            print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1}/{MAX_TOOL_TURNS})")
+            print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1})")
             current_config = json_only_config if is_final_turn else base_config
             is_final_turn = False
 
@@ -165,12 +165,7 @@ class GeminiModel(Model):
             final_response_content = f"[GEMINI WARNING]: Max tool turns of {MAX_TOOL_TURNS} reached."
             print(final_response_content)
 
-        try:
-            json.loads(final_response_content)
-            return final_response_content
-        except (json.JSONDecodeError, TypeError) as e:
-            print(f"[GEMINI ERROR]: Failed to parse final response as JSON. Error: {e}")
-            return final_response_content
+        return final_response_content
 
     def stream(self, chat_history, **kwargs):
         """
