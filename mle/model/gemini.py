@@ -118,13 +118,13 @@ class GeminiModel(Model):
 
         for turn in range(MAX_TOOL_TURNS):
             print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1})")
-            current_config = json_only_config if json_output_required else base_config
+            config = json_only_config if json_output_required else base_config
             json_output_required = False
 
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=prompt,
-                config=current_config,
+                config=config,
             )
 
             function_call = None
@@ -134,7 +134,7 @@ class GeminiModel(Model):
                         function_call = part.function_call
                         break
 
-            if function_call:                
+            if function_call:
                 prompt.append(response.candidates[0].content)
                 function_name = process_function_name(function_call.name)
                 arguments = dict(function_call.args)
@@ -153,8 +153,7 @@ class GeminiModel(Model):
                     name=function_name,
                     response={"result": str(function_result)}
                 )
-                prompt.append(types.Content(role='tool', parts=[function_response_part]))
-                
+                prompt.append(types.Content(role='tool', parts=[function_response_part]))                
                 json_output_required = True
             else:
                 final_response_content = response.text
