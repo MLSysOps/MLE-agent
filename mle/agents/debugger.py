@@ -29,7 +29,7 @@ class DebugAgent:
 
     def __init__(self, model, console=None, analyze_only=False):
         """
-        DebugAgent: the agent to run the generated the code and then debug it. The return of the
+        DebugAgent: the agent to run the generated code and then debug it. The return of the
         agent is an instruction to the user to modify the code based on the logs and web search.
 
         Args:
