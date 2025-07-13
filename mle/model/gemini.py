@@ -1,5 +1,3 @@
-import json
-
 from mle.function import SEARCH_FUNCTIONS, get_function, process_function_name
 from mle.model.common import Model
 
@@ -108,6 +106,7 @@ class GeminiModel(Model):
             temperature=self.temperature,
             response_mime_type="application/json",
             tool_config=types.ToolConfig(
+                # Explicitly forbid the model from calling any more tools.
                 function_calling_config=types.FunctionCallingConfig(mode='NONE')
             ),
             system_instruction=system_instruction
@@ -127,32 +126,34 @@ class GeminiModel(Model):
                 config=config,
             )
 
+            # The model can return multiple function calls. For now, we only process the first one,
+            # as agents' current logic is sequential. 
+            # This is a potential future improvement to handle more complex tasks.
             function_call = None
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if part.function_call:
                         function_call = part.function_call
                         break
-
             if function_call:
-                prompt.append(response.candidates[0].content)
                 function_name = process_function_name(function_call.name)
-                arguments = dict(function_call.args)
+                args = dict(function_call.args)
 
                 self.func_call_history.append(function_name)
+                # Prevent infinite search loops.
                 search_attempts = [f for f in self.func_call_history if f in SEARCH_FUNCTIONS]
                 if len(search_attempts) > SEARCH_ATTEMPT_LIMIT:
                     final_response_content = f"[GEMINI WARNING]: Search function limit of {SEARCH_ATTEMPT_LIMIT} reached."
                     print(final_response_content)
                     break
 
-                print(f"[GEMINI FUNC CALL]: Calling {function_name} with arguments: {arguments}")
-                function_result = get_function(function_name)(**arguments)
-
+                print(f"[GEMINI FUNC CALL]: Calling {function_name} with arguments: {args}")
+                function_result = get_function(function_name)(**args)
                 function_response_part = types.Part.from_function_response(
                     name=function_name,
                     response={"result": str(function_result)}
                 )
+                prompt.append(response.candidates[0].content)
                 prompt.append(types.Content(role='tool', parts=[function_response_part]))                
                 json_output_required = True
             else:
