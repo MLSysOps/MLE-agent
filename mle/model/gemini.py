@@ -115,8 +115,7 @@ class GeminiModel(Model):
         final_response_content = None
         json_output_required = False 
 
-        for turn in range(MAX_TOOL_TURNS):
-            print(f">>> SENDING REQUEST TO GEMINI (Turn {turn + 1})")
+        for _ in range(MAX_TOOL_TURNS):
             config = json_only_config if json_output_required else base_config
             json_output_required = False
 
