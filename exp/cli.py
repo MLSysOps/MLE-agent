@@ -111,7 +111,7 @@ def init(force: bool):
     "-l",
     "--list",
     "list_file",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    type=click.Path(exists=True, dir_okay=False, readable=True),
     help="Text file containing one competition ID per line.",
 )
 @click.option(
@@ -121,7 +121,7 @@ def init(force: bool):
 )
 @click.option(
     "--data-dir",
-    type=click.Path(file_okay=False, path_type=Path),
+    type=click.Path(file_okay=False),
     default=registry.get_data_dir(),
     show_default=True,
     help="Directory where the data should live.",
@@ -140,9 +140,9 @@ def prepare(
     competition_id: str | None,
     prepare_all: bool,
     lite: bool,
-    list_file: Path | None,
+    list_file: str | None,
     keep_raw: bool,
-    data_dir: Path,
+    data_dir: str,
     overwrite_checksums: bool,
     overwrite_leaderboard: bool,
     skip_verification: bool,
@@ -175,7 +175,10 @@ def prepare(
             skip_verification=skip_verification,
         )
     except Exception as e:
-        click.echo(f"Error during preparing: {e}", err=True)
+        # Use traceback to provide more context on the error
+        name = e.__traceback__.tb_frame.f_globals['__name__']
+        lineno = e.__traceback__.tb_lineno
+        click.echo(f"Error during grading at [{name}:{lineno}]: {e}", err=True)
         sys.exit(1)
 
 
@@ -185,19 +188,21 @@ def prepare(
 )
 @click.option(
     "--submission",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    type=click.Path(exists=True, dir_okay=False, readable=True),
     required=True,
-    help="JSONL submission file (see README.md).",
+    help="JSONL submission file to grade multiple competitions. Each line "
+         "should contain a JSON object with 'submission_path' and "
+         "'competition_id' keys.",
 )
 @click.option(
     "--output-dir",
-    type=click.Path(file_okay=False, path_type=Path),
+    type=click.Path(file_okay=False),
     required=True,
     help="Directory where evaluation metrics will be written.",
 )
 @click.option(
     "--data-dir",
-    type=click.Path(file_okay=False, path_type=Path),
+    type=click.Path(file_okay=False),
     default=registry.get_data_dir(),
     show_default=True,
 )
@@ -205,15 +210,49 @@ def prepare(
 @require_init
 def grade(
     ctx: click.Context,
-    submission: Path,
-    output_dir: Path,
-    data_dir: Path,
+    submission: str,
+    output_dir: str,
+    data_dir: str,
 ) -> None:
+    # Check if the submission file follows the expected JSONL format
+    # with 'submission_path' and 'competition_id'
+    with open(submission, 'r') as f:
+        for line_num, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue  # skip empty lines
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError as e:
+                click.echo(
+                    f"Invalid JSON on line {line_num}: {e}",
+                    err=True
+                )
+                sys.exit(1)
+
+            if not isinstance(data, dict):
+                click.echo(
+                    f"Invalid JSON object on line {line_num}",
+                    err=True
+                )
+                sys.exit(1)
+
+            if 'submission_path' not in data or 'competition_id' not in data:
+                click.echo(
+                    f"Missing keys `submission_path` and `competition_id` on line {line_num}:\n"
+                    f"{data}",
+                    err=True
+                )
+                sys.exit(1)
+
     try:
         ctx.obj["registry"].set_data_dir(Path(data_dir))
         grade_api(submission, output_dir)
     except Exception as e:
-        click.echo(f"Error during grading: {e}", err=True)
+        # Use traceback to provide more context on the error
+        name = e.__traceback__.tb_frame.f_globals['__name__']
+        lineno = e.__traceback__.tb_lineno
+        click.echo(f"Error during grading at [{name}:{lineno}]: {e}", err=True)
         sys.exit(1)
 
 
@@ -223,34 +262,34 @@ def grade(
 )
 @click.argument(
     "submission",
-    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    type=click.Path(exists=True, dir_okay=False, readable=True),
 )
 @click.argument("competition_id", type=str)
 @click.option(
     "--data-dir",
-    type=click.Path(file_okay=False, path_type=Path),
+    type=click.Path(file_okay=False),
     default=registry.get_data_dir(),
     show_default=True,
 )
 @click.pass_context
 def grade_sample(
     ctx: click.Context,
-    submission: Path,
+    submission: str,
     competition_id: str,
-    data_dir: Path,
+    data_dir: str,
 ) -> None:
     try:
         ctx.obj["registry"].set_data_dir(Path(data_dir))
-
-        print(submission, type(submission))
 
         report = grade_sample_api(
             submission, competition_id,
         )
         click.echo(
-            "Competition report:\n%s",
-            json.dumps(report.to_dict(), indent=4)
+            f"Competition report:\n {json.dumps(report.to_dict(), indent=4)}",
         )
     except Exception as e:
-        click.echo(f"Error during grading: {e}", err=True)
+        # Use traceback to provide more context on the error
+        name = e.__traceback__.tb_frame.f_globals['__name__']
+        lineno = e.__traceback__.tb_lineno
+        click.echo(f"Error during grading at [{name}:{lineno}]: {e}", err=True)
         sys.exit(1)

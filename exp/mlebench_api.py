@@ -5,19 +5,26 @@ Email: yuanmingleee@gmail.com
 Date: Jul 12, 2025
 """
 import sys
+from os import PathLike
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from mlebench.data import download_and_prepare_dataset
 from mlebench.grade import grade_csv, grade_jsonl
 from mlebench.grade_helpers import CompetitionReport
 from mlebench.registry import registry
 
+if TYPE_CHECKING:
+    from typing import Union, Optional
+
+    PathType = Union[str, PathLike]
+
 
 def prepare(
     competition_id: str | None = None,
     prepare_all: bool = False,
     lite: bool = False,
-    list_file: Path | None = None,
+    list_file: "Optional[PathType]" = None,
     keep_raw: bool = False,
     overwrite_checksums: bool = False,
     overwrite_leaderboard: bool = False,
@@ -44,7 +51,7 @@ def prepare(
         elif prepare_all:
             comps = [registry.get_competition(cid) for cid in registry.list_competition_ids()]
         elif list_file:
-            cids = list_file.read_text().splitlines()
+            cids = Path(list_file).read_text().splitlines()
             comps = [registry.get_competition(cid) for cid in cids]
         elif competition_id:
             comps = [registry.get_competition(competition_id)]
@@ -67,14 +74,14 @@ def prepare(
 
 
 def grade(
-    submission: Path,
-    output_dir: Path,
+    submission: "Optional[PathType]",
+    output_dir: "Optional[PathType]",
 ) -> None:
     grade_jsonl(Path(submission), Path(output_dir), registry)
 
 
 def grade_sample(
-    submission: Path,
+    submission: "Optional[PathType]",
     competition_id: str,
 ) -> CompetitionReport:
     comp = registry.get_competition(competition_id)
