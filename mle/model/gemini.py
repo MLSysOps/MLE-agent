@@ -173,11 +173,11 @@ class GeminiModel(Model):
         Args:
             chat_history: The context (chat history).
         """
-        adapted_history = self._adapt_history_for_gemini(chat_history)
+        prompt = self._adapt_history_for_gemini(chat_history)
 
         response_stream = self.client.models.generate_content_stream(
             model=self.model,
-            contents=adapted_history,
+            contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 max_output_tokens=4096,
