@@ -113,7 +113,7 @@ class GeminiModel(Model):
         )
 
         final_response_content = None
-        json_output_required = False 
+        json_output_required = False
 
         for _ in range(MAX_TOOL_TURNS):
             config = json_only_config if json_output_required else base_config
@@ -126,7 +126,7 @@ class GeminiModel(Model):
             )
 
             # The model can return multiple function calls. For now, we only process the first one,
-            # as agents' current logic is sequential. 
+            # as agents' current logic is sequential.
             # This is a potential future improvement to handle more complex tasks.
             function_call = None
             if response.candidates and response.candidates[0].content.parts:
@@ -153,7 +153,7 @@ class GeminiModel(Model):
                     response={"result": str(function_result)}
                 )
                 prompt.append(response.candidates[0].content)
-                prompt.append(types.Content(role='tool', parts=[function_response_part]))                
+                prompt.append(types.Content(role='tool', parts=[function_response_part]))
                 json_output_required = True
             else:
                 final_response_content = response.text
