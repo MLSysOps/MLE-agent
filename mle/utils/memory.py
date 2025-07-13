@@ -3,6 +3,7 @@ from typing import List, Dict, Optional
 
 import lancedb
 from lancedb.embeddings import get_registry
+from mem0 import Memory, MemoryClient
 
 from mle.utils import get_config
 
@@ -243,3 +244,95 @@ class LanceDBMemory:
         Resets the memory by dropping the default memory table.
         """
         self.drop()
+
+
+class Mem0:
+
+    def __init__(self, token: str = None, cfg: dict = None):
+        """
+        Initialize the Mem0 instance with either an API token or a local configuration.
+
+        Args:
+            token (str, optional): API key for using remote memory client.
+            cfg (dict, optional): Configuration dictionary for local memory setup.
+        """
+        self.token = token
+        self.cfg = cfg
+
+        if self.token:
+            self.client = MemoryClient(api_key=self.token)
+        else:
+            self.client = Memory.from_config(self.cfg)
+
+    def add(
+        self,
+        messages: List[Dict[str, str]],
+        metadata: Optional[Dict[str, object]] = None,
+        *,
+        prompt: str = None,
+        infer: bool = True,
+    ):
+        """
+        Add messages and optional metadata to the memory.
+
+        Args:
+            messages (List[Dict[str, str]]): List of message dictionaries to store.
+            metadata (Dict[str, object], optional): Additional metadata to associate with the messages.
+            prompt (str, optional): Optional prompt to guide memory inference.
+            infer (bool): Whether to enable inference-based embedding or storage.
+
+        Returns:
+            Any: Result of the underlying client's add operation.
+        """
+        return self.client.add(
+            messages,
+            metadata=metadata,
+            prompt=prompt,
+            infer=infer,
+        )
+
+    def query(
+        self,
+        query_text: str,
+        n_results: int = 5,
+    ):
+        """
+        Perform a search query against the memory.
+
+        Args:
+            query_text (str): The search string.
+            n_results (int): Maximum number of results to return.
+
+        Returns:
+            Any: Search results from the memory client.
+        """
+        self.client.search(
+            query_text=query_text,
+            limit=n_results,
+        )
+
+    def get_all(
+        self,
+        filters: Optional[Dict[str, object]] = None,
+        n_results: int = 100,
+    ):
+        """
+        Retrieve all stored memory entries, optionally filtered.
+
+        Args:
+            filters (Dict[str, object], optional): Dictionary of filter conditions.
+            n_results (int): Maximum number of results to return.
+
+        Returns:
+            Any: All matching memory entries.
+        """
+        return self.client.get_all(filters=filters, n_results=n_results)
+
+    def reset(self):
+        """
+        Reset or clear the entire memory storage.
+
+        Returns:
+            Any: Result of the memory client's reset operation.
+        """
+        return self.client.reset()

@@ -48,6 +48,7 @@ dependencies = [
   "lancedb==0.15.0 ; python_version >= '3.9'",
   "lancedb==0.6.13 ; python_version < '3.9'",
   "tree-sitter>=0.21.3",
+  "mem0ai~=0.1.114",
 ]
 
 [project.urls]
