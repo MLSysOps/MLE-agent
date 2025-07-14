@@ -1,5 +1,6 @@
+from datetime import datetime
 import uuid
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 import lancedb
 from lancedb.embeddings import get_registry
@@ -340,4 +341,162 @@ class Mem0:
         Returns:
             Any: Result of the memory client's reset operation.
         """
-        return self.client.reset(agent_id=self.agent_id)
+        return self.client.reset()
+
+
+class HybridMemory:
+    """
+    A hybrid memory system that integrates a slow, long-term memory (e.g., Mem0)
+    with a fast, high-recall memory (e.g., LanceDB) to support dynamic memory
+    consolidation and retrieval for LLM agents.
+
+    Attributes:
+        slow_memory (Mem0): The long-term, slower-access memory backend.
+        fast_memory (LanceDBMemory): The short-term, fast-access vector memory backend.
+    """
+
+    def __init__(self, slow_memory: Mem0, fast_memory: LanceDBMemory):
+        """
+        Initialize the HybridMemory with given slow and fast memory backends.
+
+        Args:
+            slow_memory (Mem0): An instance of slow memory (long-term storage).
+            fast_memory (LanceDBMemory): An instance of fast memory (vector store).
+        """
+        self.slow_memory: Mem0 = slow_memory
+        self.fast_memory: LanceDBMemory = fast_memory
+
+    def add(
+        self,
+        messages: List[Dict[str, str]],
+        metadata: Dict[str, Any] = None,
+        prompt: str = None,
+    ):
+        """
+        Add a set of messages to the slow memory store with optional prompt context.
+
+        Args:
+            messages (List[Dict[str, str]]): Conversation messages to store.
+            metadata (Dict[str, Any]): Metadata associated with the memory.
+            prompt (str, optional): An optional prompt or context.
+        """
+        return self.slow_memory.add(
+            messages=messages,
+            metadata=metadata,
+            prompt=prompt,
+            infer=prompt is not None,
+        )
+
+    def query(
+        self,
+        query: str,
+        n_results: int = 5,
+        fast_query: bool = True,
+    ):
+        """
+        Query memory for relevant items from fast memory and optionally from slow memory.
+
+        Args:
+            query (str): The search query string.
+            n_results (int): Number of top results to retrieve.
+            fast_query (bool): If True, only query fast memory; otherwise, include slow memory.
+
+        Returns:
+            List[Dict]: Retrieved memory items.
+        """
+        results = self.fast_memory.query([query], n_results=n_results)
+        if not fast_query:
+            results.extend(self.slow_memory.query(query, n_results=n_results))
+        return results
+
+    def reset(self, only_reset_slow_memory: bool = True):
+        """
+        Reset memory backends to empty state.
+
+        Args:
+            only_reset_slow_memory (bool): If True, only reset slow memory; otherwise reset both.
+        """
+        self.slow_memory.reset()
+        if not only_reset_slow_memory:
+            self.fast_memory.reset()
+
+    def last_n_consolidate(self, n: int, limit: int = 1000):
+        """
+        Consolidate the most recent N entries from slow memory into fast memory.
+
+        Warning:
+            Performs in-memory sort which can be memory intensive.
+
+        Args:
+            n (int): Number of most recent memory items to consolidate.
+            limit (int): Maximum number of items to retrieve from slow memory.
+
+        Returns:
+            List[Dict]: The last N memory items that were consolidated.
+        """
+        # This method performs a full in-memory sort of all memory entries,  which
+        # may result in significant memory and CPU usage if the memory store is
+        # large. Use with caution when the number of stored memory items is large.
+        items = self.slow_memory.get_all(n_results=limit)["results"]
+
+        # TODO: ranking memory items with timestamp iteratively
+        items = sorted(
+            items,
+            key=lambda x: datetime.fromisoformat(
+                x.get("updated_at") or x.get("created_at")
+            ),
+            reverse=True,
+        )
+
+        last_n_items = items[:n]
+        for item in last_n_items:
+            self.fast_memory.add(
+                texts=[item["memory"]],
+            )
+        return last_n_items
+
+    def top_k_consolidate(
+        self, k: int, metadata_key: str, reverse=False, limit: int = 1000
+    ):
+        """
+        Consolidate top-K entries from slow memory based on a metadata key.
+
+        Warning:
+            Performs full in-memory sort and should be used cautiously on large datasets.
+
+        Args:
+            k (int): Number of top memory items to consolidate.
+            metadata_key (str): Metadata key used for sorting and selection.
+            reverse (bool): Whether to sort in descending order.
+            limit (int): Maximum number of items to retrieve from slow memory.
+
+        Returns:
+            List[Dict]: The top-K memory items that were consolidated.
+        """
+        # This method performs a full in-memory sort of all memory entries,  which
+        # may result in significant memory and CPU usage if the memory store is
+        # large. Use with caution when the number of stored memory items is large.
+        items = self.slow_memory.get_all(n_results=limit)["results"]
+
+        # TODO: ranking items with manual function iteratively
+        items = sorted(
+            items, key=lambda x: x["metadata"].get(metadata_key), reverse=reverse
+        )
+
+        topk_items = items[:k]
+        for item in topk_items:
+            self.fast_memory.add(
+                texts=[item["memory"]],
+            )
+        return topk_items
+
+    def prompt_based_consolidate(self, prompt: str):
+        """
+        Consolidate memory items into fast memory based on prompt relevance.
+
+        Note: [not yet implemented]
+
+        Args:
+            prompt (str): The guiding prompt used to select memory items.
+        """
+        raise NotImplementedError
