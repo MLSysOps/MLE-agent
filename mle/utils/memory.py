@@ -420,7 +420,7 @@ class HybridMemory:
         if not only_reset_slow_memory:
             self.fast_memory.reset()
 
-    def last_n_consolidate(self, last_n: int, limit: int = 1000):
+    def last_n_consolidate(self, n: int, limit: int = 1000):
         """
         Consolidate the most recent N entries from slow memory into fast memory.
 
@@ -428,7 +428,7 @@ class HybridMemory:
             Performs in-memory sort which can be memory intensive.
 
         Args:
-            last_n (int): Number of most recent memory items to consolidate.
+            n (int): Number of most recent memory items to consolidate.
             limit (int): Maximum number of items to retrieve from slow memory.
 
         Returns:
@@ -448,14 +448,14 @@ class HybridMemory:
             reverse=True,
         )
 
-        last_n_items = items[:last_n]
+        last_n_items = items[:n]
         for item in last_n_items:
             self.fast_memory.add(
                 texts=[item["memory"]],
             )
         return last_n_items
 
-    def topk_consolidate(
+    def top_k_consolidate(
         self, k: int, metadata_key: str, reverse=False, limit: int = 1000
     ):
         """
