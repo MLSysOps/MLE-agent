@@ -59,7 +59,9 @@ def load_model(project_dir: str, model_name: str=None, observable=True):
     model = None
 
     if config['platform'] == MODEL_OLLAMA:
-        model = OllamaModel(model=model_name)
+        # For Ollama, use base_url as host_url if available
+        host_url = config.get('base_url', None)
+        model = OllamaModel(model=model_name, host_url=host_url)
     if config['platform'] == MODEL_OPENAI:
         model = OpenAIModel(api_key=config['api_key'], model=model_name)
     if config['platform'] == MODEL_CLAUDE:

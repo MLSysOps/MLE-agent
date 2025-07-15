@@ -32,7 +32,7 @@ class vLLMModel(Model):
                 "pip install openai"
             )
 
-        self.model = model if model else 'mistralai/Mistral-7B-Instruct-v0.3'
+        self.model = model if model else 'Qwen/Qwen2.5-1.5B-Instruct'
         self.model_type = 'vLLM'
         self.temperature = temperature
         self.client = self.openai(
