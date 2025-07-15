@@ -77,20 +77,10 @@ cd MLE-agent
 
 <li> Create & activate a virtual env
 
-**Option 1**: uv (recommended)
 ```bash
 uv venv .venv
 source .venv/bin/activate      # Linux/macOS
-.\.venv\Scripts\activate.bat   # Windows (cmd)
-.\.venv\Scripts\Activate.ps1   # Windows (PowerShell)
 ```
-**Option 2**: virtualenv + pip
-```bash
-python -m venv .venv
-source .venv/bin/activate      # Linux/macOS
-.\.venv\Scripts\activate       # Windows
-```
-</li>
 
 <li> Editable install
 

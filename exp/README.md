@@ -8,16 +8,7 @@ In Linux/macOS:
 ```shell
 GIT_LFS_SKIP_SMUDGE=1 pip install -e .[bench]
 ```
-In Windows (CMD):
-```shell
-set GIT_LFS_SKIP_SMUDGE=1
-pip install -e .[bench]
-```
-In Windows (PowerShell):
-```
-$env:GIT_LFS_SKIP_SMUDGE=1
-pip install -e .[bench]
-```
+
 
 Then run the following command to set up the MLE-Bench:
 ```shell
@@ -51,7 +42,9 @@ mle kaggle <competition-id>
 mle-exp grade-sample <PATH_TO_SUBMISSION> <competition-id>
 ```
 
-## Benchmarking (Full)
+## Advance (Run MLE-Agent on the Full Dataset)
+
+**Warning: This will cost a lot of resources**
 
 ### Prepare full 75 datasets
 ```shell
