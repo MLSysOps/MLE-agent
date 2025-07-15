@@ -307,8 +307,8 @@ def new(name):
         ).ask() or "http://localhost:8000/v1"
 
         model_name = questionary.text(
-            "What is the model name loaded in your vLLM server? (default: mistralai/Mistral-7B-Instruct-v0.3B)"
-        ).ask() or "mistralai/Mistral-7B-Instruct-v0.3"
+            "What is the model name loaded in your vLLM server? (default: Qwen/Qwen2.5-1.5B-Instruct)"
+        ).ask() or "Qwen/Qwen2.5-1.5B-Instruct"
 
     search_api_key = questionary.password("What is your Tavily API key? (if no, the web search will be disabled)").ask()
     if search_api_key:
