@@ -45,6 +45,7 @@ dependencies = [
   "google-api-python-client~=2.143.0",
   "google-auth-httplib2~=0.2.0",
   "google-auth-oauthlib~=1.2.1",
+  "google-genai~=1.25.0",
   "lancedb==0.15.0 ; python_version >= '3.9'",
   "lancedb==0.6.13 ; python_version < '3.9'",
   "tree-sitter>=0.21.3",
