@@ -34,6 +34,7 @@ import questionary
 from langgraph.func import task, entrypoint
 
 from mle.cli import console
+from mle.function import execute_command
 from mle.model import load_model
 from mle.agents import (
     WorkflowCache,
@@ -57,6 +58,11 @@ class KaggleState:
     console: Console | None = None
     cache: WorkflowCache | None = None
     model: Any | None = None
+    # Agents
+    advisor: AdviseAgent | None = None
+    planner: PlanAgent | None = None
+    coder: CodeAgent | None = None
+    debugger: DebugAgent | None = None
 
     # run‑time ---------------------------------------------------------------
     resume_step: int | None = None
@@ -70,10 +76,15 @@ class KaggleState:
     coding_plan: Dict[str, Any] | None = None
     is_auto_mode: bool | None = None
 
-    # coding loop ------------------------------------------------------------
+    # coding ------------------------------------------------------------
     current_task: Dict[str, Any] | None = None
     code_report: Dict[str, Any] | None = None
-    final_code_reports: List[Dict[str, Any]] = field(default_factory=list)
+    debug_attempt: int = 0
+    debug_max_attempt: int = 5
+
+    # output files -----------------------------------------------------------
+    submission: str = "submission.csv"
+    sample_submission: str = None
 
 
 # -----------------------------------------------------------------------------
@@ -104,6 +115,12 @@ def init_node(inputs: dict) -> KaggleState:
         raise ValueError(
             f"Competition with ID '{state.competition_id}' not found in MLE Bench"
         )
+
+    # Load agents
+    state.advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=state.console)
+    state.planner = PlanAgent(model=state.model, working_dir=state.work_dir, console=state.console)
+    state.coder = CodeAgent(model=state.model, working_dir=state.work_dir, console=state.console)
+    state.debugger = DebugAgent(model=state.model, console=state.console)
 
     return state
 
@@ -137,14 +154,15 @@ def overview_summary_node(state: KaggleState) -> KaggleState:
 
 @task
 def advisor_report_node(state: KaggleState) -> KaggleState:
-    cache, con = state.cache, state.console
-    with cache(step=3, name="MLE advisor agent provides a high‑level report") as ca:
+    with (state.cache(step=3, name="MLE advisor agent provides a high‑level report") as ca):
         state.advisor_report = ca.resume("advisor_report")
         if state.advisor_report is None:
-            advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=state.console)
-            state.advisor_report = advisor.interact(
-                f"[green]Competition Requirement:[/green] {state.ml_requirement}\n"
-                f"Dataset path: {state.dataset_path}"
+            with console.status("MLE Agent is processing the kaggle competition overview..."):
+                requirements = state.ml_requirement + f"\nDataset path: {state.dataset_path}" \
+                               + f"\nSUBMISSION FILE PATH: {state.submission}\n"
+
+            state.advisor_report = state.advisor.suggest(
+                requirements, return_raw=True
             )
         ca.store("advisor_report", state.advisor_report)
     return state
@@ -155,54 +173,51 @@ def plan_generation_node(state: KaggleState) -> KaggleState:
     with state.cache(step=4, name="MLE plan agent generates a dev plan") as ca:
         state.coding_plan = ca.resume("coding_plan")
         if state.coding_plan is None:
-            planner = PlanAgent(model=state.model, working_dir=state.work_dir, console=state.console)
-            state.coding_plan = planner.interact(state.advisor_report)
+            state.coding_plan = state.planner.interact(state.advisor_report)
         ca.store("coding_plan", state.coding_plan)
     return state
 
 
-def _ensure_auto_mode(state: KaggleState):
-    if state.is_auto_mode is None:
-        state.is_auto_mode = questionary.confirm(
-            "MLE developer is about to start to code.\nChoose to debug or not? (No = code‑only mode)"
-        ).ask()
+@task
+def coder_read_requirement(state: KaggleState) -> KaggleState:
+    state.coder.read_requirement(state.advisor_report)
+    return state
 
 
 @task
 def code_task_node(state: KaggleState) -> KaggleState:
-    _ensure_auto_mode(state)
-    coder = CodeAgent(state.model, state.work_dir, state.console)
-    coder.read_requirement(state.advisor_report)
-
-    tasks: Iterable[Dict[str, Any]] = state.coding_plan.get("tasks", [])
-    if not tasks:
-        return state
-    state.current_task = tasks.pop(0)
-    state.code_report = coder.interact(state.current_task)
+    state.code_report = state.coder.code(state.current_task)
     return state
 
 
-def debug_decision(state: KaggleState) -> str:
-    _ensure_auto_mode(state)
-    needs_debug = (
-        state.is_auto_mode and state.code_report and
-        str(state.code_report.get("debug", "")).lower() == "true"
-    )
-    return "debug" if needs_debug else "done"
+@task
+def debug(state: KaggleState) -> KaggleState:
+    # TODO: save the code to a file, create a venvironment, and run it
+    #  collect the run logs and errors
+    with console.status("MLE Debug Agent is executing and debugging the code..."):
+        running_cmd = state.code_report.get('command')
+        logs = execute_command(running_cmd)
+        debug_report = state.debugger.analyze_with_log(running_cmd, logs)
+        state.code_report = state.coder.debug(state.current_task, debug_report)
+    return state
 
 
 @task
-def debug_loop_node(state: KaggleState) -> KaggleState:
-    debugger = DebugAgent(state.model, state.console)
-    coder = CodeAgent(state.model, state.work_dir, state.console)
-    # TODO: save the code to a file, create a venvironment, and run it
-    #  collect the run logs and errors
-    while True:
-        with state.console.status("Debugging code …"):
-            debug_report = debugger.analyze(state.code_report)
-        if debug_report.get("status") == "success":
-            break
-        state.code_report = coder.debug(state.current_task, debug_report)
+def check_submission_file(state: KaggleState) -> KaggleState:
+    if not os.path.exists(state.submission):
+        console.log(f"The submission file ({state.submission}) is not found. Please check the code.")
+        state.code_report = state.coder.debug(
+            state.current_task,
+            {
+                "status": "error",
+                "changes": [
+                    f"make sure the submission file is generated in {state.submission}",
+                    f"make sure the submission file is in the correct format. You can refer to the example "
+                    f"submission file: {state.sample_submission}"
+                ],
+                "suggestion": f"Please update the code related to generating the submission file."
+            }
+        )
     return state
 
 
@@ -218,15 +233,23 @@ def kaggle_solver(inputs: dict) -> KaggleState:
             overview_summary_node,
             advisor_report_node,
             plan_generation_node,
+            coder_read_requirement,
     ):
         state = step_fn(state).result()
 
     # coding plan loop
-    while state.coding_plan and state.coding_plan.get("tasks"):
+    while state.coding_plan and (tasks := state.coding_plan.get("tasks")):
+        state.current_task = tasks.pop(0)
         state = code_task_node(state).result()
-        route = debug_decision(state)
-        if route == "debug":
-            state = debug_loop_node(state).result()
+        while True:
+            if state.debug_attempt > state.debug_max_attempt:
+                console.log(
+                    f"Debug the code failed with max {state.debug_max_attempt} attempts. Please check the code manually."
+                )
+                break
+
+            state = debug(state).result()
+            state.debug_attempt += 1
 
     # finished
     if state.console:
