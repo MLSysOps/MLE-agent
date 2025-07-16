@@ -124,10 +124,10 @@ class ChatAgent:
             user_prompt += f"""
             \nThese reference files and their snippets may be useful for the question:\n\n
             """
-
-            for t in query[0]:
-                snippet, metadata = t.get('text'), t.get('metadata')
-                user_prompt += f"**File**: {metadata.get('file')}\n**Snippet**: {snippet}\n"
+            if query:
+                for t in query[0]:
+                    snippet, metadata = t.get('text'), t.get('metadata')
+                    user_prompt += f"**File**: {metadata.get('file')}\n**Snippet**: {snippet}\n"
         self.chat_history.append({"role": "user", "content": user_prompt})
 
         for content in self.model.stream(
