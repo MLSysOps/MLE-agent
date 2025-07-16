@@ -12,7 +12,7 @@ GIT_LFS_SKIP_SMUDGE=1 pip install -e .[bench]
 
 Then run the following command to set up the MLE-Bench:
 ```shell
-mle-exp init
+mle bench init
 ```
 
 ## Benchmarking (Lite)
@@ -26,11 +26,11 @@ The dataset will be downloaded to the system default cache directory.
 Prepare the lite dataset ([15 smaller datasets](https://github.com/openai/mle-bench?tab=readme-ov-file#lite-evaluation)):
 ```shell
 # Prepare lite dataset (smaller version of the dataset)
-mle-exp prepare --lite
+mle bench prepare --lite
 ```
 Alternatively, you can prepare the dataset for a specific competition:
 ```shell
-mle-exp prepare -c <competition-id>
+mle bench prepare -c <competition-id>
 ```
 ### Run MLE Agent (WIP)
 ```shell
@@ -39,7 +39,7 @@ mle kaggle <competition-id>
 
 ### Grade submission
 ```shell
-mle-exp grade-sample <PATH_TO_SUBMISSION> <competition-id>
+mle bench grade-sample <PATH_TO_SUBMISSION> <competition-id>
 ```
 
 ## Advance (Run MLE-Agent on the Full Dataset)
@@ -48,7 +48,7 @@ mle-exp grade-sample <PATH_TO_SUBMISSION> <competition-id>
 
 ### Prepare full 75 datasets
 ```shell
-mle-exp prepare --all
+mle bench prepare --all
 ```
 ### Run MLE Agent (WIP)
 ```shell
@@ -57,5 +57,5 @@ mle kaggle <competition-id>
 
 ### Grade submission
 ```shell
-mle-exp grade-sample <PATH_TO_SUBMISSION> <competition-id>
+mle bench grade-sample <PATH_TO_SUBMISSION> <competition-id>
 ```

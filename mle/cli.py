@@ -553,3 +553,12 @@ def traces(component, limit, full_output):
         console.print("[yellow]Tip: Use --full-output flag to see complete trace data[/yellow]")
 
     memory.close()
+
+
+# Experimental commands
+try:
+    from exp.cli import bench
+
+    cli.add_command(bench, name='bench')
+except ImportError:
+    exp = None

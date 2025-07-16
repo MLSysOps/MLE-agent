@@ -7,7 +7,7 @@ name = "mle-agent"
 version = "0.4.3"
 description = "MLE-agent: An agent to automate your MLE processes"
 readme = "README.md"
-requires-python = ">=3.8.1"
+requires-python = ">=3.9"
 license = {text = "Apache-2.0"}
 authors = [
   { name = "Yizheng Huang", email = "huangyz0918@gmail.com" },
@@ -28,8 +28,7 @@ dependencies = [
   "rich>=13.6.0",
   "click>=7.1.1",
   "tantivy==0.24.0",
-  "py7zr~=1.0 ; python_version >= '3.9'",
-  "py7zr<0.20 ; python_version < '3.9'",
+  "py7zr~=1.0",
   "openai~=1.70.0",
   "pyyaml~=6.0",
   "kaggle>=1.5.12",
@@ -38,16 +37,14 @@ dependencies = [
   "requests~=2.32.3",
   "GitPython~=3.1",
   "questionary~=1.10.0",
-  "pandas>=2.2.2 ; python_version >= '3.9'",
-  "pandas==2.0.3 ; python_version < '3.9'",
+  "pandas>=2.2.2",
   "tavily-python~=0.6.0",
   "langfuse~=2.36.2",
   "google-api-python-client~=2.143.0",
   "google-auth-httplib2~=0.2.0",
   "google-auth-oauthlib~=1.2.1",
   "google-genai~=1.25.0",
-  "lancedb==0.15.0 ; python_version >= '3.9'",
-  "lancedb==0.6.13 ; python_version < '3.9'",
+  "lancedb==0.15.0",
   "tree-sitter>=0.21.3",
   "mem0ai~=0.1.114",
   "pip>=23.3.1",
@@ -66,7 +63,6 @@ Download = "https://github.com/MLSysOps/MLE-agent/archive/refs/heads/main.zip"
 [project.scripts]
 mle-agent = "mle.cli:cli"
 mle = "mle.cli:cli"
-mle-exp = "exp.cli:cli"
 
 [tool.setuptools.packages.find]
 include = ["mle*", "exp*"]

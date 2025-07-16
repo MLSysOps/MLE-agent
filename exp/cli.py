@@ -60,14 +60,14 @@ def require_init(f):
 )
 @click.pass_context
 @click.version_option(version=mle.__version__)
-def cli(ctx: click.Context):
+def bench(ctx: click.Context):
     """
     MLE-Exp: The Experimental CLI tool for MLE-agent.
     """
     ctx.obj = {"registry": registry}
 
 
-@cli.command(
+@bench.command(
     name="init",
     short_help="Initialize MLE-bench",
 )
@@ -86,7 +86,7 @@ def init(force: bool):
     sys.exit(init_api(force))
 
 
-@cli.command("prepare", help="Download and prepare one or more competitions.")
+@bench.command("prepare", help="Download and prepare one or more competitions.")
 @click.option(
     "-c",
     "--competition-id",
@@ -182,7 +182,7 @@ def prepare(
         sys.exit(1)
 
 
-@cli.command(
+@bench.command(
     "grade",
     help="Grade a submission covering *all* eval competitions (JSONL format).",
 )
@@ -256,7 +256,7 @@ def grade(
         sys.exit(1)
 
 
-@cli.command(
+@bench.command(
     "grade-sample",
     help="Grade a *single* competition CSV submission inside the eval.",
 )
