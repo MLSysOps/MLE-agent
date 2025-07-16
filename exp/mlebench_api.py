@@ -15,7 +15,7 @@ from mlebench.grade_helpers import CompetitionReport
 from mlebench.registry import registry
 
 if TYPE_CHECKING:
-    from typing import Union, Optional
+    from typing import Union, Optional, List
 
     PathType = Union[str, PathLike]
 

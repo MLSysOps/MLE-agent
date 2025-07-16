@@ -31,10 +31,9 @@ from typing import Any, Dict, List, Iterable
 from rich.console import Console
 import questionary
 
-import langgraph
-from langgraph import task, router, entrypoint  # functional API decorators
+from langgraph.func import task, entrypoint
 
-from mle.integration import KaggleIntegration
+from mle.cli import console
 from mle.model import load_model
 from mle.agents import (
     WorkflowCache,
@@ -44,6 +43,9 @@ from mle.agents import (
     CodeAgent,
     DebugAgent,
 )
+
+from mlebench.registry import registry
+
 
 # -----------------------------------------------------------------------------
 # Shared‑state dataclass
@@ -55,13 +57,15 @@ class KaggleState:
     console: Console | None = None
     cache: WorkflowCache | None = None
     model: Any | None = None
-    integration: KaggleIntegration | None = None
 
     # run‑time ---------------------------------------------------------------
     resume_step: int | None = None
-    competition: str | None = None
+    # dataset and competition info -------------------------------------------
+    competition_id: str | None = None
     dataset_path: str | None = None
+    description: str | None = None
     ml_requirement: str | None = None
+    # MLE agents' outputs ----------------------------------------------------
     advisor_report: str | None = None
     coding_plan: Dict[str, Any] | None = None
     is_auto_mode: bool | None = None
@@ -71,19 +75,40 @@ class KaggleState:
     code_report: Dict[str, Any] | None = None
     final_code_reports: List[Dict[str, Any]] = field(default_factory=list)
 
+
 # -----------------------------------------------------------------------------
 # Task nodes
 # -----------------------------------------------------------------------------
 
-@task()
-def init_node(state: KaggleState) -> KaggleState:
+@task
+def init_node(inputs: dict) -> KaggleState:
+    state = KaggleState(
+        work_dir=inputs.get("work_dir", os.getcwd()),
+        model=inputs.get("model", None),
+        competition_id=inputs.get("competition", None),
+    )
     state.console = Console()
     state.cache = WorkflowCache(state.work_dir, "kaggle")
-    state.model = load_model(state.work_dir, state.model)
-    state.integration = KaggleIntegration()
+    try:
+        state.model = load_model(state.work_dir, state.model)
+    except Exception as e:
+        state.console.print(f"[bold red]Error loading model: {e}[/bold red]")
+        raise e
+
+    # Load MLE Bench kaggle competition by id
+    if competition := registry.get_competition(state.competition_id):
+        console.print(competition)
+        state.dataset_path = competition.public_dir
+        state.description = competition.description
+    else:
+        raise ValueError(
+            f"Competition with ID '{state.competition_id}' not found in MLE Bench"
+        )
+
     return state
 
-@task()
+
+@task
 def resume_decision_node(state: KaggleState) -> KaggleState:
     cache = state.cache
     if cache and not cache.is_empty():
@@ -97,45 +122,26 @@ def resume_decision_node(state: KaggleState) -> KaggleState:
                 cache.remove(i)
     return state
 
-@task()
-def select_competition_node(state: KaggleState) -> KaggleState:
-    cache, integ, con = state.cache, state.integration, state.console
-    with cache(step=1, name="ask for the kaggle competition") as ca:
-        state.competition = ca.resume("competition")
-        state.dataset_path = ca.resume("dataset")
-        if not (state.competition and state.dataset_path):
-            state.competition = questionary.select(
-                "Please select a Kaggle competition to join:",
-                choices=integ.list_competition(),
-            ).ask()
-            with con.status("Downloading competition dataset …"):
-                state.dataset_path = integ.download_competition_dataset(
-                    state.competition, os.path.join(os.getcwd(), "data")
-                )
-        ca.store("competition", state.competition)
-        ca.store("dataset", state.dataset_path)
-    return state
 
-@task()
+@task
 def overview_summary_node(state: KaggleState) -> KaggleState:
-    cache, integ, con = state.cache, state.integration, state.console
+    cache, con = state.cache, state.console
     with cache(step=2, name="get the competition overview from kaggle") as ca:
         state.ml_requirement = ca.resume("ml_requirement")
         if state.ml_requirement is None:
-            with con.status("Fetching competition overview …"):
-                summary = GitHubSummaryAgent(state.model, console=con)
-                overview_md = integ.fetch_competition_overview(state.competition)
-                state.ml_requirement = summary.kaggle_request_summarize(overview_md)
+            summary = GitHubSummaryAgent(state.model, console=con)
+            state.ml_requirement = summary.kaggle_request_summarize(state.description)
         ca.store("ml_requirement", state.ml_requirement)
     return state
 
-@task()
+
+@task
 def advisor_report_node(state: KaggleState) -> KaggleState:
     cache, con = state.cache, state.console
     with cache(step=3, name="MLE advisor agent provides a high‑level report") as ca:
         state.advisor_report = ca.resume("advisor_report")
         if state.advisor_report is None:
-            advisor = AdviseAgent(state.model, con)
+            advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=state.console)
             state.advisor_report = advisor.interact(
                 f"[green]Competition Requirement:[/green] {state.ml_requirement}\n"
                 f"Dataset path: {state.dataset_path}"
@@ -143,18 +149,17 @@ def advisor_report_node(state: KaggleState) -> KaggleState:
         ca.store("advisor_report", state.advisor_report)
     return state
 
-@task()
+
+@task
 def plan_generation_node(state: KaggleState) -> KaggleState:
-    cache, con = state.cache, state.console
-    with cache(step=4, name="MLE plan agent generates a dev plan") as ca:
+    with state.cache(step=4, name="MLE plan agent generates a dev plan") as ca:
         state.coding_plan = ca.resume("coding_plan")
         if state.coding_plan is None:
-            planner = PlanAgent(state.model, con)
+            planner = PlanAgent(model=state.model, working_dir=state.work_dir, console=state.console)
             state.coding_plan = planner.interact(state.advisor_report)
         ca.store("coding_plan", state.coding_plan)
     return state
 
-# ---------- Coding helpers ---------------------------------------------------
 
 def _ensure_auto_mode(state: KaggleState):
     if state.is_auto_mode is None:
@@ -162,7 +167,8 @@ def _ensure_auto_mode(state: KaggleState):
             "MLE developer is about to start to code.\nChoose to debug or not? (No = code‑only mode)"
         ).ask()
 
-@task()
+
+@task
 def code_task_node(state: KaggleState) -> KaggleState:
     _ensure_auto_mode(state)
     coder = CodeAgent(state.model, state.work_dir, state.console)
@@ -175,8 +181,8 @@ def code_task_node(state: KaggleState) -> KaggleState:
     state.code_report = coder.interact(state.current_task)
     return state
 
-@router()
-def debug_decision_node(state: KaggleState) -> str:
+
+def debug_decision(state: KaggleState) -> str:
     _ensure_auto_mode(state)
     needs_debug = (
         state.is_auto_mode and state.code_report and
@@ -184,10 +190,13 @@ def debug_decision_node(state: KaggleState) -> str:
     )
     return "debug" if needs_debug else "done"
 
-@task()
+
+@task
 def debug_loop_node(state: KaggleState) -> KaggleState:
     debugger = DebugAgent(state.model, state.console)
     coder = CodeAgent(state.model, state.work_dir, state.console)
+    # TODO: save the code to a file, create a venvironment, and run it
+    #  collect the run logs and errors
     while True:
         with state.console.status("Debugging code …"):
             debug_report = debugger.analyze(state.code_report)
@@ -196,31 +205,26 @@ def debug_loop_node(state: KaggleState) -> KaggleState:
         state.code_report = coder.debug(state.current_task, debug_report)
     return state
 
-# -----------------------------------------------------------------------------
-# Entrypoint orchestrator – mirrors the example provided by the user
-# -----------------------------------------------------------------------------
 
 @entrypoint()
-def kaggle_solver(work_dir: str, model: Any | None = None):
+def kaggle_solver(inputs: dict) -> KaggleState:
     """Run the entire Kaggle workflow in functional‑API style."""
     # create initial state
-    state = KaggleState(work_dir=work_dir, model=model)
+    state = init_node(inputs).result()
 
     # sequential pre‑coding steps
     for step_fn in (
-        init_node,
-        resume_decision_node,
-        select_competition_node,
-        overview_summary_node,
-        advisor_report_node,
-        plan_generation_node,
+            resume_decision_node,
+            overview_summary_node,
+            advisor_report_node,
+            plan_generation_node,
     ):
         state = step_fn(state).result()
 
     # coding plan loop
     while state.coding_plan and state.coding_plan.get("tasks"):
         state = code_task_node(state).result()
-        route = debug_decision_node(state).result()
+        route = debug_decision(state)
         if route == "debug":
             state = debug_loop_node(state).result()
 
@@ -232,8 +236,13 @@ def kaggle_solver(work_dir: str, model: Any | None = None):
 
 if __name__ == "__main__":
     import argparse
+
     p = argparse.ArgumentParser(description="Run Kaggle workflow (functional API)")
     p.add_argument("work_dir")
-    p.add_argument("--model")
+    p.add_argument("--model", default='Qwen/Qwen2.5-1.5B-Instruct')
+    p.add_argument(
+        "--competition", "-c",
+        help="MLE Bench competition ID to run",
+    )
     args = p.parse_args()
-    kaggle_solver.invoke(args.work_dir)
+    kaggle_solver.invoke(vars(args))

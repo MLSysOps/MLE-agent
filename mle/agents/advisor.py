@@ -30,7 +30,7 @@ def process_report(requirement: str, suggestions: dict):
 
 class AdviseAgent:
 
-    def __init__(self, model, console=None, mode='normal'):
+    def __init__(self, model, working_dir='.', console=None, mode='normal'):
         """
         AdviseAgent: the agent to suggest which machine learning task/model/dataset to use based on the user's
         requirements. The return of the agent is an instruction to the user to modify the code based on the logs and
@@ -45,6 +45,7 @@ class AdviseAgent:
         self.model = model
         self.chat_history = []
         self.console = console
+        self.working_dir = working_dir
         if not self.console:
             self.console = Console()
         self.sys_prompt = """
