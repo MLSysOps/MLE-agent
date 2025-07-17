@@ -17,7 +17,7 @@ def process_plan(plan_dict: dict):
 
 class PlanAgent:
 
-    def __init__(self, model, console=None):
+    def __init__(self, model, working_dir='.', console=None):
         """
         PlanAgent: the agent to plan the machine learning project. By receiving the user's requirements, the agent will
         first analyze the requirements and ask the user to provide more details if necessary. Then the agent will
@@ -30,6 +30,7 @@ class PlanAgent:
             model: the model to use.
         """
         self.console = console
+        self.working_dir = working_dir
         if not self.console:
             self.console = Console()
 
