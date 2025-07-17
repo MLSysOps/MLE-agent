@@ -25,11 +25,14 @@ kaggle_solver.invoke("/tmp/kaggle")
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Iterable
+import uuid
+from dataclasses import dataclass
+from typing import Any, Dict
 
+from langgraph.checkpoint.memory import MemorySaver
 from rich.console import Console
-import questionary
+from rich.pretty import Pretty
+from rich.markdown import Markdown
 
 from langgraph.func import task, entrypoint
 
@@ -37,7 +40,6 @@ from mle.cli import console
 from mle.function import execute_command
 from mle.model import load_model
 from mle.agents import (
-    WorkflowCache,
     GitHubSummaryAgent,
     AdviseAgent,
     PlanAgent,
@@ -47,22 +49,17 @@ from mle.agents import (
 
 from mlebench.registry import registry
 
+from mle.utils import print_in_box
+
 
 # -----------------------------------------------------------------------------
 # Shared‑state dataclass
 # -----------------------------------------------------------------------------
 @dataclass
 class KaggleState:
-    work_dir: str
     # singletons -------------------------------------------------------------
-    console: Console | None = None
-    cache: WorkflowCache | None = None
+    work_dir: str
     model: Any | None = None
-    # Agents
-    advisor: AdviseAgent | None = None
-    planner: PlanAgent | None = None
-    coder: CodeAgent | None = None
-    debugger: DebugAgent | None = None
 
     # run‑time ---------------------------------------------------------------
     resume_step: int | None = None
@@ -74,7 +71,6 @@ class KaggleState:
     # MLE agents' outputs ----------------------------------------------------
     advisor_report: str | None = None
     coding_plan: Dict[str, Any] | None = None
-    is_auto_mode: bool | None = None
 
     # coding ------------------------------------------------------------
     current_task: Dict[str, Any] | None = None
@@ -95,98 +91,60 @@ class KaggleState:
 def init_node(inputs: dict) -> KaggleState:
     state = KaggleState(
         work_dir=inputs.get("work_dir", os.getcwd()),
-        model=inputs.get("model", None),
         competition_id=inputs.get("competition", None),
     )
-    state.console = Console()
-    state.cache = WorkflowCache(state.work_dir, "kaggle")
-    try:
-        state.model = load_model(state.work_dir, state.model)
-    except Exception as e:
-        state.console.print(f"[bold red]Error loading model: {e}[/bold red]")
-        raise e
-
     # Load MLE Bench kaggle competition by id
     if competition := registry.get_competition(state.competition_id):
-        console.print(competition)
         state.dataset_path = competition.public_dir
         state.description = competition.description
+        console.print(f"[bold green]Competition {state.competition_id} loaded successfully![/bold green]")
     else:
         raise ValueError(
             f"Competition with ID '{state.competition_id}' not found in MLE Bench"
         )
 
-    # Load agents
-    state.advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=state.console)
-    state.planner = PlanAgent(model=state.model, working_dir=state.work_dir, console=state.console)
-    state.coder = CodeAgent(model=state.model, working_dir=state.work_dir, console=state.console)
-    state.debugger = DebugAgent(model=state.model, console=state.console)
-
-    return state
-
-
-@task
-def resume_decision_node(state: KaggleState) -> KaggleState:
-    cache = state.cache
-    if cache and not cache.is_empty():
-        step = questionary.text(
-            f"MLE has finished the following steps:\n{cache}\n"
-            f"Pick a step from 1 to {cache.current_step()} to resume (or ENTER to continue)"
-        ).ask()
-        if step:
-            state.resume_step = int(step)
-            for i in range(state.resume_step, cache.current_step() + 1):
-                cache.remove(i)
     return state
 
 
 @task
 def overview_summary_node(state: KaggleState) -> KaggleState:
-    cache, con = state.cache, state.console
-    with cache(step=2, name="get the competition overview from kaggle") as ca:
-        state.ml_requirement = ca.resume("ml_requirement")
-        if state.ml_requirement is None:
-            summary = GitHubSummaryAgent(state.model, console=con)
-            state.ml_requirement = summary.kaggle_request_summarize(state.description)
-        ca.store("ml_requirement", state.ml_requirement)
+    summary = GitHubSummaryAgent(model, console=console)
+    state.ml_requirement = summary.kaggle_request_summarize(state.description)
     return state
 
 
 @task
 def advisor_report_node(state: KaggleState) -> KaggleState:
-    with (state.cache(step=3, name="MLE advisor agent provides a high‑level report") as ca):
-        state.advisor_report = ca.resume("advisor_report")
-        if state.advisor_report is None:
-            with console.status("MLE Agent is processing the kaggle competition overview..."):
-                requirements = state.ml_requirement + f"\nDataset path: {state.dataset_path}" \
-                               + f"\nSUBMISSION FILE PATH: {state.submission}\n"
+    requirements = state.ml_requirement + f"\nDataset path: {state.dataset_path}" \
+                   + f"\nSUBMISSION FILE PATH: {state.submission}\n"
 
-            state.advisor_report = state.advisor.suggest(
-                requirements, return_raw=True
-            )
-        ca.store("advisor_report", state.advisor_report)
+    advisor = AdviseAgent(model=model, working_dir=state.work_dir, console=console)
+    state.advisor_report = advisor.suggest(requirements)
+    print_in_box(
+        Markdown(state.advisor_report), console, title="MLE Advisor Report", color="blue"
+    )
     return state
 
 
 @task
 def plan_generation_node(state: KaggleState) -> KaggleState:
-    with state.cache(step=4, name="MLE plan agent generates a dev plan") as ca:
-        state.coding_plan = ca.resume("coding_plan")
-        if state.coding_plan is None:
-            state.coding_plan = state.planner.interact(state.advisor_report)
-        ca.store("coding_plan", state.coding_plan)
-    return state
-
-
-@task
-def coder_read_requirement(state: KaggleState) -> KaggleState:
-    state.coder.read_requirement(state.advisor_report)
+    planer = PlanAgent(model=model, working_dir=state.work_dir, console=console)
+    state.coding_plan = planer.plan(state.advisor_report)
+    print_in_box(
+        Pretty(state.coding_plan), console, title="MLE Coding Plan", color="purple"
+    )
     return state
 
 
 @task
 def code_task_node(state: KaggleState) -> KaggleState:
-    state.code_report = state.coder.code(state.current_task)
+    coder = CodeAgent(
+        model=model, working_dir=state.work_dir, console=console,
+        single_file=True,
+    )
+    coder.read_requirement(state.advisor_report)
+    state.code_report = coder.code(state.current_task)
+    console.print(state.code_report)
     return state
 
 
@@ -194,11 +152,16 @@ def code_task_node(state: KaggleState) -> KaggleState:
 def debug(state: KaggleState) -> KaggleState:
     # TODO: save the code to a file, create a venvironment, and run it
     #  collect the run logs and errors
+    coder = CodeAgent(
+        model=model, working_dir=state.work_dir, console=console,
+        single_file=True,
+    )
+    debugger = DebugAgent(model=model, console=console)
     with console.status("MLE Debug Agent is executing and debugging the code..."):
         running_cmd = state.code_report.get('command')
         logs = execute_command(running_cmd)
-        debug_report = state.debugger.analyze_with_log(running_cmd, logs)
-        state.code_report = state.coder.debug(state.current_task, debug_report)
+        debug_report = debugger.analyze_with_log(running_cmd, logs)
+        state.code_report = coder.debug(state.current_task, debug_report)
     return state
 
 
@@ -221,7 +184,7 @@ def check_submission_file(state: KaggleState) -> KaggleState:
     return state
 
 
-@entrypoint()
+@entrypoint(checkpointer=MemorySaver())
 def kaggle_solver(inputs: dict) -> KaggleState:
     """Run the entire Kaggle workflow in functional‑API style."""
     # create initial state
@@ -229,11 +192,9 @@ def kaggle_solver(inputs: dict) -> KaggleState:
 
     # sequential pre‑coding steps
     for step_fn in (
-            resume_decision_node,
             overview_summary_node,
             advisor_report_node,
             plan_generation_node,
-            coder_read_requirement,
     ):
         state = step_fn(state).result()
 
@@ -252,8 +213,10 @@ def kaggle_solver(inputs: dict) -> KaggleState:
             state.debug_attempt += 1
 
     # finished
-    if state.console:
-        state.console.print("[bold green]Kaggle workflow completed![/bold green]")
+    if console:
+        console.print("[bold green]Kaggle workflow completed![/bold green]")
+
+    console.print(state)
     return state
 
 
@@ -268,4 +231,20 @@ if __name__ == "__main__":
         help="MLE Bench competition ID to run",
     )
     args = p.parse_args()
-    kaggle_solver.invoke(vars(args))
+
+    config = {
+        "configurable": {
+            "thread_id": str(uuid.uuid4())
+        },
+    }
+    console = Console()
+    try:
+        model = load_model(args.work_dir, args.model)
+    except Exception as e:
+        console.print(f"[bold red]Error loading model: {e}[/bold red]")
+        raise e
+    kaggle_solver.invoke(vars(args), config=config)
+
+    history = list(kaggle_solver.get_state_history(config))
+    for state in history:
+        console.print(state)
