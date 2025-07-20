@@ -25,27 +25,21 @@ kaggle_solver.invoke("/tmp/kaggle")
 from __future__ import annotations
 
 import os
+import platform
+import subprocess
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict
 
 from langgraph.checkpoint.memory import MemorySaver
 from rich.console import Console
 from rich.pretty import Pretty
-from rich.markdown import Markdown
 
 from langgraph.func import task, entrypoint
 
-from mle.cli import console
-from mle.function import execute_command
-from mle.model import load_model
-from mle.agents import (
-    GitHubSummaryAgent,
-    AdviseAgent,
-    PlanAgent,
-    CodeAgent,
-    DebugAgent,
-)
+from exp.utils import build_tree_dict, find_existing_venv, create_virtualenv
+from exp.agents import AdviseAgent, PlanAgent, CodeAgent
 
 from mlebench.registry import registry
 
@@ -61,13 +55,12 @@ class KaggleState:
     work_dir: str
     model: Any | None = None
 
-    # run‑time ---------------------------------------------------------------
-    resume_step: int | None = None
     # dataset and competition info -------------------------------------------
     competition_id: str | None = None
-    dataset_path: str | None = None
+    competition_type: str | None = None
+    dataset_path: Path | None = None
     description: str | None = None
-    ml_requirement: str | None = None
+    sample_submission: str = None
     # MLE agents' outputs ----------------------------------------------------
     advisor_report: str | None = None
     coding_plan: Dict[str, Any] | None = None
@@ -80,7 +73,6 @@ class KaggleState:
 
     # output files -----------------------------------------------------------
     submission: str = "submission.csv"
-    sample_submission: str = None
 
 
 # -----------------------------------------------------------------------------
@@ -96,92 +88,54 @@ def init_node(inputs: dict) -> KaggleState:
     # Load MLE Bench kaggle competition by id
     if competition := registry.get_competition(state.competition_id):
         state.dataset_path = competition.public_dir
+        state.competition_type = competition.competition_type
         state.description = competition.description
-        console.print(f"[bold green]Competition {state.competition_id} loaded successfully![/bold green]")
+        state.sample_submission = competition.sample_submission.as_posix()
+        console.log(f"[bold green]Competition {state.competition_id} loaded successfully![/bold green]")
     else:
         raise ValueError(
             f"Competition with ID '{state.competition_id}' not found in MLE Bench"
         )
 
+    state.model = inputs.get("model", None)
+
     return state
 
 
 @task
-def overview_summary_node(state: KaggleState) -> KaggleState:
-    summary = GitHubSummaryAgent(model, console=console)
-    state.ml_requirement = summary.kaggle_request_summarize(state.description)
-    return state
-
-
-@task
-def advisor_report_node(state: KaggleState) -> KaggleState:
-    requirements = state.ml_requirement + f"\nDataset path: {state.dataset_path}" \
-                   + f"\nSUBMISSION FILE PATH: {state.submission}\n"
-
-    advisor = AdviseAgent(model=model, working_dir=state.work_dir, console=console)
-    state.advisor_report = advisor.suggest(requirements)
-    print_in_box(
-        Markdown(state.advisor_report), console, title="MLE Advisor Report", color="blue"
-    )
-    return state
-
-
-@task
-def plan_generation_node(state: KaggleState) -> KaggleState:
-    planer = PlanAgent(model=model, working_dir=state.work_dir, console=console)
-    state.coding_plan = planer.plan(state.advisor_report)
-    print_in_box(
-        Pretty(state.coding_plan), console, title="MLE Coding Plan", color="purple"
-    )
-    return state
-
-
-@task
-def code_task_node(state: KaggleState) -> KaggleState:
-    coder = CodeAgent(
-        model=model, working_dir=state.work_dir, console=console,
-        single_file=True,
-    )
-    coder.read_requirement(state.advisor_report)
-    state.code_report = coder.code(state.current_task)
-    console.print(state.code_report)
-    return state
-
-
-@task
-def debug(state: KaggleState) -> KaggleState:
-    # TODO: save the code to a file, create a venvironment, and run it
-    #  collect the run logs and errors
-    coder = CodeAgent(
-        model=model, working_dir=state.work_dir, console=console,
-        single_file=True,
-    )
-    debugger = DebugAgent(model=model, console=console)
-    with console.status("MLE Debug Agent is executing and debugging the code..."):
-        running_cmd = state.code_report.get('command')
-        logs = execute_command(running_cmd)
-        debug_report = debugger.analyze_with_log(running_cmd, logs)
-        state.code_report = coder.debug(state.current_task, debug_report)
-    return state
-
-
-@task
-def check_submission_file(state: KaggleState) -> KaggleState:
-    if not os.path.exists(state.submission):
-        console.log(f"The submission file ({state.submission}) is not found. Please check the code.")
-        state.code_report = state.coder.debug(
-            state.current_task,
-            {
-                "status": "error",
-                "changes": [
-                    f"make sure the submission file is generated in {state.submission}",
-                    f"make sure the submission file is in the correct format. You can refer to the example "
-                    f"submission file: {state.sample_submission}"
-                ],
-                "suggestion": f"Please update the code related to generating the submission file."
-            }
-        )
-    return state
+def setup_environment(state: KaggleState) -> dict[str, Any]:
+    """
+    Set up the environment for the Kaggle competition.
+    This function can be extended to install dependencies, set up virtual environments, etc.
+    """
+    console.log(f"Setting up environment for {state.competition_id}...")
+    # List out the dataset structure, and each file content
+    dataset_structure = build_tree_dict(state.dataset_path)
+    # Set up a virtual environment at the working directory (if not exists)
+    if py_exe := find_existing_venv(state.work_dir):
+        console.log(f"Found existing virtual environment")
+    else:
+        console.log("No existing virtual environment found, creating...")
+        py_exe = create_virtualenv(cwd=state.work_dir)
+    console.log(f"Using Python executable: {py_exe}")
+    # Report the venv metadata
+    py_version = subprocess.check_output([py_exe, "--version"], text=True).strip()
+    console.log(f"Python version: {py_version}")
+    return {
+        "dataset_structure": dataset_structure,
+        "python_env": {
+            "executable": str(py_exe),
+            "version": py_version,
+        },
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "architecture": platform.architecture(),
+        },
+    }
 
 
 @entrypoint(checkpointer=MemorySaver())
@@ -189,34 +143,63 @@ def kaggle_solver(inputs: dict) -> KaggleState:
     """Run the entire Kaggle workflow in functional‑API style."""
     # create initial state
     state = init_node(inputs).result()
+    env_dict = setup_environment(state).result()
 
-    # sequential pre‑coding steps
-    for step_fn in (
-            overview_summary_node,
-            advisor_report_node,
-            plan_generation_node,
-    ):
-        state = step_fn(state).result()
+    # Create agents
+    advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=console)
+    planer = PlanAgent(model=state.model, working_dir=state.work_dir, console=console)
+    coder = CodeAgent(model=state.model, working_dir=state.work_dir, console=console)
 
+    advisor.set_environment(env_dict)
+    planer.set_environment(env_dict)
+
+    advisor_report = advisor.suggest(
+        competition_type=state.competition_type,
+        description=state.description,
+        submission=state.submission,
+        sample_submission=state.sample_submission,
+    ).result()
+    print_in_box(
+        Pretty(advisor_report), console, title="MLE Advisor Report", color="blue"
+    )
+
+    coding_plan = planer.plan(
+        advisor_report=advisor_report,
+        submission_file=state.submission,
+    ).result()
+    print_in_box(
+        Pretty(coding_plan), console, title="MLE Coding Plan", color="purple"
+    )
+
+    coder.setup(
+        env=env_dict,
+        problem=advisor_report,
+        plan=coding_plan,
+    )
     # coding plan loop
-    while state.coding_plan and (tasks := state.coding_plan.get("tasks")):
-        state.current_task = tasks.pop(0)
-        state = code_task_node(state).result()
-        while True:
-            if state.debug_attempt > state.debug_max_attempt:
-                console.log(
-                    f"Debug the code failed with max {state.debug_max_attempt} attempts. Please check the code manually."
-                )
-                break
-
-            state = debug(state).result()
-            state.debug_attempt += 1
+    while tasks := coding_plan.get("tasks"):
+        current_task = tasks.pop(0)
+        code_report = coder.code(
+            task=current_task,
+        ).result()
+        print_in_box(
+            Pretty(code_report), console, title="MLE Code Report", color="yellow"
+        )
+        # Note: disable debugging for now
+        # while True:
+        #     if state.debug_attempt > state.debug_max_attempt:
+        #         console.log(
+        #             f"Debug the code failed with max {state.debug_max_attempt} attempts. Please check the code manually."
+        #         )
+        #         break
+        #
+        #     state = debug(state).result()
+        #     state.debug_attempt += 1
 
     # finished
     if console:
         console.print("[bold green]Kaggle workflow completed![/bold green]")
 
-    console.print(state)
     return state
 
 
@@ -225,7 +208,7 @@ if __name__ == "__main__":
 
     p = argparse.ArgumentParser(description="Run Kaggle workflow (functional API)")
     p.add_argument("work_dir")
-    p.add_argument("--model", default='Qwen/Qwen2.5-1.5B-Instruct')
+    p.add_argument("--model", default='Qwen/Qwen3-8B-AWQ',)
     p.add_argument(
         "--competition", "-c",
         help="MLE Bench competition ID to run",
@@ -238,13 +221,4 @@ if __name__ == "__main__":
         },
     }
     console = Console()
-    try:
-        model = load_model(args.work_dir, args.model)
-    except Exception as e:
-        console.print(f"[bold red]Error loading model: {e}[/bold red]")
-        raise e
     kaggle_solver.invoke(vars(args), config=config)
-
-    history = list(kaggle_solver.get_state_history(config))
-    for state in history:
-        console.print(state)
