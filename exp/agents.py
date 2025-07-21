@@ -1,9 +1,14 @@
 import json
 import textwrap
+from typing import TypedDict, Annotated
 
 from jinja2 import Template
-from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage
-from langgraph.func import task
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage
+from langchain_core.runnables import Runnable
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.func import task, entrypoint
+from langgraph.prebuilt import ToolNode
 from rich.console import Console
 
 from exp.utils import get_vllm_with_tools
@@ -37,6 +42,9 @@ ADVISER_SYSTEM_PROMPT = Template(
         {{ "- You should also use the function `web_search` to search for articles, papers, or tutorials related to the
          task/model/algorithm/metric to help you decide which one to use.  " if config_data.get('search_key') else "" }}
          
+        You are working with the following environment: 
+        {{ env | tojson(indent=2) }}
+         
         JSON Output Format:
         {
             "task":"xxxxx",
@@ -53,17 +61,19 @@ ADVISER_SYSTEM_PROMPT = Template(
     )
 )
 
-ADVISOR_PROMPT = Template(textwrap.dedent(
-    """
-    Kaggle Challenge for {{ competition_type }} competition
-    ---
-    {{ description }}
-    ---
-    Submission file: {{ submission_file }}
-    ---
-    Sample submission file: {{ sample_submission }}
-    """.strip()
-))
+ADVISOR_PROMPT = Template(
+    textwrap.dedent(
+        """
+        Kaggle Challenge for {{ competition_type }} competition
+        ---
+        {{ description }}
+        ---
+        Submission file: {{ submission_file }}
+        ---
+        Sample submission file: {{ sample_submission }}
+        """.strip()
+    )
+)
 
 PLANNER_SYSTEM_PROMPT = Template(
     textwrap.dedent(
@@ -125,22 +135,25 @@ PLANNER_SYSTEM_PROMPT = Template(
     )
 )
 
-PLAN_PROMPT = Template(textwrap.dedent(
-    """
-    Advisor Report:
-    {{ advisor_report }}
-    Submission File: {{ submission_file }}
-    """.strip()
-))
+PLAN_PROMPT = Template(
+    textwrap.dedent(
+        """
+        Advisor Report:
+        {{ advisor_report }}
+        Submission File: {{ submission_file }}
+        """.strip()
+    )
+)
 
 CODER_SYSTEM_PROMPT = Template(
     textwrap.dedent(
         """
         You are a **Machine Learning Engineer** tasked with implementing a solution based on the provided requirements by the advisor.
         You will be given the whole project plan, and each task will be provided to you one by one.
-        Requirements: {{ problem }}
-        Implementation Plan: {{ plan }}
+        Requirements: {{ advisor_report | tojson(indent=2) }}
+        Implementation Plan: {{ plan | tojson(indent=2) }}
         Working Directory: {{ working_dir }}
+        Environment: {{ env | tojson(indent=2) }}
         
         Your task is to generate the complete, working Python code that implements the solution. Call the write_file, mkdir, and read_file function tools to inspect and generate the necessary files.
         IMPORTANT: 
@@ -171,77 +184,85 @@ CODE_PROMPT = Template(
 
 
 class AdviseAgent:
-    def __init__(self, model: str, working_dir='.', console=None):
+    console: Console = None
+    model: "Runnable[LanguageModelInput, BaseMessage]"
+    checkpointer = MemorySaver()
+
+    class State(TypedDict):
+        chat_history: list[BaseMessage]
+        env: dict
+        competition_type: str
+        description: str
+        submission_file: str
+        sample_submission_file: str
+
+    def __new__(cls, model_name: str, console=None):
         """
         AdviseAgent: the agent to suggest which machine learning task/model/dataset to use based on the user's
         requirements. The return of the agent is an instruction to the user to modify the code based on the logs and
         web search.
 
         Args:
-            model: the model to use.
+            model_name: the model to use.
             console: the console to use.
         """
-        self.report = None
-        self.model = get_vllm_with_tools(
-            model, [
+        cls.model = get_vllm_with_tools(
+            model_name, [
                 list_files,
                 preview_csv_data,
                 preview_zip_structure,
             ]
         )
-        self.chat_history = []
-        self.console = console or Console()
-        self.working_dir = working_dir
+        cls.console = console or Console()
+        return super().__new__(cls)
 
-        self.chat_history.append(
-            SystemMessage(
-                content=ADVISER_SYSTEM_PROMPT.render(config_data=dict())
-            )
-        )
-
-    @trace_component("advisor")
-    def set_environment(self, env: dict):
-        """
-        Set the environment for the advisor agent.
-        Args:
-            env: the environment to set.
-        """
-        self.chat_history.append(
-            HumanMessage(content="Current environment: " + json.dumps(env, indent=2))
-        )
-
+    @staticmethod
     @task
-    @trace_component("advisor")
-    def suggest(
-        self,
-        description: str,
-        competition_type: str,
-        submission_file: str,
-        sample_submission_file: str,
-    ):
+    def suggest(state: Annotated[State, "State of the agent"]) -> dict:
         """
         Handle the query from the model query response.
         Args:
-            requirement: the user requirement.
+            chat_history: the chat history of the agent.
+            description: the description of the competition.
+            competition_type: the type of the competition.
+            submission_file: the path to the submission file.
+            sample_submission_file: the path to the sample submission file.
         """
-        with self.console.status("MLE Advisor is thinking of the best strategy to help you..."):
-            self.chat_history.append(HumanMessage(
-                content=ADVISOR_PROMPT.render(
-                    competition_type=competition_type,
-                    description=description,
-                    submission_file=submission_file,
-                    sample_submission=sample_submission_file
+        with AdviseAgent.console.status("MLE Advisor is thinking of the best strategy to help you..."):
+            state['chat_history'].append(
+                HumanMessage(
+                    content=ADVISOR_PROMPT.render(
+                        competition_type=state['competition_type'],
+                        description=state['description'],
+                        submission_file=state['submission_file'],
+                        sample_submission=state['sample_submission_file']
+                    )
                 )
-            ))
-            message = self.model.invoke(self.chat_history)
+            )
+            message = AdviseAgent.model.invoke(state['chat_history'])
 
-            self.chat_history.append(message)
+            state['chat_history'].append(message)
             try:
                 suggestions = json.loads(message.content)
             except json.JSONDecodeError as e:
                 suggestions = clean_json_string(message.content)
 
         return suggestions
+
+    @staticmethod
+    @entrypoint(checkpointer=checkpointer)
+    def graph(state: Annotated[State, "State of the agent"]) -> dict:
+        """
+        Call the agent to get the suggestions.
+        Returns:
+            The suggestions from the agent.
+        """
+        state['chat_history'] = [
+            SystemMessage(
+                content=ADVISER_SYSTEM_PROMPT.render(config_data=dict(), env=state['env'])
+            )
+        ]
+        return AdviseAgent.suggest(state).result()
 
 
 class PlanAgent:
@@ -312,8 +333,21 @@ class PlanAgent:
 
 
 class CodeAgent:
+    model: "Runnable[LanguageModelInput, BaseMessage]"
+    console: Console = None
+    working_dir: str = '.'
+    chat_history: list[BaseMessage] = []
+    checkpointer = MemorySaver()
+    tool_node: ToolNode
 
-    def __init__(self, model_name, working_dir='.', console=None):
+    class State(TypedDict):
+        advisor_report: dict
+        plan: dict
+        task: str
+        description: str
+        env: dict
+
+    def __new__(cls, model_name, working_dir='.', console=None):
         """
         CodeAgent: the agent to solve the given coding problem by planning coding tasks, searching websites,
         and generating code snippets. It does not execute the code, only make use of built-in functions to provide
@@ -324,9 +358,7 @@ class CodeAgent:
             working_dir: the working directory.
             console: the console to use.
         """
-        self.model = get_vllm_with_tools(
-            model_name,
-            [
+        tools =             [
                 read_file,
                 create_file,
                 write_file,
@@ -336,52 +368,84 @@ class CodeAgent:
                 preview_zip_structure,
                 unzip_data,
             ]
-        )
-        self.chat_history = []
-        self.working_dir = working_dir
-        self.console = console or Console()
 
-    @trace_component("coder")
-    def setup(self, env, problem: dict, plan: dict):
-        """
-        Setup the coder agent with the environment, problem, and plan.
-        Args:
-            env: the environment to set.
-            problem: the problem to solve.
-            plan: the overall plan to follow.
-        """
-        self.chat_history.append(
-            SystemMessage(
-                content=CODER_SYSTEM_PROMPT.render(
-                    working_dir=self.working_dir,
-                    problem=json.dumps(problem, indent=2),
-                    plan=json.dumps(plan, indent=2)
-                )
-            )
-        )
-        self.chat_history.append(
-            HumanMessage(content="Current environment: " + json.dumps(env, indent=2))
-        )
+        cls.model = get_vllm_with_tools(model_name, tools)
+        cls.working_dir = working_dir
+        cls.console = console or Console()
+        cls.tool_node = ToolNode(tools)
+        return super().__new__(cls)
 
+    @staticmethod
     @task
-    @trace_component("coder")
-    def code(self, task_dict: dict):
+    def code(task: str, description: str, first_call=True) -> AIMessage:
         """
         Handle the query from the model query response.
         Args:
-            task_dict: the task dictionary.
+            task: the task to solve.
+            description: the description of the task.
+            first_call: whether this is the first call to the code task.
         """
 
-        with self.console.status(f"Coder is working on the task: {task_dict.get('task')}..."):
-            self.chat_history.append(
-                HumanMessage(CODE_PROMPT.render(
-                        task=task_dict.get('task'),
-                        description=task_dict.get('description')
-                ))
-            )
-            message = self.model.invoke(self.chat_history)
+        with CodeAgent.console.status(f"Coder is working on the task: {task}..."):
+            if first_call:
+                CodeAgent.chat_history.append(
+                    HumanMessage(
+                        CODE_PROMPT.render(
+                            task=task,
+                            description=description,
+                        )
+                    )
+                )
+            message = CodeAgent.model.invoke(CodeAgent.chat_history)
 
-            self.chat_history.append(message)
-            code_summary = clean_json_string(message.content)
-            code_summary.update({'task': task_dict.get('task'), 'task_description': task_dict.get('description')})
-        return code_summary
+            CodeAgent.chat_history.append(message)
+        return message
+
+    @staticmethod
+    @entrypoint(checkpointer=checkpointer)
+    def graph(state: State) -> dict:
+        """
+        Call the agent to get the code for the task.
+        Args:
+            state: the state of the agent containing the task and description.
+        Returns:
+            The code for the task.
+        """
+        # Set up the chat history with the system prompt if not already set
+        if len(CodeAgent.chat_history) == 0:
+            CodeAgent.chat_history.append(
+                SystemMessage(
+                    content=CODER_SYSTEM_PROMPT.render(
+                        working_dir=CodeAgent.working_dir,
+                        advisor_report=state['advisor_report'],
+                        plan=state['plan'],
+                        env=state['env'],
+                    )
+                )
+            )
+
+        try_times = 5
+        while try_times > 0:
+            message = CodeAgent.code(
+                task=state['task'],
+                description=state['description'],
+                first_call=(try_times == 5)
+            ).result()
+            try_times -= 1
+
+            if isinstance(message, AIMessage):
+                # If the message is an AIMessage, check if it need tool calls
+                if message.tool_calls:
+                    message = CodeAgent.tool_node.invoke({
+                        "messages": CodeAgent.chat_history[-1:],
+                    })
+                    CodeAgent.chat_history.extend(message['messages'])
+                else:
+                    # If no tool calls, return the message
+                    CodeAgent.chat_history.append(message)
+                    break
+            else:
+                break
+
+        CodeAgent.console.print(CodeAgent.chat_history)
+        return message

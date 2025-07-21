@@ -146,19 +146,21 @@ def kaggle_solver(inputs: dict) -> KaggleState:
     env_dict = setup_environment(state).result()
 
     # Create agents
-    advisor = AdviseAgent(model=state.model, working_dir=state.work_dir, console=console)
+    advisor = AdviseAgent(model_name=state.model, console=console)
     planer = PlanAgent(model=state.model, working_dir=state.work_dir, console=console)
-    coder = CodeAgent(model=state.model, working_dir=state.work_dir, console=console)
+    coder = CodeAgent(model_name=state.model, working_dir=state.work_dir, console=console)
 
-    advisor.set_environment(env_dict)
     planer.set_environment(env_dict)
 
-    advisor_report = advisor.suggest(
-        competition_type=state.competition_type,
-        description=state.description,
-        submission=state.submission,
-        sample_submission=state.sample_submission,
-    ).result()
+    advisor_report = advisor.graph.invoke(
+        advisor.State(
+            env=env_dict,
+            competition_type=state.competition_type,
+            description=state.description,
+            submission_file=state.sample_submission,
+            sample_submission_file=state.sample_submission,
+        )
+    )
     print_in_box(
         Pretty(advisor_report), console, title="MLE Advisor Report", color="blue"
     )
@@ -171,17 +173,18 @@ def kaggle_solver(inputs: dict) -> KaggleState:
         Pretty(coding_plan), console, title="MLE Coding Plan", color="purple"
     )
 
-    coder.setup(
-        env=env_dict,
-        problem=advisor_report,
-        plan=coding_plan,
-    )
     # coding plan loop
     while tasks := coding_plan.get("tasks"):
         current_task = tasks.pop(0)
-        code_report = coder.code(
-            task=current_task,
-        ).result()
+        code_report = coder.graph.invoke(
+            CodeAgent.State(
+                task=current_task.get("task", ""),
+                description=current_task.get("description", ""),
+                advisor_report=advisor_report,
+                plan=coding_plan,
+                env=env_dict,
+            ),
+        )
         print_in_box(
             Pretty(code_report), console, title="MLE Code Report", color="yellow"
         )
@@ -208,7 +211,7 @@ if __name__ == "__main__":
 
     p = argparse.ArgumentParser(description="Run Kaggle workflow (functional API)")
     p.add_argument("work_dir")
-    p.add_argument("--model", default='Qwen/Qwen3-8B-AWQ',)
+    p.add_argument("--model", default='Qwen/Qwen3-8B-AWQ', )
     p.add_argument(
         "--competition", "-c",
         help="MLE Bench competition ID to run",
