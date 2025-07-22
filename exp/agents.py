@@ -4,16 +4,16 @@ from typing import TypedDict, Annotated
 
 from jinja2 import Template
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage
+from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage, ToolCall
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.func import task, entrypoint
 from langgraph.prebuilt import ToolNode
 from rich.console import Console
 
-from exp.utils import get_vllm_with_tools
+from exp.utils import get_vllm_with_tools, safe_fileio
 from mle.function import (
-    read_file, create_file, write_file, list_files,
+    read_file, create_file, list_files,
     create_directory, preview_csv_data, preview_zip_structure, unzip_data
 )
 from mle.utils import clean_json_string
@@ -149,37 +149,50 @@ CODER_SYSTEM_PROMPT = Template(
     textwrap.dedent(
         """
         You are a **Machine Learning Engineer** tasked with implementing a solution based on the provided requirements by the advisor.
-        You will be given the whole project plan, and each task will be provided to you one by one.
         Requirements: {{ advisor_report | tojson(indent=2) }}
-        Implementation Plan: {{ plan | tojson(indent=2) }}
         Working Directory: {{ working_dir }}
         Environment: {{ env | tojson(indent=2) }}
         
-        Your task is to generate the complete, working Python code that implements the solution. Call the write_file, mkdir, and read_file function tools to inspect and generate the necessary files.
-        IMPORTANT: 
-        1. Generate a single file `solution.py` that contains all the code for the solution, including imports, constants, functions, classes, main guard (`if __name__ == "__main__":`), argument parsing (if needed), execution logic, and docstrings.
-        Focus on:
+        Your task is to generate the complete, working Python code. Focus points to consider:
         1. Clean, readable code
         2. Proper data handling
         3. Model implementation
         4. Training and evaluation logic
         5. Kaggle submission format
-        
-        After finalizing the code, you will call the `create_file` function to save the code to `solution.py`
-        After the tool calling result is given back, you should also provide the dependencies required to run the code and the command to run the code in a JSON format:
-        {
-            "dependency": ["pkg1", "pkg2", "..."],
-            "command": "python solution.py"
-        }
         """.strip()
     )
 )
 
 CODE_PROMPT = Template(
-    """
-    ## Task: {{ task }}
-    {{ description }}
-    """
+    textwrap.dedent(
+        """
+        Implement Python code to solve the following task:
+        ## Task: {{ task }}
+        {{ description }}
+        
+        Make sure to follow the requirements and provide the code in a single Python file. Call any necessary tools to inspect the data.
+        Once ready, call the ` create_file ` tool to save the code.
+        
+        The code should include:
+        1. A single file `solution.py` that contains all the code for the solution, including imports, constants, functions, classes, main guard (`if __name__ == "__main__":`), argument parsing (if needed), execution logic, and docstrings.
+        2. Overwrite existing code; do not supply diffs or partial patches.
+        """.strip()
+    )
+)
+
+CODER_DEPS_PROMPT = Template(
+    textwrap.dedent(
+        """
+        Look at the latest created code in the chat history and analyze the dependencies required to run the code.
+        Providing the dependencies required and the command to run the code in a JSON format.
+        Example (for JSON schema illustration only):
+        {
+            "dependency": ["pkg1", "pkg2", "..."],
+            "command": "python solution.py",
+            "entryfile": "solution.py"
+        }
+        """.strip()
+    )
 )
 
 
@@ -342,7 +355,6 @@ class CodeAgent:
 
     class State(TypedDict):
         advisor_report: dict
-        plan: dict
         task: str
         description: str
         env: dict
@@ -358,16 +370,15 @@ class CodeAgent:
             working_dir: the working directory.
             console: the console to use.
         """
-        tools =             [
-                read_file,
-                create_file,
-                write_file,
-                list_files,
-                create_directory,
-                preview_csv_data,
-                preview_zip_structure,
-                unzip_data,
-            ]
+        tools = [
+            safe_fileio(working_dir)(read_file),
+            safe_fileio(working_dir, path_params=["path"])(create_file),
+            safe_fileio(working_dir)(list_files),
+            safe_fileio(working_dir, path_params=["path"])(create_directory),
+            safe_fileio(working_dir, path_params=["path"])(preview_csv_data),
+            safe_fileio(working_dir, path_params=["path"])(preview_zip_structure),
+            safe_fileio(working_dir, path_params=["extract_path"])(unzip_data),
+        ]
 
         cls.model = get_vllm_with_tools(model_name, tools)
         cls.working_dir = working_dir
@@ -377,7 +388,22 @@ class CodeAgent:
 
     @staticmethod
     @task
-    def code(task: str, description: str, first_call=True) -> AIMessage:
+    def setup(advisor_report: dict, env: dict):
+        # Set up the chat history with the system prompt if not already set
+        if len(CodeAgent.chat_history) == 0:
+            CodeAgent.chat_history.append(
+                SystemMessage(
+                    content=CODER_SYSTEM_PROMPT.render(
+                        working_dir=CodeAgent.working_dir,
+                        advisor_report=advisor_report,
+                        env=env,
+                    )
+                )
+            )
+
+    @staticmethod
+    @task
+    def code(task: str, description: str, first_call=True) -> AIMessage | dict:
         """
         Handle the query from the model query response.
         Args:
@@ -396,10 +422,29 @@ class CodeAgent:
                         )
                     )
                 )
-            message = CodeAgent.model.invoke(CodeAgent.chat_history)
+            message: AIMessage = CodeAgent.model.invoke(CodeAgent.chat_history)
 
             CodeAgent.chat_history.append(message)
-        return message
+            return message
+
+    @staticmethod
+    @task
+    def deps() -> dict:
+        """
+        Get the dependencies required to run the code and the command to run the code.
+        Returns:
+            A dictionary containing the dependencies and the command to run the code.
+        """
+        CodeAgent.chat_history.append(
+            HumanMessage(content=CODER_DEPS_PROMPT.render())
+        )
+        message = CodeAgent.model.invoke(CodeAgent.chat_history)
+
+        CodeAgent.chat_history.append(message)
+        try:
+            return json.loads(message.content)
+        except json.JSONDecodeError as e:
+            return clean_json_string(message.content)
 
     @staticmethod
     @entrypoint(checkpointer=checkpointer)
@@ -411,18 +456,7 @@ class CodeAgent:
         Returns:
             The code for the task.
         """
-        # Set up the chat history with the system prompt if not already set
-        if len(CodeAgent.chat_history) == 0:
-            CodeAgent.chat_history.append(
-                SystemMessage(
-                    content=CODER_SYSTEM_PROMPT.render(
-                        working_dir=CodeAgent.working_dir,
-                        advisor_report=state['advisor_report'],
-                        plan=state['plan'],
-                        env=state['env'],
-                    )
-                )
-            )
+        CodeAgent.setup(state['advisor_report'], state['env'])
 
         try_times = 5
         while try_times > 0:
@@ -432,20 +466,28 @@ class CodeAgent:
                 first_call=(try_times == 5)
             ).result()
             try_times -= 1
-
             if isinstance(message, AIMessage):
-                # If the message is an AIMessage, check if it need tool calls
                 if message.tool_calls:
-                    message = CodeAgent.tool_node.invoke({
-                        "messages": CodeAgent.chat_history[-1:],
-                    })
+                    CodeAgent.console.print(f"Calling tools {[tool['name'] for tool in message.tool_calls]}")
+                    message = CodeAgent.tool_node.invoke(
+                        {
+                            "messages": [message],
+                        }
+                    )
                     CodeAgent.chat_history.extend(message['messages'])
+
+                    # If the tool `create_file` succeeded, break the loop
+                    if any(
+                        isinstance(msg, ToolMessage) and msg.name == "create_file" and
+                        msg.content and "error" not in msg.content.lower()
+                        for msg in message['messages']
+                    ):
+                        break
                 else:
-                    # If no tool calls, return the message
-                    CodeAgent.chat_history.append(message)
                     break
             else:
                 break
 
-        CodeAgent.console.print(CodeAgent.chat_history)
-        return message
+        # Check the dependencies and command to run the code
+        deps = CodeAgent.deps().result()
+        return deps

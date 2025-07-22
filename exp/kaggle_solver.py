@@ -43,6 +43,7 @@ from exp.agents import AdviseAgent, PlanAgent, CodeAgent
 
 from mlebench.registry import registry
 
+from mle.function import read_file
 from mle.utils import print_in_box
 
 

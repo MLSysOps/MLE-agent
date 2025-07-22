@@ -4,15 +4,19 @@ Author: Li Yuanming
 Email: yuanmingleee@gmail.com
 Date: Jul 12, 2025
 """
+import inspect
 import logging
 import mimetypes
 import os
 import random
+import tempfile
 import venv
 import zipfile
 from collections import defaultdict
+from functools import wraps
 from io import StringIO
 from pathlib import Path
+from typing import Callable, Any
 
 import pandas as pd
 from langchain.chat_models import init_chat_model
@@ -223,3 +227,50 @@ def create_virtualenv(cwd='.', path='.venv'):
     builder = venv.EnvBuilder(with_pip=True)
     builder.create(venv_path)
     return venv_path.absolute() / 'bin' / 'python' if os.name != 'nt' else venv_path / 'Scripts' / 'python.exe'
+
+
+
+def safe_fileio(working_dir: str, path_params: str | list[str] | None = None) -> Callable:
+    working_dir = Path(working_dir).resolve()
+    temp_dir = Path(tempfile.gettempdir()).resolve()
+
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            sig = inspect.signature(func)
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+
+            # Validate and rewrite specified path parameters
+            if isinstance(path_params, str):
+                path_params_ = [path_params]
+            else:
+                path_params_ = path_params or []
+            for param in path_params_:
+                if param in bound.arguments:
+                    original = bound.arguments[param]
+                    if original is None:
+                        continue
+                    if not isinstance(original, (str, Path)):
+                        raise TypeError(f"Expected str or Path for '{param}', got {type(original)}")
+                    if not Path(original).is_absolute():
+                        abs_path = (working_dir / original).resolve()
+                    else:
+                        abs_path = Path(original).resolve()
+                    if not (
+                        str(abs_path).startswith(str(working_dir)) or
+                        str(abs_path).startswith(str(temp_dir))
+                    ):
+                        raise PermissionError(f"Access denied: {abs_path} is outside allowed directories")
+                    bound.arguments[param] = abs_path
+
+            # Change CWD temporarily
+            prev_cwd = os.getcwd()
+            os.chdir(working_dir)
+            try:
+                return func(*bound.args, **bound.kwargs)
+            finally:
+                os.chdir(prev_cwd)
+
+        return wrapper
+    return decorator
