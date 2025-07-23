@@ -87,8 +87,12 @@ PLANNER_SYSTEM_PROMPT = Template(
         * Include minimal but high‑impact feature engineering and model ensembling steps (e.g., Deep Model, LightGBM + optional secondary model).
         * Include saving of out-of-fold predictions (if useful) and final `submission.csv`.
         * Avoid extraneous theory—just actionable steps.
+        ---
+        Current Environment:
+        {{ env | tojson(indent=2) }}
         
-        # Output JSON Schema
+        ---
+        ### Output JSON Schema
         Each task object must have:
           - `task`: short imperative label.
           - `description`: crisp bullet-like instructions (can contain semicolons) telling the coder exactly what to implement.
@@ -101,7 +105,7 @@ PLANNER_SYSTEM_PROMPT = Template(
         }
         ```
         
-        # Example (Illustrative Only)
+        ### Example (Illustrative Only)
         ```json
         {
           "tasks": [
@@ -138,9 +142,12 @@ PLANNER_SYSTEM_PROMPT = Template(
 PLAN_PROMPT = Template(
     textwrap.dedent(
         """
-        Advisor Report:
-        {{ advisor_report }}
-        Submission File: {{ submission_file }}
+        Advise the coding tasks based on the following requirements:
+        {{ advisor_report | tojson(indent=2) }}
+        ---
+        Refer to the dataset structure preview on the submission file and example submission file, below are their paths:
+        Submission file: {{ submission_file }}
+        Sample submission file: {{ sample_submission_file }}
         """.strip()
     )
 )
@@ -148,17 +155,35 @@ PLAN_PROMPT = Template(
 CODER_SYSTEM_PROMPT = Template(
     textwrap.dedent(
         """
-        You are a **Machine Learning Engineer** tasked with implementing a solution based on the provided requirements by the advisor.
-        Requirements: {{ advisor_report | tojson(indent=2) }}
-        Working Directory: {{ working_dir }}
-        Environment: {{ env | tojson(indent=2) }}
+        You are a **Machine Learning Engineer** executing SMALL, ORDERED tasks.
         
-        Your task is to generate the complete, working Python code. Focus points to consider:
-        1. Clean, readable code
-        2. Proper data handling
-        3. Model implementation
-        4. Training and evaluation logic
-        5. Kaggle submission format
+        ### Context
+        - advisor_report: {{ advisor_report | tojson(indent=2) }}
+        - working_dir: {{ working_dir }}
+        - env: {{ env | tojson(indent=2) }}
+        
+        ### GOLDEN RULE
+        **Implement ONLY what the "Current Task" asks for.**  
+        Do NOT add future pipeline pieces unless the task explicitly says to finalize the whole solution.
+        
+        ### FILE CONTRACT
+        - All code must live in ONE file: `solution.py`.
+        - Every time you modify code, you must output the **entire final content** of `solution.py` (no diffs/patches).
+        - Always end your response with exactly ONE `create_file` tool call to write/overwrite `solution.py`. Nothing after that call.
+        
+        ### TOOL USAGE
+        - Use any inspection tools before guessing (e.g., to view data/file tree).
+        - But the final step is always the `create_file` call.
+        
+        ### OUTPUT PROCEDURE
+        1. **THINK**: Briefly state what you will do (≤3 bullet points).
+        2. **INSPECT**: If needed, use tools to inspect data/files.
+        3. **CODE**: Write the code for the task in `solution.py`.
+        4. **TOOL CALL**: Always end with a `create_file` tool call to write the code.
+        
+        ### SAFETY RAILS
+        - If the task is too broad or conflicts with the Golden Rule, state the issue and request clarification.
+        - ≤ 100 LOC per task unless the task says to “FINALIZE”, “FULL SOLUTION” etc.
         """.strip()
     )
 )
@@ -166,16 +191,11 @@ CODER_SYSTEM_PROMPT = Template(
 CODE_PROMPT = Template(
     textwrap.dedent(
         """
-        Implement Python code to solve the following task:
-        ## Task: {{ task }}
+        Current Task:
+        {{ task }}
         {{ description }}
         
-        Make sure to follow the requirements and provide the code in a single Python file. Call any necessary tools to inspect the data.
-        Once ready, call the ` create_file ` tool to save the code.
-        
-        The code should include:
-        1. A single file `solution.py` that contains all the code for the solution, including imports, constants, functions, classes, main guard (`if __name__ == "__main__":`), argument parsing (if needed), execution logic, and docstrings.
-        2. Overwrite existing code; do not supply diffs or partial patches.
+        (Remember: Only do what's here.)
         """.strip()
     )
 )
@@ -279,8 +299,19 @@ class AdviseAgent:
 
 
 class PlanAgent:
+    model: "Runnable[LanguageModelInput, BaseMessage]"
+    console: Console = None
+    working_dir: str = '.'
+    chat_history: list[BaseMessage] = []
+    checkpointer = MemorySaver()
 
-    def __init__(self, model, working_dir='.', console=None):
+    class State(TypedDict):
+        advisor_report: dict
+        submission_file: str
+        sample_submission_file: str
+        env: dict
+
+    def __new__(cls, model_name, working_dir='.', console=None):
         """
         PlanAgent: the agent to plan the machine learning project. By receiving the user's requirements, the agent will
         first analyze the requirements and ask the user to provide more details if necessary. Then the agent will
@@ -290,59 +321,80 @@ class PlanAgent:
         model, dataset, and evaluation metrics to use.
 
         Args:
-            model: the model to use.
+            model_name: the model name to use.
+            working_dir: the working directory.
+            console: the console to use.
         """
-        self.console = console or Console()
-        self.working_dir = working_dir
-        self.model = model
-        self.chat_history = []
-        self.chat_history.append(
-            SystemMessage(
-                content=PLANNER_SYSTEM_PROMPT.render(config_data=dict())
-            )
-        )
+        cls.model = get_vllm_with_tools(model_name, [])
+        cls.working_dir = working_dir
+        cls.console = console or Console()
+        return super().__new__(cls)
 
-    @trace_component("planner")
-    def set_environment(self, env: dict):
+    @staticmethod
+    @task
+    def setup(env: dict):
         """
         Set the environment for the planner agent.
         Args:
             env: the environment to set.
         """
-        self.chat_history.append(
-            HumanMessage(content="Current environment: " + json.dumps(env, indent=2))
-        )
+        if len(PlanAgent.chat_history) == 0:
+            PlanAgent.chat_history.append(
+                SystemMessage(
+                    content=PLANNER_SYSTEM_PROMPT.render(config_data=dict(), env=env)
+                )
+            )
 
+    @staticmethod
     @task
-    @trace_component("planner")
     def plan(
-        self,
         advisor_report: dict,
         submission_file: str,
+        sample_submission_file: str
     ):
         """
         Handle the query from the model query response.
         Args:
             advisor_report: the report from the advisor agent.
             submission_file: the path to the submission file.
+            sample_submission_file: the path to the sample submission file.
         """
-        with self.console.status("MLE Planner is planning the coding tasks..."):
-            self.chat_history.append(
+        with PlanAgent.console.status("MLE Planner is planning the coding tasks..."):
+            PlanAgent.chat_history.append(
                 HumanMessage(
                     content=PLAN_PROMPT.render(
-                        description=json.dumps(advisor_report, indent=2),
+                        advisor_report=advisor_report,
                         submission_file=submission_file,
+                        sample_submission_file=sample_submission_file
                     )
                 )
             )
-            message = self.model.invoke(self.chat_history)
+            message = PlanAgent.model.invoke(PlanAgent.chat_history)
 
-            self.chat_history.append(message)
-
+            PlanAgent.chat_history.append(message)
         try:
             return json.loads(message.content)
         except json.JSONDecodeError as e:
             return clean_json_string(message.content)
+
+    @staticmethod
+    @entrypoint(checkpointer=checkpointer)
+    def graph(state: State) -> dict:
+        """
+        Call the agent to get the plan for the task.
+        Args:
+            state: the state of the agent containing the task and description.
+        Returns:
+            The plan for the task.
+        """
+        # Set up the chat history with the system prompt if not already set
+        PlanAgent.setup(state['env'])
+
+        return PlanAgent.plan(
+            advisor_report=state['advisor_report'],
+            submission_file=state['submission_file'],
+            sample_submission_file=state['sample_submission_file']
+        ).result()
 
 
 class CodeAgent:

@@ -25,7 +25,6 @@ kaggle_solver.invoke("/tmp/kaggle")
 from __future__ import annotations
 
 import os
-import platform
 import subprocess
 import uuid
 from dataclasses import dataclass
@@ -37,6 +36,7 @@ from rich.console import Console
 from rich.pretty import Pretty
 
 from langgraph.func import task, entrypoint
+from rich.syntax import Syntax
 
 from exp.utils import build_tree_dict, find_existing_venv, create_virtualenv
 from exp.agents import AdviseAgent, PlanAgent, CodeAgent
@@ -123,18 +123,11 @@ def setup_environment(state: KaggleState) -> dict[str, Any]:
     py_version = subprocess.check_output([py_exe, "--version"], text=True).strip()
     console.log(f"Python version: {py_version}")
     return {
+        "dataset_path": str(state.dataset_path),
         "dataset_structure": dataset_structure,
         "python_env": {
             "executable": str(py_exe),
             "version": py_version,
-        },
-        "platform": {
-            "system": platform.system(),
-            "release": platform.release(),
-            "version": platform.version(),
-            "machine": platform.machine(),
-            "processor": platform.processor(),
-            "architecture": platform.architecture(),
         },
     }
 
@@ -148,10 +141,8 @@ def kaggle_solver(inputs: dict) -> KaggleState:
 
     # Create agents
     advisor = AdviseAgent(model_name=state.model, console=console)
-    planer = PlanAgent(model=state.model, working_dir=state.work_dir, console=console)
+    planer = PlanAgent(model_name=state.model, working_dir=state.work_dir, console=console)
     coder = CodeAgent(model_name=state.model, working_dir=state.work_dir, console=console)
-
-    planer.set_environment(env_dict)
 
     advisor_report = advisor.graph.invoke(
         advisor.State(
@@ -166,10 +157,14 @@ def kaggle_solver(inputs: dict) -> KaggleState:
         Pretty(advisor_report), console, title="MLE Advisor Report", color="blue"
     )
 
-    coding_plan = planer.plan(
-        advisor_report=advisor_report,
-        submission_file=state.submission,
-    ).result()
+    coding_plan = planer.graph.invoke(
+        planer.State(
+            advisor_report=advisor_report,
+            env=env_dict,
+            submission_file=state.sample_submission,
+            sample_submission_file=state.sample_submission,
+        )
+    )
     print_in_box(
         Pretty(coding_plan), console, title="MLE Coding Plan", color="purple"
     )
@@ -189,6 +184,14 @@ def kaggle_solver(inputs: dict) -> KaggleState:
         print_in_box(
             Pretty(code_report), console, title="MLE Code Report", color="yellow"
         )
+        # Print the code
+        console.log(f"Generated code for task: {current_task.get('task', '')}")
+        if (python_file := code_report.get("entryfile", None)) is not None:
+            python_code = read_file(
+                Path(state.work_dir).absolute() / python_file,
+            )
+            console.print(Syntax(python_code, "python", word_wrap=True))
+
         # Note: disable debugging for now
         # while True:
         #     if state.debug_attempt > state.debug_max_attempt:

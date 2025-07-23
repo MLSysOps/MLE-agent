@@ -4,6 +4,8 @@ Author: Li Yuanming
 Email: yuanmingleee@gmail.com
 Date: Jul 12, 2025
 """
+from __future__ import annotations
+
 import inspect
 import logging
 import mimetypes
@@ -77,7 +79,7 @@ def get_vllm_with_tools(model, tools, **kwargs):
     )
 
 
-def build_tree_dict(path: Path, max_files: int = 10) -> list:
+def build_tree_dict(path: Path, max_files: int = 10) -> dict:
     tree = dict()
     if path.is_dir():
         entries = sorted(path.iterdir())
