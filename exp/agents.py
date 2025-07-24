@@ -1,6 +1,7 @@
 import json
+import re
 import textwrap
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, cast
 
 from jinja2 import Template
 from langchain_core.language_models import LanguageModelInput
@@ -14,7 +15,7 @@ from rich.console import Console
 from exp.utils import get_vllm_with_tools, safe_fileio
 from mle.function import (
     read_file, create_file, list_files,
-    create_directory, preview_csv_data, preview_zip_structure, unzip_data
+    create_directory, preview_csv_data, preview_zip_structure, unzip_data, execute_command
 )
 from mle.utils import clean_json_string
 from mle.utils.component_memory import trace_component
@@ -41,10 +42,10 @@ ADVISER_SYSTEM_PROMPT = Template(
          MLFlow, W&B, etc. PyTorch is preferred for deep learning tasks.
         {{ "- You should also use the function `web_search` to search for articles, papers, or tutorials related to the
          task/model/algorithm/metric to help you decide which one to use.  " if config_data.get('search_key') else "" }}
-         
-        You are working with the following environment: 
+        
+        You are working with the following environment:
         {{ env | tojson(indent=2) }}
-         
+        
         JSON Output Format:
         {
             "task":"xxxxx",
@@ -105,7 +106,7 @@ PLANNER_SYSTEM_PROMPT = Template(
         }
         ```
         
-        ### Example (Illustrative Only)
+        `### Example (Illustrative Only)
         ```json
         {
           "tasks": [
@@ -163,7 +164,7 @@ CODER_SYSTEM_PROMPT = Template(
         - env: {{ env | tojson(indent=2) }}
         
         ### GOLDEN RULE
-        **Implement ONLY what the "Current Task" asks for.**  
+        **Implement ONLY what the "Current Task" asks for.**
         Do NOT add future pipeline pieces unless the task explicitly says to finalize the whole solution.
         
         ### FILE CONTRACT
@@ -455,7 +456,7 @@ class CodeAgent:
 
     @staticmethod
     @task
-    def code(task: str, description: str, first_call=True) -> AIMessage | dict:
+    def code(task: str, description: str, first_call=True) -> AIMessage:
         """
         Handle the query from the model query response.
         Args:
@@ -474,7 +475,7 @@ class CodeAgent:
                         )
                     )
                 )
-            message: AIMessage = CodeAgent.model.invoke(CodeAgent.chat_history)
+            message = cast(AIMessage, CodeAgent.model.invoke(CodeAgent.chat_history))
 
             CodeAgent.chat_history.append(message)
             return message
@@ -499,6 +500,55 @@ class CodeAgent:
             return clean_json_string(message.content)
 
     @staticmethod
+    @task
+    def verify_code(python_exec: str, dependency: list[str], command: str) -> dict:
+        """
+        Installs missing dependencies and runs the provided command using the venv.
+        """
+        working_dir = CodeAgent.working_dir
+        results = {}
+
+        # Step 1: Detect missing dependencies
+        missing_deps = []
+        for dep in dependency:
+            check_cmd = f'{python_exec} -c "import {dep}"'
+            check_result: dict = execute_command(check_cmd, raw=True)
+            CodeAgent.console.log(f"Checking dependency: [yellow]{dep}[/yellow]")
+            if check_result['exit_code'] != 0:
+                missing_deps.append(dep)
+
+        CodeAgent.console.print(f"Found missing dependencies: {missing_deps}", style="bold yellow")
+
+        # Step 2: Batch install if needed
+        if missing_deps:
+            install_cmd = f"{python_exec} -m pip install {' '.join(missing_deps)}"
+            install_result = execute_command(install_cmd, cwd=working_dir, raw=True)
+            CodeAgent.console.log(f"Executing command: [yellow]{install_cmd}[/yellow]")
+            results["install"] = {
+                "dependencies": missing_deps,
+                "exit_code": install_result["exit_code"],
+                "stdout": install_result["stdout"],
+                "stderr": install_result["stderr"],
+            }
+        else:
+            results["install"] = "all dependencies already installed"
+        CodeAgent.console.print(f"Installed: {results['install']}", style="bold green")
+
+        # Step 3: Run the main command
+        # Replace 'python' / 'python3' command world with the provided python_exec, use regex to ensure it works
+        command = re.sub(r'\bpython[3]?\b', python_exec, command)
+        run_result = execute_command(command, cwd=working_dir, raw=True)
+        CodeAgent.console.log(f"Executing command: [yellow]{command}[/yellow]")
+        results["execution"] = {
+            "exit_code": run_result["exit_code"],
+            "stdout": run_result["stdout"],
+            "stderr": run_result["stderr"],
+        }
+        CodeAgent.console.print(f"Executed command: {command}, return {run_result['exit_code']}", style="bold green")
+
+        return results
+
+    @staticmethod
     @entrypoint(checkpointer=checkpointer)
     def graph(state: State) -> dict:
         """
@@ -518,28 +568,37 @@ class CodeAgent:
                 first_call=(try_times == 5)
             ).result()
             try_times -= 1
-            if isinstance(message, AIMessage):
-                if message.tool_calls:
-                    CodeAgent.console.print(f"Calling tools {[tool['name'] for tool in message.tool_calls]}")
-                    message = CodeAgent.tool_node.invoke(
-                        {
-                            "messages": [message],
-                        }
-                    )
-                    CodeAgent.chat_history.extend(message['messages'])
+            if message.tool_calls:
+                CodeAgent.console.print(f"Calling tools {[tool['name'] for tool in message.tool_calls]}")
+                message = CodeAgent.tool_node.invoke(
+                    {
+                        "messages": [message],
+                    }
+                )
+                CodeAgent.chat_history.extend(message['messages'])
 
-                    # If the tool `create_file` succeeded, break the loop
-                    if any(
-                        isinstance(msg, ToolMessage) and msg.name == "create_file" and
-                        msg.content and "error" not in msg.content.lower()
-                        for msg in message['messages']
-                    ):
-                        break
-                else:
+                # If the tool `create_file` succeeded, break the loop
+                if any(
+                    isinstance(msg, ToolMessage) and msg.name == "create_file" and
+                    msg.content and "error" not in msg.content.lower()
+                    for msg in message['messages']
+                ):
                     break
             else:
                 break
 
         # Check the dependencies and command to run the code
         deps = CodeAgent.deps().result()
+
+        # Execute the code and check if successful
+        if deps.get("dependency") and deps.get("command"):
+            results = CodeAgent.verify_code(
+                python_exec=deps.get("python_exec", "python3"),
+                dependency=deps["dependency"],
+                command=deps["command"]
+            ).result()
+            deps["results"] = results
+        else:
+            CodeAgent.console.print("No dependencies or command found, skipping execution.", style="bold red")
+
         return deps
