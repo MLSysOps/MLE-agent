@@ -1,14 +1,11 @@
 import json
 import re
 import textwrap
-from typing import TypedDict, Annotated, cast
+from typing import TypedDict, cast
 
 from jinja2 import Template
-from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage
-from langchain_core.runnables import Runnable
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.func import task, entrypoint
 from langgraph.prebuilt import ToolNode
 from rich.console import Console
 
@@ -218,92 +215,87 @@ CODER_DEPS_PROMPT = Template(
 
 
 class AdviseAgent:
-    console: Console = None
-    model: "Runnable[LanguageModelInput, BaseMessage]"
     checkpointer = MemorySaver()
 
     class State(TypedDict):
-        chat_history: list[BaseMessage]
+        chat_history: list[BaseMessage]  # kept for backward-compat, not required anymore
         env: dict
         competition_type: str
         description: str
         submission_file: str
         sample_submission_file: str
 
-    def __new__(cls, model_name: str, console=None):
+    def __init__(self, model_name: str, console: Console | None = None):
         """
-        AdviseAgent: the agent to suggest which machine learning task/model/dataset to use based on the user's
-        requirements. The return of the agent is an instruction to the user to modify the code based on the logs and
-        web search.
+        AdviseAgent: suggests which ML task/model/dataset to use based on user's requirements.
+        Returns structured suggestions/instructions to the user.
+        """
+        tools = [
+            list_files,
+            preview_csv_data,
+            preview_zip_structure,
+        ]
+        self.model = get_vllm_with_tools(model_name, tools)
+        self.console = console or Console()
+        self.chat_history: list[BaseMessage] = []
 
-        Args:
-            model_name: the model to use.
-            console: the console to use.
+    @method_task
+    def setup(self, env: dict):
         """
-        cls.model = get_vllm_with_tools(
-            model_name, [
-                list_files,
-                preview_csv_data,
-                preview_zip_structure,
-            ]
-        )
-        cls.console = console or Console()
-        return super().__new__(cls)
+        Initialize the conversation with the system prompt, once.
+        """
+        if not self.chat_history:
+            self.chat_history.append(
+                SystemMessage(
+                    content=ADVISER_SYSTEM_PROMPT.render(config_data=dict(), env=env)
+                )
+            )
 
-    @staticmethod
-    @task
-    def suggest(state: Annotated[State, "State of the agent"]) -> dict:
+    @method_task
+    def suggest(
+        self,
+        competition_type: str,
+        description: str,
+        submission_file: str,
+        sample_submission_file: str,
+    ) -> dict:
         """
-        Handle the query from the model query response.
-        Args:
-            chat_history: the chat history of the agent.
-            description: the description of the competition.
-            competition_type: the type of the competition.
-            submission_file: the path to the submission file.
-            sample_submission_file: the path to the sample submission file.
+        Ask the advisor model for suggestions based on the provided context.
         """
-        with AdviseAgent.console.status("MLE Advisor is thinking of the best strategy to help you..."):
-            state['chat_history'].append(
+        with self.console.status("MLE Advisor is thinking of the best strategy to help you..."):
+            self.chat_history.append(
                 HumanMessage(
                     content=ADVISOR_PROMPT.render(
-                        competition_type=state['competition_type'],
-                        description=state['description'],
-                        submission_file=state['submission_file'],
-                        sample_submission=state['sample_submission_file']
+                        competition_type=competition_type,
+                        description=description,
+                        submission_file=submission_file,
+                        sample_submission=sample_submission_file,
                     )
                 )
             )
-            message = AdviseAgent.model.invoke(state['chat_history'])
+            message = self.model.invoke(self.chat_history)
+            self.chat_history.append(message)
 
-            state['chat_history'].append(message)
-            try:
-                suggestions = json.loads(message.content)
-            except json.JSONDecodeError as e:
-                suggestions = clean_json_string(message.content)
+        try:
+            return json.loads(message.content)
+        except json.JSONDecodeError:
+            return clean_json_string(message.content)
 
-        return suggestions
-
-    @staticmethod
-    @entrypoint(checkpointer=checkpointer)
-    def graph(state: Annotated[State, "State of the agent"]) -> dict:
+    @method_entrypoint(checkpointer=checkpointer)
+    def graph(self, state: State) -> dict:
         """
-        Call the agent to get the suggestions.
-        Returns:
-            The suggestions from the agent.
+        Orchestrate setup + suggestion and return advisor output.
         """
-        state['chat_history'] = [
-            SystemMessage(
-                content=ADVISER_SYSTEM_PROMPT.render(config_data=dict(), env=state['env'])
-            )
-        ]
-        return AdviseAgent.suggest(state).result()
+        self.setup(state["env"])
+        return self.suggest(
+            competition_type=state["competition_type"],
+            description=state["description"],
+            submission_file=state["submission_file"],
+            sample_submission_file=state["sample_submission_file"],
+        ).result()
 
 
 class PlanAgent:
-    model: "Runnable[LanguageModelInput, BaseMessage]"
-    console: Console = None
-    working_dir: str = '.'
-    chat_history: list[BaseMessage] = []
     checkpointer = MemorySaver()
 
     class State(TypedDict):
@@ -312,89 +304,65 @@ class PlanAgent:
         sample_submission_file: str
         env: dict
 
-    def __new__(cls, model_name, working_dir='.', console=None):
+    def __init__(self, model_name: str, working_dir: str = ".", console: Console | None = None):
         """
-        PlanAgent: the agent to plan the machine learning project. By receiving the user's requirements, the agent will
-        first analyze the requirements and ask the user to provide more details if necessary. Then the agent will
-        generate the project plan based on the requirements and the user's input.
+        PlanAgent: plans the ML project based on requirements and the advisor's report.
+        """
+        self.model = get_vllm_with_tools(model_name, [])
+        self.working_dir = working_dir
+        self.console = console or Console()
+        self.chat_history: list[BaseMessage] = []
 
-        The project plan will be sent to the advisor agent to provide suggestions on the best machine learning task,
-        model, dataset, and evaluation metrics to use.
-
-        Args:
-            model_name: the model name to use.
-            working_dir: the working directory.
-            console: the console to use.
+    @method_task
+    def setup(self, env: dict):
         """
-        cls.model = get_vllm_with_tools(model_name, [])
-        cls.working_dir = working_dir
-        cls.console = console or Console()
-        return super().__new__(cls)
-
-    @staticmethod
-    @task
-    def setup(env: dict):
+        Initialize the conversation with the planner system prompt, once.
         """
-        Set the environment for the planner agent.
-        Args:
-            env: the environment to set.
-        """
-        if len(PlanAgent.chat_history) == 0:
-            PlanAgent.chat_history.append(
+        if not self.chat_history:
+            self.chat_history.append(
                 SystemMessage(
                     content=PLANNER_SYSTEM_PROMPT.render(config_data=dict(), env=env)
                 )
             )
 
-    @staticmethod
-    @task
+    @method_task
     def plan(
+        self,
         advisor_report: dict,
         submission_file: str,
-        sample_submission_file: str
-    ):
+        sample_submission_file: str,
+    ) -> dict:
         """
-        Handle the query from the model query response.
-        Args:
-            advisor_report: the report from the advisor agent.
-            submission_file: the path to the submission file.
-            sample_submission_file: the path to the sample submission file.
+        Ask the planner model to generate the project plan.
         """
-        with PlanAgent.console.status("MLE Planner is planning the coding tasks..."):
-            PlanAgent.chat_history.append(
+        with self.console.status("MLE Planner is planning the coding tasks..."):
+            self.chat_history.append(
                 HumanMessage(
                     content=PLAN_PROMPT.render(
                         advisor_report=advisor_report,
                         submission_file=submission_file,
-                        sample_submission_file=sample_submission_file
+                        sample_submission_file=sample_submission_file,
                     )
                 )
             )
-            message = PlanAgent.model.invoke(PlanAgent.chat_history)
+            message = self.model.invoke(self.chat_history)
+            self.chat_history.append(message)
 
-            PlanAgent.chat_history.append(message)
         try:
             return json.loads(message.content)
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             return clean_json_string(message.content)
 
-    @staticmethod
-    @entrypoint(checkpointer=checkpointer)
-    def graph(state: State) -> dict:
+    @method_entrypoint(checkpointer=checkpointer)
+    def graph(self, state: State) -> dict:
         """
-        Call the agent to get the plan for the task.
-        Args:
-            state: the state of the agent containing the task and description.
-        Returns:
-            The plan for the task.
+        Orchestrate setup + planning and return the plan.
         """
-        # Set up the chat history with the system prompt if not already set
-        PlanAgent.setup(state['env'])
-
-        return PlanAgent.plan(
-            advisor_report=state['advisor_report'],
-            submission_file=state['submission_file'],
-            sample_submission_file=state['sample_submission_file']
+        self.setup(state["env"])
+        return self.plan(
+            advisor_report=state["advisor_report"],
+            submission_file=state["submission_file"],
+            sample_submission_file=state["sample_submission_file"],
         ).result()
 
 
@@ -548,14 +516,14 @@ class CodeAgent:
         Returns:
             The code for the task.
         """
-        CodeAgent.setup(state['advisor_report'], state['env'])
+        self.setup(state['advisor_report'], state['env'])
 
         try_times = 5
         while try_times > 0:
-            message = CodeAgent.code(
+            message = self.code(
                 task=state['task'],
                 description=state['description'],
-                first_call=(try_times == 5)
+                # first_call=(try_times == 5)
             ).result()
             try_times -= 1
             if message.tool_calls:

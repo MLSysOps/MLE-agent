@@ -9,7 +9,10 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable, Awaitable
 from inspect import Parameter, Signature
-from typing import TypeVar, Any, cast, TYPE_CHECKING
+from typing import TypeVar, Any, cast, overload, TYPE_CHECKING
+from weakref import WeakKeyDictionary
+
+from langgraph.pregel import Pregel
 from typing_extensions import ParamSpec, Concatenate
 
 from langgraph.func import task as _task, entrypoint as _entrypoint, TaskFunction
@@ -18,17 +21,15 @@ from langchain_core.runnables import RunnableConfig
 # ----------------- typing primitives -----------------
 S = TypeVar("S")  # your class (self)
 P = ParamSpec("P")  # params of the original method (excluding self)
-R = TypeVar("R", covariant=True)  # return type
+T = TypeVar("T", covariant=True)  # return type
 I = TypeVar("I")  # entry payload type
 O = TypeVar("O")  # entry output type
 
-_Method = Callable[Concatenate[S, P], R]
-_MethodA = Callable[Concatenate[S, P], Awaitable[R]]
 _Entry = Callable[[S, I, RunnableConfig], O]
 _EntryA = Callable[[S, I, RunnableConfig], Awaitable[O]]
 
 if TYPE_CHECKING:
-    from typing import Sequence, Unpack, overload
+    from typing import Sequence, Unpack
 
     from langgraph._typing import DeprecatedKwargs
     from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -70,6 +71,7 @@ def _copy_meta(dst: Callable[..., Any], src: Callable[..., Any]) -> None:
         except Exception:
             pass
 
+
 def _task_signature_of(fn: Callable[..., Any]) -> Signature:
     """
     Build a signature that:
@@ -90,50 +92,104 @@ def _task_signature_of(fn: Callable[..., Any]) -> Signature:
     return sig
 
 
-# ----------------- decorators -----------------
+@overload
 def method_task(
-    __func_or_none__: _Method[S, P, R] | _MethodA[S, P, R] | None = None,
     *,
-    config_key: str = "self",
     name: str | None = None,
     retry_policy: RetryPolicy | Sequence[RetryPolicy] | None = None,
     cache_policy: CachePolicy[Callable[P, str | bytes]] | None = None,
     **kwargs: Unpack[DeprecatedKwargs],
-) -> Callable[[_Method[S, P, R] | _MethodA[S, P, R]], TaskFunction[P, R]] \
-     | TaskFunction[P, R]:
+) -> Callable[
+    [Callable[P, Awaitable[T]] | Callable[P, T]],
+    TaskFunction[P, T],
+]: ...
+
+
+@overload
+def method_task(
+    __func_or_none__: Callable[P, Awaitable[T]] | Callable[P, T],
+) -> TaskFunction[P, T]: ...
+
+
+def method_task(
+    __func_or_none__: Callable[P, Awaitable[T]] | Callable[P, T] | None = None,
+    *,
+    name: str | None = None,
+    retry_policy: RetryPolicy | Sequence[RetryPolicy] | None = None,
+    cache_policy: CachePolicy[Callable[P, str | bytes]] | None = None,
+    **kwargs: Unpack[DeprecatedKwargs],
+) -> (
+    Callable[[Callable[P, Awaitable[T]] | Callable[P, T]], TaskFunction[P, T]]
+    | TaskFunction[P, T]
+):
     """
-    Decorator to turn an *instance method* into a langgraph.func.task.
-    self is fetched from config["configurable"][config_key].
+    Decorate an *instance method* into a `langgraph.func.task`.
+
+    Typing behavior:
+      - If decorating `def f(self, *args) -> R`, the attribute type becomes
+        `TaskFunction[P, R]`, so `obj.f(...).result()` is typed as `R`.
+    Runtime behavior:
+      - Binds `self` via the descriptor (`__get__`), not via `config`.
+      - Forwards `config` only if the method declared it.
+      - Synthesizes an adapter signature: original params + optional kw-only `config`.
     """
 
-    def _decorate(fn: _Method[S, P, R] | _MethodA[S, P, R]) -> TaskFunction[P, R]:
-        wants_config = _wants("config", fn)
+    class _MethodTaskDescriptor:
+        __slots__ = ("_fn", "_name", "_retry_policy", "_cache_policy", "_kwargs", "_cache")
 
-        def adapted(*args: P.args, config: RunnableConfig, **kw: P.kwargs):
-            self_obj = cast(S, config["configurable"][config_key])
-            if wants_config:
-                return fn(self_obj, *args, config, **kw)
-            else:
-                return fn(self_obj, *args, **kw)
+        def __init__(self, fn: Callable[P, T]) -> None:
+            self._fn = fn
+            self._name = name
+            self._retry_policy = retry_policy
+            self._cache_policy = cache_policy
+            self._kwargs = kwargs
+            self._cache: "WeakKeyDictionary[object, TaskFunction[Any, Any]]" = WeakKeyDictionary()
 
-        _copy_meta(adapted, fn)
-        _task_signature_of(adapted)
+        def __get__(
+            self,
+            obj: S | None,
+            objtype: type[Any] | None = None,
+        ) -> TaskFunction[P, T] | _MethodTaskDescriptor:
+            if obj is None:
+                return self
 
-        # Use the real @task to get a TaskFunction back, then cast its generics to ours.
-        # noinspection PyArgumentList
-        tf = _task(
-            name=name,
-            retry_policy=retry_policy,
-            cache_policy=cache_policy,
-            **kwargs,  # type: ignore[arg-type]
-        )(adapted)
+            cached = self._cache.get(obj)
+            if cached is not None:
+                return cast(TaskFunction[P, T], cached)
 
-        return cast(TaskFunction[P, R], tf)
+            fn = self._fn
+            wants_cfg = _wants("config", fn)
 
-    # Support both decorator styles: @method_task(...) and @method_task without parens
+            # Adapter that binds `self` and optionally passes through `config`
+            def adapted(*args: P.args, **kw: P.kwargs):
+                cfg = kw.pop("config", None)
+                if wants_cfg:
+                    kw["config"] = cfg
+                # Bind the instance
+                return cast(Callable[..., Any], fn)(obj, *args, **kw)
+
+            # Avoid functools.wraps; set a synthetic signature LangGraph can see
+            _copy_meta(adapted, fn)
+            adapted.__signature__ = _task_signature_of(fn)  # type: ignore[attr-defined]
+
+            # noinspection PyArgumentList
+            tf = _task(
+                name=self._name,
+                retry_policy=self._retry_policy,
+                cache_policy=self._cache_policy,
+                **self._kwargs,
+            )(adapted)
+
+            self._cache[obj] = tf
+            return cast(TaskFunction[P, T], tf)
+
+    def _decorate(fn: Callable[P, T] | Callable[P, Awaitable[T]]):
+        # Return the descriptor; the overloads above tell the checker that
+        # the final attribute type is TaskFunction[P, R].
+        return _MethodTaskDescriptor(fn)
+
     if __func_or_none__ is not None:
         return _decorate(__func_or_none__)
-
     return _decorate
 
 
@@ -157,10 +213,9 @@ class method_entrypoint:  # noqa: N801
         config_schema: "type[Any] | None" = None,
         cache_policy: "CachePolicy | None" = None,
         retry_policy: "RetryPolicy | Sequence[RetryPolicy] | None" = None,
-        config_key: str = "self",
         **kwargs: "Unpack[DeprecatedKwargs]",
     ) -> None:
-        self._config_key = config_key
+        self._fn: Callable[..., Any] | None = None
         self._inner = _entrypoint(
             checkpointer=checkpointer,
             store=store,
@@ -170,8 +225,47 @@ class method_entrypoint:  # noqa: N801
             retry_policy=retry_policy,
             **kwargs,
         )
+        self._cache: "WeakKeyDictionary[object, Pregel]" = WeakKeyDictionary()
 
     def __call__(self, fn: Callable[..., Any]):
+        self._fn = fn
+        return self
+
+    def __set_name__(self, owner: type[Any], name: str) -> None:
+        self._name_in_class = name
+
+    @overload
+    def __get__(
+        self,
+        instance: None,
+        owner: type[S] | None = None,
+    ) -> "method_entrypoint":
+        """
+        If called on the class itself, return the decorator.
+        """
+        ...
+
+    @overload
+    def __get__(
+        self,
+        instance: S,
+        owner: type[S] | None = None,
+    ) -> Pregel[S, I, O]:
+        """
+        If called on an instance, return the runnable for that instance.
+        """
+        ...
+
+    def __get__(self, obj: S | None, objtype: type[S] | None = None) -> Pregel[S, I, O] | "method_entrypoint":
+        if obj is None:
+            # If called on the class itself, return the decorator
+            return self
+
+        cached = self._cache.get(obj)
+        if cached is not None:
+            # If we already have a cached runnable for this class, return it
+            return cast(Pregel[S, I, O], cached)
+
         # First param (after self) is the workflow input
         # We keep our adapter's signature compatible with entrypoint:
         #   payload, *, store, writer, config, previous
@@ -184,20 +278,19 @@ class method_entrypoint:  # noqa: N801
             writer: StreamWriter | None = None,
             previous: Any = None,
         ) -> O | _entrypoint.final[Any, Any]:
-            # Recover self from config
-            self_obj = cast(S, config["configurable"][self._config_key])
-
             # Build kwargs only for what the user method declared
             kw = _kwargs_for_user_fn(
-                fn,
+                self._fn,
                 config=config,
                 store=store,
                 writer=writer,
                 previous=previous,
             )
-            return fn(self_obj, payload, **kw)
+            return self._fn(obj, payload, **kw)
 
         # Copy meta attrs from the original function to the adapted one
-        _copy_meta(adapted, fn)
+        _copy_meta(adapted, self._fn)
+        pregel = self._inner(adapted)
+        self._cache[obj] = pregel
 
-        return self._inner(adapted)
+        return pregel
