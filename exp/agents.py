@@ -5,20 +5,20 @@ from typing import TypedDict, Annotated, cast
 
 from jinja2 import Template
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage, ToolCall
+from langchain_core.messages import ToolMessage, HumanMessage, SystemMessage, BaseMessage, AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.func import task, entrypoint
 from langgraph.prebuilt import ToolNode
 from rich.console import Console
 
+from exp.decorators import method_task, method_entrypoint
 from exp.utils import get_vllm_with_tools, safe_fileio
 from mle.function import (
     read_file, create_file, list_files,
     create_directory, preview_csv_data, preview_zip_structure, unzip_data, execute_command
 )
 from mle.utils import clean_json_string
-from mle.utils.component_memory import trace_component
 
 ADVISER_SYSTEM_PROMPT = Template(
     textwrap.dedent(
@@ -399,12 +399,7 @@ class PlanAgent:
 
 
 class CodeAgent:
-    model: "Runnable[LanguageModelInput, BaseMessage]"
-    console: Console = None
-    working_dir: str = '.'
-    chat_history: list[BaseMessage] = []
     checkpointer = MemorySaver()
-    tool_node: ToolNode
 
     class State(TypedDict):
         advisor_report: dict
@@ -412,7 +407,7 @@ class CodeAgent:
         description: str
         env: dict
 
-    def __new__(cls, model_name, working_dir='.', console=None):
+    def __init__(self, model_name, working_dir='.', console=None):
         """
         CodeAgent: the agent to solve the given coding problem by planning coding tasks, searching websites,
         and generating code snippets. It does not execute the code, only make use of built-in functions to provide
@@ -433,30 +428,28 @@ class CodeAgent:
             safe_fileio(working_dir, path_params=["extract_path"])(unzip_data),
         ]
 
-        cls.model = get_vllm_with_tools(model_name, tools)
-        cls.working_dir = working_dir
-        cls.console = console or Console()
-        cls.tool_node = ToolNode(tools)
-        return super().__new__(cls)
+        self.model = get_vllm_with_tools(model_name, tools)
+        self.working_dir = working_dir
+        self.console = console or Console()
+        self.tool_node = ToolNode(tools)
+        self.chat_history: list[BaseMessage] = []
 
-    @staticmethod
-    @task
-    def setup(advisor_report: dict, env: dict):
+    @method_task
+    def setup(self, advisor_report: dict, env: dict):
         # Set up the chat history with the system prompt if not already set
-        if len(CodeAgent.chat_history) == 0:
-            CodeAgent.chat_history.append(
+        if len(self.chat_history) == 0:
+            self.chat_history.append(
                 SystemMessage(
                     content=CODER_SYSTEM_PROMPT.render(
-                        working_dir=CodeAgent.working_dir,
+                        working_dir=self.working_dir,
                         advisor_report=advisor_report,
                         env=env,
                     )
                 )
             )
 
-    @staticmethod
-    @task
-    def code(task: str, description: str, first_call=True) -> AIMessage:
+    @method_task
+    def code(self, task: str, description: str, first_call=True) -> AIMessage:
         """
         Handle the query from the model query response.
         Args:
@@ -465,9 +458,9 @@ class CodeAgent:
             first_call: whether this is the first call to the code task.
         """
 
-        with CodeAgent.console.status(f"Coder is working on the task: {task}..."):
+        with self.console.status(f"Coder is working on the task: {task}..."):
             if first_call:
-                CodeAgent.chat_history.append(
+                self.chat_history.append(
                     HumanMessage(
                         CODE_PROMPT.render(
                             task=task,
@@ -475,37 +468,35 @@ class CodeAgent:
                         )
                     )
                 )
-            message = cast(AIMessage, CodeAgent.model.invoke(CodeAgent.chat_history))
+            message = cast(AIMessage, self.model.invoke(self.chat_history))
 
-            CodeAgent.chat_history.append(message)
+            self.chat_history.append(message)
             return message
 
-    @staticmethod
-    @task
-    def deps() -> dict:
+    @method_task
+    def deps(self) -> dict:
         """
         Get the dependencies required to run the code and the command to run the code.
         Returns:
             A dictionary containing the dependencies and the command to run the code.
         """
-        CodeAgent.chat_history.append(
+        self.chat_history.append(
             HumanMessage(content=CODER_DEPS_PROMPT.render())
         )
-        message = CodeAgent.model.invoke(CodeAgent.chat_history)
+        message = self.model.invoke(self.chat_history)
 
-        CodeAgent.chat_history.append(message)
+        self.chat_history.append(message)
         try:
             return json.loads(message.content)
         except json.JSONDecodeError as e:
             return clean_json_string(message.content)
 
-    @staticmethod
-    @task
-    def verify_code(python_exec: str, dependency: list[str], command: str) -> dict:
+    @method_task
+    def verify_code(self, python_exec: str, dependency: list[str], command: str) -> dict:
         """
         Installs missing dependencies and runs the provided command using the venv.
         """
-        working_dir = CodeAgent.working_dir
+        working_dir = self.working_dir
         results = {}
 
         # Step 1: Detect missing dependencies
@@ -513,17 +504,17 @@ class CodeAgent:
         for dep in dependency:
             check_cmd = f'{python_exec} -c "import {dep}"'
             check_result: dict = execute_command(check_cmd, raw=True)
-            CodeAgent.console.log(f"Checking dependency: [yellow]{dep}[/yellow]")
+            self.console.log(f"Checking dependency: [yellow]{dep}[/yellow]")
             if check_result['exit_code'] != 0:
                 missing_deps.append(dep)
 
-        CodeAgent.console.print(f"Found missing dependencies: {missing_deps}", style="bold yellow")
+        self.console.print(f"Found missing dependencies: {missing_deps}", style="bold yellow")
 
         # Step 2: Batch install if needed
         if missing_deps:
             install_cmd = f"{python_exec} -m pip install {' '.join(missing_deps)}"
             install_result = execute_command(install_cmd, cwd=working_dir, raw=True)
-            CodeAgent.console.log(f"Executing command: [yellow]{install_cmd}[/yellow]")
+            self.console.log(f"Executing command: [yellow]{install_cmd}[/yellow]")
             results["install"] = {
                 "dependencies": missing_deps,
                 "exit_code": install_result["exit_code"],
@@ -532,25 +523,24 @@ class CodeAgent:
             }
         else:
             results["install"] = "all dependencies already installed"
-        CodeAgent.console.print(f"Installed: {results['install']}", style="bold green")
+        self.console.print(f"Installed: {results['install']}", style="bold green")
 
         # Step 3: Run the main command
         # Replace 'python' / 'python3' command world with the provided python_exec, use regex to ensure it works
         command = re.sub(r'\bpython[3]?\b', python_exec, command)
         run_result = execute_command(command, cwd=working_dir, raw=True)
-        CodeAgent.console.log(f"Executing command: [yellow]{command}[/yellow]")
+        self.console.log(f"Executing command: [yellow]{command}[/yellow]")
         results["execution"] = {
             "exit_code": run_result["exit_code"],
             "stdout": run_result["stdout"],
             "stderr": run_result["stderr"],
         }
-        CodeAgent.console.print(f"Executed command: {command}, return {run_result['exit_code']}", style="bold green")
+        self.console.log(f"Executed command: {command}, return {run_result['exit_code']}", style="bold green")
 
         return results
 
-    @staticmethod
-    @entrypoint(checkpointer=checkpointer)
-    def graph(state: State) -> dict:
+    @method_entrypoint(checkpointer=checkpointer)
+    def graph(self, state: State) -> dict:
         """
         Call the agent to get the code for the task.
         Args:
@@ -569,13 +559,13 @@ class CodeAgent:
             ).result()
             try_times -= 1
             if message.tool_calls:
-                CodeAgent.console.print(f"Calling tools {[tool['name'] for tool in message.tool_calls]}")
-                message = CodeAgent.tool_node.invoke(
+                self.console.print(f"Calling tools {[tool['name'] for tool in message.tool_calls]}")
+                message = self.tool_node.invoke(
                     {
                         "messages": [message],
                     }
                 )
-                CodeAgent.chat_history.extend(message['messages'])
+                self.chat_history.extend(message['messages'])
 
                 # If the tool `create_file` succeeded, break the loop
                 if any(
@@ -588,17 +578,17 @@ class CodeAgent:
                 break
 
         # Check the dependencies and command to run the code
-        deps = CodeAgent.deps().result()
+        deps = self.deps().result()
 
         # Execute the code and check if successful
         if deps.get("dependency") and deps.get("command"):
-            results = CodeAgent.verify_code(
+            results = self.verify_code(
                 python_exec=deps.get("python_exec", "python3"),
                 dependency=deps["dependency"],
                 command=deps["command"]
             ).result()
             deps["results"] = results
         else:
-            CodeAgent.console.print("No dependencies or command found, skipping execution.", style="bold red")
+            self.console.print("No dependencies or command found, skipping execution.", style="bold red")
 
         return deps
