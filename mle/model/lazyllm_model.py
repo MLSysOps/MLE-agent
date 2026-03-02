@@ -119,15 +119,24 @@ class LazyLLMModel(Model):
     
     def _init_model(self):
         """
-        Initialize LazyLLM AutoModel with configuration.
+        Initialize LazyLLM OnlineModule with configuration.
         
-        AutoModel automatically:
-        1. Checks if model is available locally (TrainableModule)
-        2. Falls back to online API (OnlineModule)
-        3. Handles provider-specific configuration
+        OnlineModule is used for cloud API providers.
+        For local models, TrainableModule would be used instead.
         """
         try:
-            # Use LazyLLM's AutoModel for automatic model selection
+            # Use LazyLLM's OnlineModule for cloud API providers
+            # This avoids auto-downloading local models
+            
+            # Set API key in LazyLLM's expected environment variable format
+            if self.api_key and self.source:
+                # LazyLLM expects LAZYLLM_<SOURCE>_API_KEY or <SOURCE>_API_KEY
+                lazyllm_key_name = f"LAZYLLM_{self.source.upper()}_API_KEY"
+                os.environ[lazyllm_key_name] = self.api_key
+                # Also set standard format as fallback
+                standard_key_name = f"{self.source.upper()}_API_KEY"
+                os.environ[standard_key_name] = self.api_key
+            
             kwargs = {
                 'model': self.model,
                 'temperature': self.temperature,
@@ -136,24 +145,23 @@ class LazyLLMModel(Model):
             if self.source:
                 kwargs['source'] = self.source
             
-            if self.api_key:
-                # Set API key in environment for LazyLLM to pick up
-                if self.source:
-                    env_key_name = f"MLE_{self.source.upper()}_API_KEY"
-                    os.environ[env_key_name] = self.api_key
-            
             if self.base_url:
                 kwargs['base_url'] = self.base_url
             
-            # Create AutoModel instance
-            self._model = self.lazyllm.AutoModel(**kwargs)
+            # Create OnlineModule instance for cloud APIs
+            # This is more reliable than AutoModel when no local models are configured
+            self._model = self.lazyllm.OnlineModule(**kwargs)
             
         except Exception as e:
-            raise RuntimeError(f"Failed to initialize LazyLLM model: {e}")
+            # Fallback to AutoModel if OnlineModule fails
+            try:
+                self._model = self.lazyllm.AutoModel(**kwargs)
+            except Exception as e2:
+                raise RuntimeError(f"Failed to initialize LazyLLM model: {e2}")
     
     def query(self, chat_history, **kwargs):
         """
-        Query the LLM model.
+        Query the LLM model using LazyLLM's forward method.
         
         Args:
             chat_history (list): List of message dictionaries with 'role' and 'content'
@@ -163,10 +171,11 @@ class LazyLLMModel(Model):
             str: Model response content
         """
         try:
-            # LazyLLM models accept messages in OpenAI format
-            response = self._model.query(
-                chat_history,
-                temperature=self.temperature,
+            # LazyLLM uses forward() with llm_chat_history parameter
+            # First parameter (input) cannot be None, use empty string
+            response = self._model.forward(
+                '',  # Empty input, actual conversation is in llm_chat_history
+                llm_chat_history=chat_history,
                 **kwargs
             )
             return response
@@ -186,12 +195,15 @@ class LazyLLMModel(Model):
             str: Chunks of model response
         """
         try:
-            for chunk in self._model.stream(
-                chat_history,
-                temperature=self.temperature,
+            # LazyLLM streaming is done via stream_output parameter
+            for chunk in self._model.forward(
+                '',  # Empty input
+                llm_chat_history=chat_history,
+                stream_output=True,
                 **kwargs
             ):
-                yield chunk
+                if chunk:  # Filter out empty chunks
+                    yield chunk
                 
         except Exception as e:
             raise RuntimeError(f"LazyLLM stream failed: {e}")
