@@ -1,9 +1,10 @@
 from .anthropic import *
 from .deepseek import *
+from .gemini import *
+from .lazyllm_model import *
 from .mistral import *
 from .ollama import *
 from .openai import *
-from .gemini import *
 from .vllm import *
 
 from mle.utils import get_config
@@ -12,9 +13,10 @@ from mle.utils import get_config
 MODEL_OLLAMA = 'Ollama'
 MODEL_OPENAI = 'OpenAI'
 MODEL_CLAUDE = 'Claude'
-MODEL_MISTRAL = 'MistralAI'
 MODEL_DEEPSEEK = 'DeepSeek'
 MODEL_GEMINI = 'Gemini'
+MODEL_LAZYLLM = 'LazyLLM'
+MODEL_MISTRAL = 'MistralAI'
 MODEL_VLLM = 'vLLM'
 
 
@@ -58,6 +60,15 @@ def load_model(project_dir: str, model_name: str=None, observable=True):
     config = get_config(project_dir)
     model = None
 
+    if config['platform'] == MODEL_LAZYLLM:
+        # LazyLLM unified interface - supports 20+ providers automatically
+        model = LazyLLMModel(
+            model=model_name,
+            source=config.get('source', None),
+            api_key=config.get('api_key', None),
+            base_url=config.get('base_url', None),
+            temperature=config.get('temperature', 0.7),
+        )
     if config['platform'] == MODEL_OLLAMA:
         # For Ollama, use base_url as host_url if available
         host_url = config.get('base_url', None)
