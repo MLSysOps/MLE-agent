@@ -33,6 +33,14 @@ Alternatively, you can prepare the dataset for a specific competition:
 mle bench prepare -c <competition-id>
 ```
 ### Run MLE Agent (WIP)
+
+Start a local vLLM server:
+```shell
+vllm serve Qwen/Qwen2.5-1.5B-Instruct --enable-auto-tool-choice \
+  --tool-call-parser hermes --reasoning-parser deepseek_r1
+```
+
+Then run the MLE Agent on the lite dataset:
 ```shell
 mle kaggle <competition-id>
 ```
